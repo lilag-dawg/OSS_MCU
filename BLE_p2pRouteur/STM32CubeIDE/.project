@@ -34,12 +34,12 @@
 		<link>
 			<name>OSS_BLE.ioc</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/OSS_BLE.ioc</locationURI>
+			<locationURI>$%7BPROJECT_LOC%7D/OSS_BLE.ioc</locationURI>
 		</link>
 		<link>
 			<name>Doc/readme.txt</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/readme.txt</locationURI>
+			<locationURI>$%7BPROJECT_LOC%7D/readme.txt</locationURI>
 		</link>
 		<link>
 			<name>Utilities/stm32_lpm.c</name>
@@ -54,7 +54,7 @@
 		<link>
 			<name>Drivers/CMSIS/system_stm32wbxx.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Core/Src/system_stm32wbxx.c</locationURI>
+			<locationURI>$%7BPROJECT_LOC%7D/Core/Src/system_stm32wbxx.c</locationURI>
 		</link>
 		<link>
 			<name>Drivers/STM32WBxx_HAL_Driver/stm32wbxx_hal.c</name>
@@ -249,42 +249,42 @@
 		<link>
 			<name>Application/User/Core/app_debug.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Core/Src/app_debug.c</locationURI>
+			<locationURI>$%7BPROJECT_LOC%7D/Core/Src/app_debug.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/Core/app_entry.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Core/Src/app_entry.c</locationURI>
+			<locationURI>$%7BPROJECT_LOC%7D/Core/Src/app_entry.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/Core/hw_timerserver.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Core/Src/hw_timerserver.c</locationURI>
+			<locationURI>$%7BPROJECT_LOC%7D/Core/Src/hw_timerserver.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/Core/hw_uart.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Core/Src/hw_uart.c</locationURI>
+			<locationURI>$%7BPROJECT_LOC%7D/Core/Src/hw_uart.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/Core/main.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Core/Src/main.c</locationURI>
+			<locationURI>$%7BPROJECT_LOC%7D/Core/Src/main.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/Core/stm32_lpm_if.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Core/Src/stm32_lpm_if.c</locationURI>
+			<locationURI>$%7BPROJECT_LOC%7D/Core/Src/stm32_lpm_if.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/Core/stm32wbxx_hal_msp.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Core/Src/stm32wbxx_hal_msp.c</locationURI>
+			<locationURI>$%7BPROJECT_LOC%7D/Core/Src/stm32wbxx_hal_msp.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/Core/stm32wbxx_it.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Core/Src/stm32wbxx_it.c</locationURI>
+			<locationURI>$%7BPROJECT_LOC%7D/Core/Src/stm32wbxx_it.c</locationURI>
 		</link>
 		<link>
 			<name>Drivers/BSP/P-NUCLEO-WB55.Nucleo/stm32wbxx_nucleo.c</name>
@@ -294,17 +294,23 @@
 		<link>
 			<name>Application/User/STM32_WPAN/App/app_ble.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/STM32_WPAN/App/app_ble.c</locationURI>
+			<locationURI>$%7BPROJECT_LOC%7D/STM32_WPAN/App/app_ble.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/STM32_WPAN/App/p2p_routeur_app.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/STM32_WPAN/App/p2p_routeur_app.c</locationURI>
+			<locationURI>$%7BPROJECT_LOC%7D/STM32_WPAN/App/p2p_routeur_app.c</locationURI>
 		</link>
 		<link>
 			<name>Application/User/STM32_WPAN/Target/hw_ipcc.c</name>
 			<type>1</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/STM32_WPAN/Target/hw_ipcc.c</locationURI>
+			<locationURI>$%7BPROJECT_LOC%7D/STM32_WPAN/Target/hw_ipcc.c</locationURI>
 		</link>
 	</linkedResources>
+	<variableList>
+		<variable>
+			<name>MY_PATH</name>
+			<value>$%7BPROJECT_LOC%7D</value>
+		</variable>
+	</variableList>
 </projectDescription>

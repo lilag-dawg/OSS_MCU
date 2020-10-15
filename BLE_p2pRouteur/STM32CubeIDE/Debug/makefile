@@ -55,8 +55,8 @@ OSS_BLE.bin \
 all: OSS_BLE.elf secondary-outputs
 
 # Tool invocations
-OSS_BLE.elf: $(OBJS) $(USER_OBJS) C:\Users\gara3103\Desktop\mcu_code\STM32CubeWB-caliss\STM32CubeWB-master\Projects\P-NUCLEO-WB55.Nucleo\Applications\BLE\BLE_p2pRouteur\STM32CubeIDE\STM32WB55RGVX_FLASH.ld
-	arm-none-eabi-gcc -o "OSS_BLE.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\gara3103\Desktop\mcu_code\STM32CubeWB-caliss\STM32CubeWB-master\Projects\P-NUCLEO-WB55.Nucleo\Applications\BLE\BLE_p2pRouteur\STM32CubeIDE\STM32WB55RGVX_FLASH.ld" --specs=nosys.specs -Wl,-Map="OSS_BLE.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+OSS_BLE.elf: $(OBJS) $(USER_OBJS) C:\Users\gara3103\Documents\flutter_projects\oss_mcu\OSS_MCU\BLE_p2pRouteur\STM32CubeIDE\STM32WB55RGVX_FLASH.ld
+	arm-none-eabi-gcc -o "OSS_BLE.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\gara3103\Documents\flutter_projects\oss_mcu\OSS_MCU\BLE_p2pRouteur\STM32CubeIDE\STM32WB55RGVX_FLASH.ld" --specs=nosys.specs -Wl,-Map="OSS_BLE.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
