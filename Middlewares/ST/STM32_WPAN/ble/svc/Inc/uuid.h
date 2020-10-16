@@ -295,6 +295,11 @@
 /*UUIDs for End Device Management Service*/
 #define END_DEVICE_MGT_SERVICE_UUID                                   (0x1A40)
 #define END_DEVICE_STATUS_CHAR_UUID                                   (0x2B60)
+/* USER CODE BEGIN */
+#define END_DEVICE_STATUS_NOTIFY_UUID								  (0x0001)
+/* USER CODE END */
+
+
 
 #define P2P_SERVICE_UUID                                              (0xFE40)
 #define P2P_WRITE_CHAR_UUID                                           (0xFE41)

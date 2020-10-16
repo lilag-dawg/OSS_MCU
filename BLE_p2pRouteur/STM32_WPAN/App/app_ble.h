@@ -75,6 +75,7 @@ typedef struct
   uint8_t   ServiceInstance;
 }P2P_Client_App_Notification_evt_t;
 
+
 /* USER CODE BEGIN ET */
 
 /* USER CODE END ET */

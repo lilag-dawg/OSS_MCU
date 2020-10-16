@@ -18,6 +18,7 @@
  ******************************************************************************
  */
 /* USER CODE END Header */
+
 /* Includes ------------------------------------------------------------------*/
 #include "app_common.h"
 
@@ -349,7 +350,7 @@ tBDAddr SERVER_REMOTE_BDADDR;
 /**
  * Advertising Data
  */
-static char local_name[] = { AD_TYPE_COMPLETE_LOCAL_NAME,'P','2','P','R','O','U','T'};
+static char local_name[] = { AD_TYPE_COMPLETE_LOCAL_NAME,'M','i','s','s','L','P'};
 uint8_t manuf_data[14] = {
     sizeof(manuf_data)-1, AD_TYPE_MANUFACTURER_SPECIFIC_DATA,
     0x01/*SKD version */,
@@ -1286,7 +1287,7 @@ static void Ble_Hci_Gap_Gatt_Init(void){
 
   if (role > 0)
   {
-    const char *name = "P2PROUT";
+    const char *name = "MissLP";
 
     aci_gap_init(role, 0,
                  APPBLE_GAP_DEVICE_NAME_LENGTH,

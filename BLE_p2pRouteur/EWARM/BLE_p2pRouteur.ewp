@@ -363,6 +363,24 @@
           <state>$PROJ_DIR$/../../../../../../Drivers/CMSIS/Device/ST/STM32WBxx/Include</state>
           <state>$PROJ_DIR$/../../../../../../Drivers/CMSIS/Include</state>
           <state>$PROJ_DIR$/../../../../../../Drivers/BSP/P-NUCLEO-WB55.Nucleo</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Inc</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Inc/Legacy</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Utilities/lpm/tiny_lpm</state>
+          <state>$PROJ_DIR$/../tiny_lpm</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread/tl</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread/shci</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/utilities</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/ble/core</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/ble/core/auto</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/ble/core/template</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/ble/svc/Inc</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/ble/svc/Src</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/CMSIS/Device/ST/STM32WBxx/Include</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Utilities/sequencer</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/ble</state>
+          <state>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/CMSIS/Include</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -1050,16 +1068,19 @@
       <group>
         <name>Core</name>
         <file>
-          <name>$PROJ_DIR$\..\Core\Src\main.c</name>
-        </file>
-        <file>
-          <name>$PROJ_DIR$\..\Core\Src\app_debug.c</name>
-        </file>
-        <file>
           <name>$PROJ_DIR$\..\Core\Src\app_entry.c</name>
         </file>
         <file>
-          <name>$PROJ_DIR$\..\Core\Src\stm32_lpm_if.c</name>
+          <name>$PROJ_DIR$\..\Core\Src\main.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\Core\Src\stm32wbxx_it.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\Core\Src\stm32wbxx_hal_msp.c</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\Core\Src\app_debug.c</name>
         </file>
         <file>
           <name>$PROJ_DIR$\..\Core\Src\hw_timerserver.c</name>
@@ -1068,10 +1089,7 @@
           <name>$PROJ_DIR$\..\Core\Src\hw_uart.c</name>
         </file>
         <file>
-          <name>$PROJ_DIR$\..\Core\Src\stm32wbxx_it.c</name>
-        </file>
-        <file>
-          <name>$PROJ_DIR$\..\Core\Src\stm32wbxx_hal_msp.c</name>
+          <name>$PROJ_DIR$\..\Core\Src\stm32_lpm_if.c</name>
         </file>
       </group>
       <group>
@@ -1176,6 +1194,66 @@
       <file>
         <name>$PROJ_DIR$\..\..\..\..\..\..\Drivers\STM32WBxx_HAL_Driver\Src\stm32wbxx_hal.c</name>
       </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_ipcc.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_gpio.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_hsem.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_rcc.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_rcc_ex.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_flash.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_flash_ex.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_dma.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_dma_ex.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_pwr.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_pwr_ex.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_cortex.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_exti.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_uart.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_uart_ex.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_rtc.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_rtc_ex.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_tim.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_tim_ex.c</name>
+      </file>
     </group>
   </group>
   <group>
@@ -1239,16 +1317,79 @@
       <file>
         <name>$PROJ_DIR$\..\..\..\..\..\..\Middlewares\ST\STM32_WPAN\interface\patterns\ble_thread\tl\shci_tl.c</name>
       </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread/tl/tl_mbox.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread/shci/shci.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/utilities/dbg_trace.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/utilities/otp.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/utilities/stm_list.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/utilities/stm_queue.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/ble/core/template/osal.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/ble/svc/Src/svc_ctl.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/ble/core/auto/ble_gap_aci.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/ble/core/auto/ble_gatt_aci.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/ble/core/auto/ble_hal_aci.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/ble/core/auto/ble_hci_le.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/ble/core/auto/ble_l2cap_aci.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/ble/svc/Src/eds_stm.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/ble/svc/Src/p2p_stm.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread/tl/hci_tl.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread/tl/hci_tl_if.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread/tl/shci_tl.c</name>
+      </file>
+      <file>
+        <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread/tl/shci_tl_if.c</name>
+      </file>
     </group>
   </group>
-    <group>
-        <name>Utilities</name>
-        <file>
-            <name>$PROJ_DIR$\..\..\..\..\..\..\Utilities\lpm\tiny_lpm\stm32_lpm.c</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\..\..\..\..\..\Utilities\sequencer\stm32_seq.c</name>
-        </file>
-    </group>
+  <group>
+    <name>Utilities</name>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\..\Utilities\lpm\tiny_lpm\stm32_lpm.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\..\Utilities\sequencer\stm32_seq.c</name>
+    </file>
+    <file>
+      <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Utilities/lpm/tiny_lpm/stm32_lpm.c</name>
+    </file>
+    <file>
+      <name>C:/Users/gara3103/STM32Cube/Repository/STM32Cube_FW_WB_V1.8.0/Utilities/sequencer/stm32_seq.c</name>
+    </file>
+  </group>
 </project>
 

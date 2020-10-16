@@ -18,6 +18,7 @@
  ******************************************************************************
  */
 /* USER CODE END Header */
+
 /* Includes ------------------------------------------------------------------*/
 
 #include "main.h"
@@ -89,6 +90,16 @@ typedef struct{
     uint8_t                                     ButtonStatus;
 }P2P_ButtonCharValue_t;
 
+typedef struct{
+	uint8_t Value;
+}TEMPLATE_NbrSensor_t;
+
+typedef struct{
+	uint8_t Position;
+	uint8_t Pairing;
+	uint8_t SensorName[19];
+}TEMPLATE_SensorName_t;
+
 typedef struct
 {
     /**
@@ -108,6 +119,11 @@ typedef struct
      */
     P2P_ButtonCharValue_t      ButtonStatusEndDevice;
     P2P_LedCharValue_t         LedControlEndDevice;
+
+    TEMPLATE_NbrSensor_t 		NumberOfSensorNearbyStruct;
+    TEMPLATE_SensorName_t      	SensorNameStruct;
+
+    uint8_t Update_timer_Id;
    
 
 } P2P_Router_App_Context_t;
@@ -124,6 +140,22 @@ typedef struct
 #define UNPACK_2_BYTE_PARAMETER(ptr)  \
         (uint16_t)((uint16_t)(*((uint8_t *)ptr))) |   \
         (uint16_t)((((uint16_t)(*((uint8_t *)ptr + 1))) << 8))
+
+#define MAX_NAMES							8
+#define MAX_CARAC							19
+
+uint8_t randomNames[MAX_NAMES][MAX_CARAC]={
+	{0x69, 0x70, 0x68, 0x6f, 0x6e, 0x65, 0x20, 0x64, 0x65, 0x20, 0x69, 0x73, 0x61, 0x6d},
+	{0x63,0x6F,0x76,0x69,0x64,0x2D,0x31,0x39},
+	{0x6F,0x73,0x73,0x2D,0x73,0x38,0x20,0x6A,0x65,0x20,0x74,0x65,0x20,0x76,0x6F,0x69,0x65,0x58,0x44},
+	{0x69,0x70,0x68,0x6f,0x6e,0x65,0x20,0x64,0x65,0x20,0x41,0x6c,0x65,0x78,0x69,0x73},
+	{0x70,0x6f,0x77,0x65,0x72,0x2d,0x73,0x65,0x6e,0x73,0x6f,0x72},
+	{0x48,0x61,0x6e,0x64,0x73,0x46,0x72,0x65,0x65,0x4c,0x69,0x6e,0x6b},
+	{0x74,0x65,0x73,0x74,0x34},
+	{0x74,0x65,0x73,0x74,0x35},
+};
+
+#define NAME_CHANGES_PERIODE			(1*1000*1000/CFG_TS_TICK_VAL) //1sec//
 /* USER CODE BEGIN PD */
 
 /* USER CODE END PD */
@@ -157,6 +189,11 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
 void P2P_Client_Init(void);
 /* USER CODE BEGIN PFP */
 
+static void P2P_SensorName_Timer_Callback(void){
+	UTIL_SEQ_SetTask(1<<CFG_TASK_SEARCH_SERVICE_ID, CFG_SCH_PRIO_0 );
+}
+
+
 /* USER CODE END PFP */
 
 /* Functions Definition ------------------------------------------------------*/
@@ -181,6 +218,7 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
 #endif
             /* USER CODE BEGIN EDS_STM_NOTIFY_ENABLED_EVT */
             P2P_Router_App_Context.Notification_EndDevice_Status = 1;
+            HW_TS_Start(P2P_Router_App_Context.Update_timer_Id, NAME_CHANGES_PERIODE);
             /* USER CODE END EDS_STM_NOTIFY_ENABLED_EVT */
             break;
 
@@ -190,6 +228,7 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
 #endif
             /* USER CODE BEGIN EDS_STM_NOTIFY_DISABLED_EVT */
             P2P_Router_App_Context.Notification_EndDevice_Status = 0;
+            HW_TS_Stop(P2P_Router_App_Context.Update_timer_Id);
             /* USER CODE END EDS_STM_NOTIFY_DISABLED_EVT */
             break;
 
@@ -280,7 +319,9 @@ void P2P_Router_APP_Init(void)
     P2PR_APP_Device_Status_t device_status;
     /* USER CODE END P2P_Router_APP_Init_1 */
 
-    UTIL_SEQ_RegTask( 1<< CFG_TASK_SEARCH_SERVICE_ID, UTIL_SEQ_RFU, Client_Update_Service );
+    UTIL_SEQ_RegTask(1<<CFG_TASK_SEARCH_SERVICE_ID, UTIL_SEQ_RFU, Client_Update_Service );
+
+    HW_TS_Create(CFG_TIM_PROC_ID_ISR, &(P2P_Router_App_Context.Update_timer_Id), hw_ts_Repeated, P2P_SensorName_Timer_Callback);
 
     /* USER CODE BEGIN P2P_Router_APP_Init_2 */
     /**
@@ -290,6 +331,18 @@ void P2P_Router_APP_Init(void)
     P2P_Router_App_Context.Notification_EndDevice_Status=0;
 
     P2P_Router_App_Context.EndDeviceStatus.Device1_Status=0x00;
+
+    //tempo
+    P2P_Router_App_Context.NumberOfSensorNearbyStruct.Value = MAX_NAMES;
+    P2P_Router_App_Context.SensorNameStruct.Pairing = 0;
+    P2P_Router_App_Context.SensorNameStruct.Position = 0;
+
+    for(int i=0; i<(sizeof(P2P_Router_App_Context.SensorNameStruct.SensorName));i++){
+    	P2P_Router_App_Context.SensorNameStruct.SensorName[i] = 0;
+    }
+
+
+
     device_status.Device1_Status = 0x80; /* Not connected */
 #if (CFG_P2P_DEMO_MULTI != 0 )   
     P2P_Router_App_Context.EndDeviceStatus.Device2_Status=0x00;
@@ -312,6 +365,9 @@ void P2P_Router_APP_Init(void)
 
     return;
 }
+
+
+
 
 /**
  * @brief  End Device Managment
@@ -358,7 +414,10 @@ void P2PR_APP_End_Device_Mgt_Connection_Update( P2PR_APP_Device_Status_t *p_devi
     /* USER CODE END CFG_P2P_DEMO_MULTI */
 #endif
 /* USER CODE BEGIN P2PR_APP_End_Device_Mgt_Connection_Update_2 */
-    EDS_STM_Update_Char(END_DEVICE_STATUS_CHAR_UUID, 
+    //EDS_STM_Update_Char(END_DEVICE_STATUS_CHAR_UUID,
+    //        (uint8_t *)&P2P_Router_App_Context.EndDeviceStatus);
+
+    EDS_STM_Update_Char(0x0000,
             (uint8_t *)&P2P_Router_App_Context.EndDeviceStatus);
 
 /* USER CODE END P2PR_APP_End_Device_Mgt_Connection_Update_2 */
@@ -466,86 +525,39 @@ static void Client_Update_Service( void )
 {
     /* USER CODE BEGIN Client_Update_Service_1 */
 
+	uint8_t value[20];
+	value[0] = (uint8_t)(P2P_Router_App_Context.SensorNameStruct.Position);
+//	if (TEMPLATE_Server_App_Context.SensorName.Pairing <= 1){
+//		value[0] = value[0] + TEMPLATE_Server_App_Context.SensorName.Pairing;
+//	}
+    //green led is on when notifying
+    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+
+	printf("Size: %d \n\r",sizeof(P2P_Router_App_Context.SensorNameStruct.SensorName));
+	printf("Position: %d \n\r",P2P_Router_App_Context.SensorNameStruct.Position);
+	printf("[");
+
+	for(int j = 0; j<MAX_CARAC;j++){
+		P2P_Router_App_Context.SensorNameStruct.SensorName[j] = randomNames[P2P_Router_App_Context.SensorNameStruct.Position][j];
+	}
+
+	for(int i = 1; i<(sizeof(value));i++){
+		value[i] = (uint8_t)(P2P_Router_App_Context.SensorNameStruct.SensorName[i-1]);
+		printf("%x,",value[i]);
+	}
+
+	P2P_Router_App_Context.SensorNameStruct.Position ++;
+
+	if (P2P_Router_App_Context.SensorNameStruct.Position >= P2P_Router_App_Context.NumberOfSensorNearbyStruct.Value){
+		P2P_Router_App_Context.SensorNameStruct.Position = 0;
+	}
+
+	printf("]\n\r");
+
+	EDS_STM_Update_Char(0x0000,(uint8_t *)&value);
+
     /* USER CODE END Client_Update_Service_1 */
-    uint16_t enable = 0x0001;
 
-    uint8_t index;
-
-    index = 0;
-    while((index < BLE_CFG_CLT_MAX_NBR_CB) &&
-            (aP2PClientContext[index].state != APP_BLE_IDLE))
-    {
-
-        switch(aP2PClientContext[index].state)
-        {
-            /* USER CODE BEGIN aP2PClientContext */
-            case APP_BLE_DISCOVER_LED_CHAR_DESC: /* Not Used - No decriptor */
-                APP_DBG_MSG("* GATT : Discover Descriptor of Led Characteritic\n");
-                aci_gatt_disc_all_char_desc(aP2PClientContext[index].connHandle,
-                        aP2PClientContext[index].P2PLedCharHdle,
-                        aP2PClientContext[index].P2PLedCharHdle+2);
-
-                break;
-            case APP_BLE_DISCOVER_BUTTON_CHAR_DESC:
-                APP_DBG_MSG("* GATT : Discover Descriptor of Button Characteritic\n");
-                aci_gatt_disc_all_char_desc(aP2PClientContext[index].connHandle,
-                        aP2PClientContext[index].P2PClientCharHdle,
-                        aP2PClientContext[index].P2PClientCharHdle+2);
-
-                break;
-            case APP_BLE_ENABLE_NOTIFICATION_BUTTON_DESC:
-                APP_DBG_MSG("* GATT : Enable Button Notification\n");
-                aci_gatt_write_char_desc(aP2PClientContext[index].connHandle,
-                        aP2PClientContext[index].P2PClientDescHandle,
-                        2,
-                        (uint8_t *)&enable);
-
-                aP2PClientContext[index].state = APP_BLE_CONNECTED;
-
-                break;
-            /* USER CODE END aP2PClientContext */
-            case APP_BLE_DISCOVER_SERVICES:
-#if(CFG_DEBUG_APP_TRACE != 0)
-                APP_DBG_MSG("APP_BLE_DISCOVER_SERVICES\n");
-#endif
-            /* USER CODE BEGIN APP_BLE_DISCOVER_SERVICES */
-
-            /* USER CODE END APP_BLE_DISCOVER_SERVICES */
-            break;
-            case APP_BLE_DISCOVER_CHARACS:
-#if(CFG_DEBUG_APP_TRACE != 0)
-                APP_DBG_MSG("* GATT : Discover Led Button  Characteristics\n");
-#endif
-                aci_gatt_disc_all_char_of_service(aP2PClientContext[index].connHandle,
-                        aP2PClientContext[index].P2PServiceHandle,
-                        aP2PClientContext[index].P2PServiceEndHandle);
-            /* USER CODE BEGIN APP_BLE_DISCOVER_CHARACS */
-
-            /* USER CODE END APP_BLE_DISCOVER_CHARACS */
-                break;
-
-            case APP_BLE_DISABLE_NOTIFICATION_TX_DESC :
-#if(CFG_DEBUG_APP_TRACE != 0)
-                APP_DBG_MSG("* GATT : Disable Button Notification\n");
-#endif
-                aci_gatt_write_char_desc(aP2PClientContext[index].connHandle,
-                        aP2PClientContext[index].P2PClientDescHandle,
-                        2,
-                        (uint8_t *)&enable);
-
-                aP2PClientContext[index].state = APP_BLE_CONNECTED;
-            /* USER CODE BEGIN APP_BLE_DISABLE_NOTIFICATION_TX_DESC */
-
-            /* USER CODE END APP_BLE_DISABLE_NOTIFICATION_TX_DESC */
-                break;
-            default:
-            /* USER CODE BEGIN aP2PClientContext_default */
-
-            /* USER CODE END aP2PClientContext_default */
-                break;
-        }
-        index++;
-    }
     /* USER CODE BEGIN Client_Update_Service_2 */
 
     /* USER CODE END Client_Update_Service_2 */
