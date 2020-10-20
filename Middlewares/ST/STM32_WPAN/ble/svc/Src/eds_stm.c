@@ -25,10 +25,10 @@
 /* Private typedef -----------------------------------------------------------*/
 typedef struct{
   uint16_t	EndDeviceManagementSvcHdle;				/**< Service handle */
-  uint16_t	EndDeviceStatusCharHdle;	                /**< Characteristic handle */
+  uint8_t	EndDeviceStatusCharHdle;	                /**< Characteristic handle */
   uint16_t	EndDeviceStatusWriteClientToServerCharHdle;	  /**< Characteristic handle */
   uint16_t	EndDeviceStatusNotifyServerToClientCharHdle;	/**< Characteristic handle */
- 
+
 }EndDeviceManagementContext_t;
 
 /* Private defines -----------------------------------------------------------*/
@@ -119,7 +119,8 @@ static SVCCTL_EvtAckStatus_t EndDeviceManagement_Event_Handler(void *Event)
             
             else if(attribute_modified->Attr_Handle == (aEndDeviceManagementContext.EndDeviceStatusWriteClientToServerCharHdle + 1))
             {
-            	APP_DBG_MSG("-- GATT : WRITE CHAR INFO RECEIVED\n");
+            	Notification.EDS_Evt_Opcode = EDS_STM_WRITE_EVT;
+            	EDS_STM_App_Notification(&Notification);
             }
         }
         break;
@@ -182,7 +183,7 @@ void EDS_STM_Init(void)
                       ATTR_PERMISSION_NONE,
                       GATT_DONT_NOTIFY_EVENTS, /* gattEvtMask */
                       10, /* encryKeySize */
-                      1, /* isVariable */
+                      0, /* isVariable */
                       &(aEndDeviceManagementContext.EndDeviceStatusCharHdle));
 
     /**
@@ -206,7 +207,7 @@ void EDS_STM_Init(void)
     aci_gatt_add_char(aEndDeviceManagementContext.EndDeviceManagementSvcHdle,
                       UUID_TYPE_16,
                       &uuid16,
-                      1,
+                      20,
                       CHAR_PROP_WRITE,
                       ATTR_PERMISSION_NONE,
 					  GATT_NOTIFY_ATTRIBUTE_WRITE, /* gattEvtMask */
@@ -250,6 +251,15 @@ tBleStatus EDS_STM_Update_Char(uint16_t UUID, uint8_t *pPayload)
                                0, /* charValOffset */
                                20, /* charValueLen */
                                (uint8_t *)  pPayload);
+       break;
+    case 0x0001:
+
+        result = aci_gatt_update_char_value(aEndDeviceManagementContext.EndDeviceManagementSvcHdle,
+                               aEndDeviceManagementContext.EndDeviceStatusCharHdle,
+                               0, /* charValOffset */
+                               1, /* charValueLen */
+                               (uint8_t *)  pPayload);
+       break;
     default:
       break;
   }

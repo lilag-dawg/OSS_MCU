@@ -100,18 +100,23 @@ typedef struct{
 	uint8_t SensorName[19];
 }TEMPLATE_SensorName_t;
 
+typedef struct{
+	uint8_t Pairing;
+	uint8_t SensorName[19];
+}TEMPLATE_PairingRequest_t;
+
 typedef struct
 {
     /**
-     * used to chek if Client (Smart Phone) can receive push button information
+     * used to check if Client (Smart Phone) can receive push button information
      */
     uint8_t       Notification_Button_Status;
     /**
-     * used to chek if Client (Smart Phone) can receive end device connection information
+     * used to check if Client (Smart Phone) can receive end device connection information
      */
     uint8_t       Notification_EndDevice_Status;
     /**
-     * provide end device Managment information
+     * provide end device Management information
      */
     EDS_STM_Status_t EndDeviceStatus;
 /**
@@ -122,6 +127,7 @@ typedef struct
 
     TEMPLATE_NbrSensor_t 		NumberOfSensorNearbyStruct;
     TEMPLATE_SensorName_t      	SensorNameStruct;
+    TEMPLATE_PairingRequest_t	PairingRequestStruct;
 
     uint8_t Update_timer_Id;
    
@@ -231,6 +237,15 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
             HW_TS_Stop(P2P_Router_App_Context.Update_timer_Id);
             /* USER CODE END EDS_STM_NOTIFY_DISABLED_EVT */
             break;
+        case EDS_STM_WRITE_EVT:
+#if(CFG_DEBUG_APP_TRACE != 0)
+        	APP_DBG_MSG("-- GATT : WRITE CHAR INFO RECEIVED\n");
+#endif
+            /* USER CODE BEGIN EDS_STM_WRITE_EVT */
+        	P2P_Router_App_Context.PairingRequestStruct.Pairing = pNotification->DataTransfered.pPayload[0];
+        	//P2P_Router_App_Context.PairingRequestStruct.SensorName = pNotification->DataTransfered.pPayload[0];
+            /* USER CODE END EDS_STM_WRITE_EVT */
+            break;
 
         default:
             /* USER CODE BEGIN EDS_Evt_Opcode_default */
@@ -336,10 +351,17 @@ void P2P_Router_APP_Init(void)
     P2P_Router_App_Context.NumberOfSensorNearbyStruct.Value = MAX_NAMES;
     P2P_Router_App_Context.SensorNameStruct.Pairing = 0;
     P2P_Router_App_Context.SensorNameStruct.Position = 0;
-
     for(int i=0; i<(sizeof(P2P_Router_App_Context.SensorNameStruct.SensorName));i++){
     	P2P_Router_App_Context.SensorNameStruct.SensorName[i] = 0;
     }
+
+    P2P_Router_App_Context.PairingRequestStruct.Pairing = 0;
+    for(int i=0; i<(sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));i++){
+    	P2P_Router_App_Context.PairingRequestStruct.SensorName[i] = 0;
+    }
+
+    EDS_STM_Update_Char(0x0001,
+            (uint8_t *)&P2P_Router_App_Context.NumberOfSensorNearbyStruct.Value);
 
 
 
@@ -417,8 +439,6 @@ void P2PR_APP_End_Device_Mgt_Connection_Update( P2PR_APP_Device_Status_t *p_devi
     //EDS_STM_Update_Char(END_DEVICE_STATUS_CHAR_UUID,
     //        (uint8_t *)&P2P_Router_App_Context.EndDeviceStatus);
 
-    EDS_STM_Update_Char(0x0000,
-            (uint8_t *)&P2P_Router_App_Context.EndDeviceStatus);
 
 /* USER CODE END P2PR_APP_End_Device_Mgt_Connection_Update_2 */
     return;
@@ -526,7 +546,16 @@ static void Client_Update_Service( void )
     /* USER CODE BEGIN Client_Update_Service_1 */
 
 	uint8_t value[20];
-	value[0] = (uint8_t)(P2P_Router_App_Context.SensorNameStruct.Position);
+
+
+	for(int j = 0; j<MAX_CARAC;j++){
+		P2P_Router_App_Context.SensorNameStruct.SensorName[j] = randomNames[P2P_Router_App_Context.SensorNameStruct.Position][j];
+	}
+	if(P2P_Router_App_Context.SensorNameStruct.SensorName == P2P_Router_App_Context.PairingRequestStruct.SensorName){
+		P2P_Router_App_Context.SensorNameStruct.Pairing = P2P_Router_App_Context.PairingRequestStruct.Pairing;
+	}
+
+	value[0] = (uint8_t)(P2P_Router_App_Context.SensorNameStruct.Position) << 1 | (uint8_t)P2P_Router_App_Context.SensorNameStruct.Pairing; // PPPP PPPC
 //	if (TEMPLATE_Server_App_Context.SensorName.Pairing <= 1){
 //		value[0] = value[0] + TEMPLATE_Server_App_Context.SensorName.Pairing;
 //	}
@@ -537,9 +566,7 @@ static void Client_Update_Service( void )
 	printf("Position: %d \n\r",P2P_Router_App_Context.SensorNameStruct.Position);
 	printf("[");
 
-	for(int j = 0; j<MAX_CARAC;j++){
-		P2P_Router_App_Context.SensorNameStruct.SensorName[j] = randomNames[P2P_Router_App_Context.SensorNameStruct.Position][j];
-	}
+	printf("%x,",value[0]);
 
 	for(int i = 1; i<(sizeof(value));i++){
 		value[i] = (uint8_t)(P2P_Router_App_Context.SensorNameStruct.SensorName[i-1]);
