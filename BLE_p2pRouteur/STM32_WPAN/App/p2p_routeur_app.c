@@ -161,7 +161,7 @@ uint8_t randomNames[MAX_NAMES][MAX_CARAC]={
 	{0x74,0x65,0x73,0x74,0x35},
 };
 
-#define NAME_CHANGES_PERIODE			(1*1000*1000/CFG_TS_TICK_VAL) //1sec//
+#define NAME_CHANGES_PERIODE			(0.1*1000*1000/CFG_TS_TICK_VAL) //100ms//
 /* USER CODE BEGIN PD */
 
 /* USER CODE END PD */
@@ -242,8 +242,18 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
         	APP_DBG_MSG("-- GATT : WRITE CHAR INFO RECEIVED\n");
 #endif
             /* USER CODE BEGIN EDS_STM_WRITE_EVT */
+
         	P2P_Router_App_Context.PairingRequestStruct.Pairing = pNotification->DataTransfered.pPayload[0];
-        	//P2P_Router_App_Context.PairingRequestStruct.SensorName = pNotification->DataTransfered.pPayload[0];
+
+            for(int i=0; i<pNotification->DataTransfered.Length;i++){
+            	P2P_Router_App_Context.PairingRequestStruct.SensorName[i] = pNotification->DataTransfered.pPayload[i+1];
+            	printf("%c", P2P_Router_App_Context.PairingRequestStruct.SensorName[i]);
+            }
+
+            printf("\n\r");
+
+            printf("%d\n\r", P2P_Router_App_Context.PairingRequestStruct.Pairing);
+
             /* USER CODE END EDS_STM_WRITE_EVT */
             break;
 
@@ -548,12 +558,15 @@ static void Client_Update_Service( void )
 	uint8_t value[20];
 
 
-	for(int j = 0; j<MAX_CARAC;j++){
-		P2P_Router_App_Context.SensorNameStruct.SensorName[j] = randomNames[P2P_Router_App_Context.SensorNameStruct.Position][j];
+	for(int i = 0; i<MAX_CARAC;i++){
+		P2P_Router_App_Context.SensorNameStruct.SensorName[i] = randomNames[P2P_Router_App_Context.SensorNameStruct.Position][i];
 	}
-	if(P2P_Router_App_Context.SensorNameStruct.SensorName == P2P_Router_App_Context.PairingRequestStruct.SensorName){
+
+	if(memcmp(P2P_Router_App_Context.SensorNameStruct.SensorName, P2P_Router_App_Context.PairingRequestStruct.SensorName, sizeof(P2P_Router_App_Context.SensorNameStruct.SensorName)) == 0){
 		P2P_Router_App_Context.SensorNameStruct.Pairing = P2P_Router_App_Context.PairingRequestStruct.Pairing;
 	}
+
+
 
 	value[0] = (uint8_t)(P2P_Router_App_Context.SensorNameStruct.Position) << 1 | (uint8_t)P2P_Router_App_Context.SensorNameStruct.Pairing; // PPPP PPPC
 //	if (TEMPLATE_Server_App_Context.SensorName.Pairing <= 1){

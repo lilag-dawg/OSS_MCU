@@ -25,7 +25,7 @@
 /* Private typedef -----------------------------------------------------------*/
 typedef struct{
   uint16_t	EndDeviceManagementSvcHdle;				/**< Service handle */
-  uint8_t	EndDeviceStatusCharHdle;	                /**< Characteristic handle */
+  uint16_t	EndDeviceStatusCharHdle;	                /**< Characteristic handle */
   uint16_t	EndDeviceStatusWriteClientToServerCharHdle;	  /**< Characteristic handle */
   uint16_t	EndDeviceStatusNotifyServerToClientCharHdle;	/**< Characteristic handle */
 
@@ -120,6 +120,8 @@ static SVCCTL_EvtAckStatus_t EndDeviceManagement_Event_Handler(void *Event)
             else if(attribute_modified->Attr_Handle == (aEndDeviceManagementContext.EndDeviceStatusWriteClientToServerCharHdle + 1))
             {
             	Notification.EDS_Evt_Opcode = EDS_STM_WRITE_EVT;
+                Notification.DataTransfered.Length=attribute_modified->Attr_Data_Length;
+                Notification.DataTransfered.pPayload=attribute_modified->Attr_Data;
             	EDS_STM_App_Notification(&Notification);
             }
         }
@@ -208,7 +210,7 @@ void EDS_STM_Init(void)
                       UUID_TYPE_16,
                       &uuid16,
                       20,
-                      CHAR_PROP_WRITE,
+					  CHAR_PROP_WRITE,
                       ATTR_PERMISSION_NONE,
 					  GATT_NOTIFY_ATTRIBUTE_WRITE, /* gattEvtMask */
                       10, /* encryKeySize */
@@ -259,6 +261,17 @@ tBleStatus EDS_STM_Update_Char(uint16_t UUID, uint8_t *pPayload)
                                0, /* charValOffset */
                                1, /* charValueLen */
                                (uint8_t *)  pPayload);
+
+       break;
+
+    case 0x0002:
+
+        result = aci_gatt_update_char_value(aEndDeviceManagementContext.EndDeviceManagementSvcHdle,
+                               aEndDeviceManagementContext.EndDeviceStatusWriteClientToServerCharHdle,
+                               0, /* charValOffset */
+                               2, /* charValueLen */
+                               (uint8_t *)  pPayload);
+
        break;
     default:
       break;
