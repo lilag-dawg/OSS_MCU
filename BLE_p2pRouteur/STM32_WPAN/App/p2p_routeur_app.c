@@ -92,13 +92,9 @@ typedef struct{
 
 typedef struct{
 	uint8_t Value;
+	uint8_t CurrentPosition;
 }TEMPLATE_NbrSensor_t;
 
-typedef struct{
-	uint8_t Position;
-	uint8_t Pairing;
-	uint8_t SensorName[19];
-}TEMPLATE_SensorName_t;
 
 typedef struct{
 	uint8_t Pairing;
@@ -126,7 +122,6 @@ typedef struct
     P2P_LedCharValue_t         LedControlEndDevice;
 
     TEMPLATE_NbrSensor_t 		NumberOfSensorNearbyStruct;
-    TEMPLATE_SensorName_t      	SensorNameStruct;
     TEMPLATE_PairingRequest_t	PairingRequestStruct;
 
     uint8_t Update_timer_Id;
@@ -150,16 +145,6 @@ typedef struct
 #define MAX_NAMES							8
 #define MAX_CARAC							19
 
-uint8_t randomNames[MAX_NAMES][MAX_CARAC]={
-	{0x69, 0x70, 0x68, 0x6f, 0x6e, 0x65, 0x20, 0x64, 0x65, 0x20, 0x69, 0x73, 0x61, 0x6d},
-	{0x63,0x6F,0x76,0x69,0x64,0x2D,0x31,0x39},
-	{0x6F,0x73,0x73,0x2D,0x73,0x38,0x20,0x6A,0x65,0x20,0x74,0x65,0x20,0x76,0x6F,0x69,0x65,0x58,0x44},
-	{0x69,0x70,0x68,0x6f,0x6e,0x65,0x20,0x64,0x65,0x20,0x41,0x6c,0x65,0x78,0x69,0x73},
-	{0x70,0x6f,0x77,0x65,0x72,0x2d,0x73,0x65,0x6e,0x73,0x6f,0x72},
-	{0x48,0x61,0x6e,0x64,0x73,0x46,0x72,0x65,0x65,0x4c,0x69,0x6e,0x6b},
-	{0x74,0x65,0x73,0x74,0x34},
-	{0x74,0x65,0x73,0x74,0x35},
-};
 
 #define NAME_CHANGES_PERIODE			(0.1*1000*1000/CFG_TS_TICK_VAL) //100ms//
 /* USER CODE BEGIN PD */
@@ -358,20 +343,13 @@ void P2P_Router_APP_Init(void)
     P2P_Router_App_Context.EndDeviceStatus.Device1_Status=0x00;
 
     //tempo
-    P2P_Router_App_Context.NumberOfSensorNearbyStruct.Value = MAX_NAMES;
-    P2P_Router_App_Context.SensorNameStruct.Pairing = 0;
-    P2P_Router_App_Context.SensorNameStruct.Position = 0;
-    for(int i=0; i<(sizeof(P2P_Router_App_Context.SensorNameStruct.SensorName));i++){
-    	P2P_Router_App_Context.SensorNameStruct.SensorName[i] = 0;
-    }
+    P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
 
     P2P_Router_App_Context.PairingRequestStruct.Pairing = 0;
     for(int i=0; i<(sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));i++){
     	P2P_Router_App_Context.PairingRequestStruct.SensorName[i] = 0;
     }
 
-    EDS_STM_Update_Char(0x0001,
-            (uint8_t *)&P2P_Router_App_Context.NumberOfSensorNearbyStruct.Value);
 
 
 
@@ -556,40 +534,38 @@ static void Client_Update_Service( void )
     /* USER CODE BEGIN Client_Update_Service_1 */
 
 	uint8_t value[20];
+	uint8_t index =  P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition;
+
+	printf("%s", devicesList[0].deviceName);
+	printf(" //////// %d /////////// \n", device_list_index);
 
 
-	for(int i = 0; i<MAX_CARAC;i++){
-		P2P_Router_App_Context.SensorNameStruct.SensorName[i] = randomNames[P2P_Router_App_Context.SensorNameStruct.Position][i];
-	}
-
-	if(memcmp(P2P_Router_App_Context.SensorNameStruct.SensorName, P2P_Router_App_Context.PairingRequestStruct.SensorName, sizeof(P2P_Router_App_Context.SensorNameStruct.SensorName)) == 0){
-		P2P_Router_App_Context.SensorNameStruct.Pairing = P2P_Router_App_Context.PairingRequestStruct.Pairing;
-	}
-
-
-
-	value[0] = (uint8_t)(P2P_Router_App_Context.SensorNameStruct.Position) << 1 | (uint8_t)P2P_Router_App_Context.SensorNameStruct.Pairing; // PPPP PPPC
-//	if (TEMPLATE_Server_App_Context.SensorName.Pairing <= 1){
-//		value[0] = value[0] + TEMPLATE_Server_App_Context.SensorName.Pairing;
+//	if(memcmp(P2P_Router_App_Context.SensorNameStruct.SensorName, P2P_Router_App_Context.PairingRequestStruct.SensorName, sizeof(P2P_Router_App_Context.SensorNameStruct.SensorName)) == 0){
+//		P2P_Router_App_Context.SensorNameStruct.Pairing = P2P_Router_App_Context.PairingRequestStruct.Pairing;
 //	}
+
+
+
+	value[0] = (uint8_t)(index) << 1 | devicesList[index].position; // PPPP PPPC
+
     //green led is on when notifying
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
 
-	printf("Size: %d \n\r",sizeof(P2P_Router_App_Context.SensorNameStruct.SensorName));
-	printf("Position: %d \n\r",P2P_Router_App_Context.SensorNameStruct.Position);
+	printf("Size: %d \n\r",sizeof(devicesList[index].deviceName));
+	printf("Position: %d \n\r",devicesList[index].position);
 	printf("[");
 
 	printf("%x,",value[0]);
 
 	for(int i = 1; i<(sizeof(value));i++){
-		value[i] = (uint8_t)(P2P_Router_App_Context.SensorNameStruct.SensorName[i-1]);
+		value[i] = (uint8_t)(devicesList[index].deviceName[i-1]);
 		printf("%x,",value[i]);
 	}
 
-	P2P_Router_App_Context.SensorNameStruct.Position ++;
+	P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition ++;
 
-	if (P2P_Router_App_Context.SensorNameStruct.Position >= P2P_Router_App_Context.NumberOfSensorNearbyStruct.Value){
-		P2P_Router_App_Context.SensorNameStruct.Position = 0;
+	if (P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition >= device_list_index){
+		P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
 	}
 
 	printf("]\n\r");

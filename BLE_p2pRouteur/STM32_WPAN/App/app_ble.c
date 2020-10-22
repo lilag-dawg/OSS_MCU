@@ -44,15 +44,9 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#define MAX_DEVICES					127
-#define MAX_DEVICE_NAME_LENGHT		50
 
-struct DeviceInformations_t{
-    char deviceName[MAX_DEVICE_NAME_LENGHT];
-    uint64_t deviceAddress;
-};
 
-struct DeviceInformations_t devicesList[MAX_DEVICES];
+struct DeviceInformations_t devicesList[MAX_DEVICES] = {0};
 
 int device_list_index = 0;
 /* USER CODE END PTD */
@@ -1028,6 +1022,8 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 	}
 					if (isStringFound == false){
 						strcpy(devicesList[device_list_index].deviceName, current_device_name);
+						devicesList[device_list_index].pairingStatus = 0;
+						devicesList[device_list_index].position = device_list_index;
 
 						printf("%s", devicesList[device_list_index].deviceName);
 						printf(" //////// %d /////////// \n", device_list_index);
@@ -1753,7 +1749,8 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
 
     /* USER CODE END P2P_Evt_Opcode */
     case SMART_PHONE1_CONN_HANDLE_EVT:
-
+        EDS_STM_Update_Char(0x0001,
+                (uint8_t *)&device_list_index);
       break;
 
     case P2P_SERVER1_CONN_HANDLE_EVT:
