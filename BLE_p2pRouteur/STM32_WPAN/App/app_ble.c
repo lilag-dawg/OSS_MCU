@@ -37,11 +37,23 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "main.h"
+#include <string.h>
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+#define MAX_DEVICES					127
+#define MAX_DEVICE_NAME_LENGHT		50
 
+struct DeviceInformations_t{
+    char deviceName[MAX_DEVICE_NAME_LENGHT];
+    uint64_t deviceAddress;
+};
+
+struct DeviceInformations_t devicesList[MAX_DEVICES];
+
+int device_list_index = 0;
 /* USER CODE END PTD */
 
 /**
@@ -298,6 +310,9 @@ typedef struct
 #define BD_ADDR_SIZE_LOCAL    6
 
 /* USER CODE BEGIN PD */
+#define MAX_NMBR_DEVICES      127
+
+struct DeviceInformations_t *DeviceFound[MAX_NMBR_DEVICES];
 
 /* USER CODE END PD */
 
@@ -988,6 +1003,9 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
             {
               adlength = adv_report_data[k];
               adtype = adv_report_data[k + 1];
+              char current_device_name[MAX_DEVICE_NAME_LENGHT] = {0};
+              bool isStringFound = false;
+
               switch (adtype)
               {
                 case 0x01: /* now get flags */
@@ -997,6 +1015,25 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 break;
                 case 0x09: /* now get local name */
                 /* USER CODE BEGIN get_local_name */
+                	for (int i=0; i<adlength;i++){
+                		current_device_name[i] = adv_report_data[k+i+1];
+					}
+
+                	for(int j=0;j<device_list_index;j++){
+                		if (strcmp(current_device_name, devicesList[j].deviceName) == 0){
+                			isStringFound = true;
+                			break;
+                		}
+                	}
+					if (isStringFound == false){
+						strcpy(devicesList[device_list_index].deviceName, current_device_name);
+
+						printf("%s", devicesList[device_list_index].deviceName);
+						printf(" //////// %d /////////// \n", device_list_index);
+						device_list_index ++;
+					}
+
+
 
                 /* USER CODE END get_local_name */
                   break;
@@ -1016,7 +1053,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 /* USER CODE END Manufactureur_Specific */
                   if (adlength >= 7 && adv_report_data[k + 2] == 0x01)
                   { /* ST VERSION ID 01 */
-                    APP_DBG_MSG("--- ST MANUFACTURER ID --- \n");
+                    //APP_DBG_MSG("--- ST MANUFACTURER ID --- \n");
                     switch (adv_report_data[k + 3])
                     {
                       case CFG_DEV_ID_P2P_SERVER1:
@@ -1376,6 +1413,7 @@ static void Scan_Request( void )
     if (result == BLE_STATUS_SUCCESS)
     {
     /* USER CODE BEGIN BLE_SCAN_SUCCESS */
+    device_list_index = 0;
 
     /* USER CODE END BLE_SCAN_SUCCESS */
       APP_DBG_MSG(" \r\n\r** START GENERAL DISCOVERY (SCAN) **  \r\n\r");
