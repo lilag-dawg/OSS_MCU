@@ -75,7 +75,22 @@ typedef struct
   uint8_t   ServiceInstance;
 }P2P_Client_App_Notification_evt_t;
 
+
+
 /* USER CODE BEGIN ET */
+
+#define MAX_DEVICES					127
+#define MAX_DEVICE_NAME_LENGHT		50
+
+struct DeviceInformations_t{
+    char deviceName[MAX_DEVICE_NAME_LENGHT];
+    uint64_t deviceAddress;
+    uint8_t pairingStatus;
+    uint8_t position;
+};
+
+extern struct DeviceInformations_t devicesList[MAX_DEVICES];
+extern int device_list_index;
 
 /* USER CODE END ET */
 

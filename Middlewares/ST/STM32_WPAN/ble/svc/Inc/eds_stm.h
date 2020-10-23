@@ -35,6 +35,8 @@ typedef enum
 {
   EDS_STM_NOTIFY_DISABLED_EVT,
   EDS_STM_NOTIFY_ENABLED_EVT,
+  EDS_STM_READ_EVT,
+  EDS_STM_WRITE_EVT,
 } EDS_STM_Opcode_evt_t;
 
 typedef struct

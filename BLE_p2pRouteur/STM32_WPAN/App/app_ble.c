@@ -18,6 +18,7 @@
  ******************************************************************************
  */
 /* USER CODE END Header */
+
 /* Includes ------------------------------------------------------------------*/
 #include "app_common.h"
 
@@ -37,11 +38,17 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "main.h"
+#include <string.h>
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
+
+struct DeviceInformations_t devicesList[MAX_DEVICES] = {0};
+
+int device_list_index = 0;
 /* USER CODE END PTD */
 
 /**
@@ -298,6 +305,9 @@ typedef struct
 #define BD_ADDR_SIZE_LOCAL    6
 
 /* USER CODE BEGIN PD */
+#define MAX_NMBR_DEVICES      127
+
+struct DeviceInformations_t *DeviceFound[MAX_NMBR_DEVICES];
 
 /* USER CODE END PD */
 
@@ -349,7 +359,7 @@ tBDAddr SERVER_REMOTE_BDADDR;
 /**
  * Advertising Data
  */
-static char local_name[] = { AD_TYPE_COMPLETE_LOCAL_NAME,'P','2','P','R','O','U','T'};
+static char local_name[] = { AD_TYPE_COMPLETE_LOCAL_NAME,'M','i','s','s','L','P'};
 uint8_t manuf_data[14] = {
     sizeof(manuf_data)-1, AD_TYPE_MANUFACTURER_SPECIFIC_DATA,
     0x01/*SKD version */,
@@ -988,6 +998,9 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
             {
               adlength = adv_report_data[k];
               adtype = adv_report_data[k + 1];
+              char current_device_name[MAX_DEVICE_NAME_LENGHT] = {0};
+              bool isStringFound = false;
+
               switch (adtype)
               {
                 case 0x01: /* now get flags */
@@ -997,6 +1010,27 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 break;
                 case 0x09: /* now get local name */
                 /* USER CODE BEGIN get_local_name */
+                	for (int i=0; i<adlength;i++){
+                		current_device_name[i] = adv_report_data[k+i+1];
+					}
+
+                	for(int j=0;j<device_list_index;j++){
+                		if (strcmp(current_device_name, devicesList[j].deviceName) == 0){
+                			isStringFound = true;
+                			break;
+                		}
+                	}
+					if (isStringFound == false){
+						strcpy(devicesList[device_list_index].deviceName, current_device_name);
+						devicesList[device_list_index].pairingStatus = 0;
+						devicesList[device_list_index].position = device_list_index;
+
+						printf("%s", devicesList[device_list_index].deviceName);
+						printf(" //////// %d /////////// \n", device_list_index);
+						device_list_index ++;
+					}
+
+
 
                 /* USER CODE END get_local_name */
                   break;
@@ -1016,7 +1050,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 /* USER CODE END Manufactureur_Specific */
                   if (adlength >= 7 && adv_report_data[k + 2] == 0x01)
                   { /* ST VERSION ID 01 */
-                    APP_DBG_MSG("--- ST MANUFACTURER ID --- \n");
+                    //APP_DBG_MSG("--- ST MANUFACTURER ID --- \n");
                     switch (adv_report_data[k + 3])
                     {
                       case CFG_DEV_ID_P2P_SERVER1:
@@ -1286,7 +1320,7 @@ static void Ble_Hci_Gap_Gatt_Init(void){
 
   if (role > 0)
   {
-    const char *name = "P2PROUT";
+    const char *name = "MissLP";
 
     aci_gap_init(role, 0,
                  APPBLE_GAP_DEVICE_NAME_LENGTH,
@@ -1376,6 +1410,7 @@ static void Scan_Request( void )
     if (result == BLE_STATUS_SUCCESS)
     {
     /* USER CODE BEGIN BLE_SCAN_SUCCESS */
+    device_list_index = 0;
 
     /* USER CODE END BLE_SCAN_SUCCESS */
       APP_DBG_MSG(" \r\n\r** START GENERAL DISCOVERY (SCAN) **  \r\n\r");
@@ -1714,7 +1749,8 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
 
     /* USER CODE END P2P_Evt_Opcode */
     case SMART_PHONE1_CONN_HANDLE_EVT:
-
+        EDS_STM_Update_Char(0x0001,
+                (uint8_t *)&device_list_index);
       break;
 
     case P2P_SERVER1_CONN_HANDLE_EVT:
