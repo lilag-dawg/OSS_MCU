@@ -49,6 +49,7 @@
 #include "dbg_trace.h"
 #include "hw_conf.h"
 #include "otp.h"
+#include <saveToFlash.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
