@@ -1755,12 +1755,10 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
 
     case P2P_SERVER1_CONN_HANDLE_EVT:
       device_status.Device1_Status = 0x81; /* Connected */
-      P2PR_APP_End_Device_Mgt_Connection_Update(&device_status);
       break;
 
     case P2P_SERVER1_DISCON_HANDLE_EVT:
       device_status.Device1_Status = 0x80; /* Not connected */
-      P2PR_APP_End_Device_Mgt_Connection_Update(&device_status);
       /* restart Create Connection */
       UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
       break;
@@ -1773,59 +1771,48 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
     /* USER CODE BEGIN P2P_SERVER_CONN_HANDLE_EVT_Multi_Notification */
     case P2P_SERVER2_CONN_HANDLE_EVT:
       device_status.Device2_Status = 0x81; /* Connected */
-      P2PR_APP_End_Device_Mgt_Connection_Update(&device_status);
       break;
 
     case P2P_SERVER3_CONN_HANDLE_EVT:
       device_status.Device3_Status = 0x81; /* connected */
-      P2PR_APP_End_Device_Mgt_Connection_Update(&device_status);
       break;
 
     case P2P_SERVER4_CONN_HANDLE_EVT:
       device_status.Device4_Status = 0x81; /* Connected */
-      P2PR_APP_End_Device_Mgt_Connection_Update(&device_status);
       break;
 
     case P2P_SERVER5_CONN_HANDLE_EVT:
       device_status.Device5_Status = 0x81; /* Connected */
-      P2PR_APP_End_Device_Mgt_Connection_Update(&device_status);
       break;
 
     case P2P_SERVER6_CONN_HANDLE_EVT:
       device_status.Device6_Status = 0x81; /* Connected */
-      P2PR_APP_End_Device_Mgt_Connection_Update(&device_status);
       break;
     /* USER CODE END P2P_SERVER_CONN_HANDLE_EVT_Multi_Notification */
     /* USER CODE BEGIN P2P_SERVER_DISCON_HANDLE_EVT_Multi_Notification */
     case P2P_SERVER2_DISCON_HANDLE_EVT:
-      device_status.Device2_Status = 0x80; /* Not connected */
-      P2PR_APP_End_Device_Mgt_Connection_Update(&device_status);
       UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_2_ID, CFG_SCH_PRIO_0);
       break;
 
     case P2P_SERVER3_DISCON_HANDLE_EVT:
       device_status.Device3_Status = 0x80; /* Not connected */
-      P2PR_APP_End_Device_Mgt_Connection_Update(&device_status);
       /* Restart Create Connection */
       UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_3_ID, CFG_SCH_PRIO_0);
       break;
 
     case P2P_SERVER4_DISCON_HANDLE_EVT:
       device_status.Device4_Status = 0x80; /* Not connected */
-      P2PR_APP_End_Device_Mgt_Connection_Update(&device_status);
       UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_4_ID, CFG_SCH_PRIO_0);
       break;
 
     case P2P_SERVER5_DISCON_HANDLE_EVT:
       device_status.Device5_Status = 0x80; /* Not connected */
-      P2PR_APP_End_Device_Mgt_Connection_Update(&device_status);
       /* Restart Create Connection */
       UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_5_ID, CFG_SCH_PRIO_0);
       break;
 
     case P2P_SERVER6_DISCON_HANDLE_EVT:
       device_status.Device6_Status = 0x80; /* Not connected */
-      P2PR_APP_End_Device_Mgt_Connection_Update(&device_status);
       UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_6_ID, CFG_SCH_PRIO_0);
       break;
     /* USER CODE END P2P_SERVER_DISCON_HANDLE_EVT_Multi_Notification */

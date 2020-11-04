@@ -80,7 +80,7 @@ typedef struct
 /* USER CODE BEGIN ET */
 
 #define MAX_DEVICES					127
-#define MAX_DEVICE_NAME_LENGHT		50
+#define MAX_DEVICE_NAME_LENGHT		19
 
 struct DeviceInformations_t{
     char deviceName[MAX_DEVICE_NAME_LENGHT];
