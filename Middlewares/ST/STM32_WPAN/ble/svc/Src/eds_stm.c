@@ -31,11 +31,14 @@ typedef struct{
 
 }EndDeviceManagementContext_t;
 
+
+
 /* Private defines -----------------------------------------------------------*/
 /* Private macros ------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
 PLACE_IN_SECTION("BLE_DRIVER_CONTEXT") static EndDeviceManagementContext_t aEndDeviceManagementContext;
+PLACE_IN_SECTION("BLE_DRIVER_CONTEXT") static EndDeviceManagementContext_t bEndDeviceManagementContext;
 
 /* Private function prototypes -----------------------------------------------*/
 static SVCCTL_EvtAckStatus_t EndDeviceManagement_Event_Handler(void *pckt);
@@ -57,13 +60,14 @@ do {\
 }while(0)
 
 /* Hardware Characteristics Service */
-//#define COPY_EDM_SERVICE_UUID(uuid_struct)       COPY_UUID_128(uuid_struct,0x00,0x00,0xfe,0x50,0xcc,0x7a,0x48,0x2a,0x98,0x4a,0x7f,0x2e,0xd5,0xb3,0xe5,0x8f)
-//#define COPY_EDM_STATUS_CHAR_UUID(uuid_struct)   COPY_UUID_128(uuid_struct,0x00,0x00,0xfe,0x51,0x8e,0x22,0x45,0x41,0x9d,0x4c,0x21,0xed,0xae,0x82,0xed,0x19)
 
 #define COPY_EDM_CONNEX_HAND_SERVICE_UUID(uuid_struct)   COPY_UUID_16(uuid_struct,0x1802)
-#define COPY_EDM_READ_UUID_NUMBER(uuid_struct)	         COPY_UUID_16(uuid_struct,0x16A1)
-#define COPY_EDM_NOTIFY_UUID(uuid_struct)                COPY_UUID_16(uuid_struct,0x16A2)
-#define COPY_EDM_SELECT_UUID(uuid_struct)                COPY_UUID_16(uuid_struct,0x16A3)
+#define COPY_EDM_CONNEX_HAND_CARA_1_UUID(uuid_struct)	 COPY_UUID_16(uuid_struct,0x16A1)
+#define COPY_EDM_CONNEX_HAND_CARA_2_UUID(uuid_struct)    COPY_UUID_16(uuid_struct,0x16A2)
+#define COPY_EDM_CONNEX_HAND_CARA_3_UUID(uuid_struct)    COPY_UUID_16(uuid_struct,0x16A3)
+
+#define COPY_EDM_CALIBRATION_SERVICE_UUID(uuid_struct)   COPY_UUID_16(uuid_struct,0x1803)
+#define COPY_EDM_CALIBRATION_CARA_1_UUID(uuid_struct)    COPY_UUID_16(uuid_struct,0x16B1)
 
 /**
  * @brief  Event handler
@@ -166,6 +170,7 @@ void EDS_STM_Init(void)
      *                                1 for client char configuration descriptor 
      *                                
      */
+  //for service connexion handling
   	COPY_EDM_CONNEX_HAND_SERVICE_UUID(uuid16.Char_UUID_16);
     aci_gatt_add_service(UUID_TYPE_16,
                       (Service_UUID_t *) &uuid16,
@@ -176,7 +181,7 @@ void EDS_STM_Init(void)
     /**
      *  Add Read Characteristic
      */
-    COPY_EDM_READ_UUID_NUMBER(uuid16.Char_UUID_16);
+    COPY_EDM_CONNEX_HAND_CARA_1_UUID(uuid16.Char_UUID_16);
     aci_gatt_add_char(aEndDeviceManagementContext.EndDeviceManagementSvcHdle,
                       UUID_TYPE_16,
                       &uuid16,
@@ -191,7 +196,7 @@ void EDS_STM_Init(void)
     /**
      *  Add Notify Characteristic
      */
-    COPY_EDM_NOTIFY_UUID(uuid16.Char_UUID_16);
+    COPY_EDM_CONNEX_HAND_CARA_2_UUID(uuid16.Char_UUID_16);
     aci_gatt_add_char(aEndDeviceManagementContext.EndDeviceManagementSvcHdle,
                       UUID_TYPE_16,
                       &uuid16,
@@ -205,7 +210,7 @@ void EDS_STM_Init(void)
     /**
      *  Add write Characteristic select
      */
-    COPY_EDM_SELECT_UUID(uuid16.Char_UUID_16);
+    COPY_EDM_CONNEX_HAND_CARA_3_UUID(uuid16.Char_UUID_16);
     aci_gatt_add_char(aEndDeviceManagementContext.EndDeviceManagementSvcHdle,
                       UUID_TYPE_16,
                       &uuid16,
@@ -219,6 +224,28 @@ void EDS_STM_Init(void)
     
      BLE_DBG_EDS_STM_MSG("-- End Device Managment Service (EDMS) is added Successfully %04X\n",
                  aEndDeviceManagementContext.EndDeviceManagementSvcHdle);
+     
+    //for service calibration
+    COPY_EDM_CALIBRATION_SERVICE_UUID(uuid16.Char_UUID_16);
+    aci_gatt_add_service(UUID_TYPE_16,
+                      (Service_UUID_t *) &uuid16,
+                      PRIMARY_SERVICE,
+                      10,
+                      &(bEndDeviceManagementContext.EndDeviceManagementSvcHdle));
+    
+    COPY_EDM_CALIBRATION_CARA_1_UUID(uuid16.Char_UUID_16);
+    aci_gatt_add_char(bEndDeviceManagementContext.EndDeviceManagementSvcHdle,
+                      UUID_TYPE_16,
+                      &uuid16,
+                      20,
+					  CHAR_PROP_WRITE,
+                      ATTR_PERMISSION_NONE,
+					  GATT_NOTIFY_ATTRIBUTE_WRITE, /* gattEvtMask */
+                      10, /* encryKeySize */
+                      1, /* isVariable */
+                      &(bEndDeviceManagementContext.EndDeviceStatusWriteClientToServerCharHdle));
+    
+     
 
     return;
 }
