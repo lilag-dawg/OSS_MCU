@@ -98,7 +98,7 @@ typedef struct{
 
 typedef struct{
 	uint8_t Pairing;
-	uint8_t SensorName[19];
+	char SensorName[19];
 }TEMPLATE_PairingRequest_t;
 
 typedef struct
@@ -230,14 +230,14 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
 
         	P2P_Router_App_Context.PairingRequestStruct.Pairing = pNotification->DataTransfered.pPayload[0];
 
-            for(int i=0; i<pNotification->DataTransfered.Length;i++){
-            	P2P_Router_App_Context.PairingRequestStruct.SensorName[i] = pNotification->DataTransfered.pPayload[i+1];
+            for(int i=0; i<(sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));i++){
+            	P2P_Router_App_Context.PairingRequestStruct.SensorName[i] = 0;
+            }// reset à 0 avant chaque nouvelle lecture
+
+            for(int i=1; i<pNotification->DataTransfered.Length;i++){
+            	P2P_Router_App_Context.PairingRequestStruct.SensorName[i-1] = pNotification->DataTransfered.pPayload[i];
             	printf("%c", P2P_Router_App_Context.PairingRequestStruct.SensorName[i]);
             }
-
-            printf("\n\r");
-
-            printf("%d\n\r", P2P_Router_App_Context.PairingRequestStruct.Pairing);
 
             /* USER CODE END EDS_STM_WRITE_EVT */
             break;
@@ -536,17 +536,11 @@ static void Client_Update_Service( void )
 	uint8_t value[20];
 	uint8_t index =  P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition;
 
-	printf("%s", devicesList[0].deviceName);
-	printf(" //////// %d /////////// \n", device_list_index);
+	if(strcmp(devicesList[index].deviceName, P2P_Router_App_Context.PairingRequestStruct.SensorName) == 0){
+		devicesList[index].pairingStatus = P2P_Router_App_Context.PairingRequestStruct.Pairing;
+	}
 
-
-//	if(memcmp(P2P_Router_App_Context.SensorNameStruct.SensorName, P2P_Router_App_Context.PairingRequestStruct.SensorName, sizeof(P2P_Router_App_Context.SensorNameStruct.SensorName)) == 0){
-//		P2P_Router_App_Context.SensorNameStruct.Pairing = P2P_Router_App_Context.PairingRequestStruct.Pairing;
-//	}
-
-
-
-	value[0] = (uint8_t)(index) << 1 | devicesList[index].position; // PPPP PPPC
+	value[0] = (uint8_t)((devicesList[index].position) << 1) + devicesList[index].pairingStatus; // PPPP PPPC
 
     //green led is on when notifying
     HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
