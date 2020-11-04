@@ -80,62 +80,28 @@ typedef struct{
 }P2P_ClientContext_t;
 
 /* USER CODE BEGIN PTD */
-typedef struct{
-    uint8_t                                     Device_Led_Selection;
-    uint8_t                                     Led1Control;
-}P2P_LedCharValue_t;
-
-typedef struct{
-    uint8_t                                     Device_Button_Selection;
-    uint8_t                                     ButtonStatus;
-}P2P_ButtonCharValue_t;
 
 typedef struct{
 	uint8_t Value;
 	uint8_t CurrentPosition;
-}TEMPLATE_NbrSensor_t;
+}gestion_conn_NbrSensor_t;
 
 
 typedef struct{
 	uint8_t Pairing;
 	char SensorName[19];
-}TEMPLATE_PairingRequest_t;
+}gestion_conn_PairingRequest_t;
 
 typedef struct
 {
-    /**
-     * used to check if Client (Smart Phone) can receive push button information
-     */
-    uint8_t       Notification_Button_Status;
-    /**
-     * used to check if Client (Smart Phone) can receive end device connection information
-     */
-    uint8_t       Notification_EndDevice_Status;
-    /**
-     * provide end device Management information
-     */
-    EDS_STM_Status_t EndDeviceStatus;
-/**
-     * Manage button Status for End Device / Server 
-     */
-    P2P_ButtonCharValue_t      ButtonStatusEndDevice;
-    P2P_LedCharValue_t         LedControlEndDevice;
 
-    TEMPLATE_NbrSensor_t 		NumberOfSensorNearbyStruct;
-    TEMPLATE_PairingRequest_t	PairingRequestStruct;
+    gestion_conn_NbrSensor_t 		NumberOfSensorNearbyStruct;
+    gestion_conn_PairingRequest_t	PairingRequestStruct;
 
     uint8_t Update_timer_Id;
    
 
 } P2P_Router_App_Context_t;
-
-typedef struct
-{
-    P2P_Client_Data_t LedData;
-    P2P_Client_Data_t ButtonData;
-
-} LB_Routeur_ClientContext_t;
-/* USER CODE END PTD */
 
 /* Private defines ------------------------------------------------------------*/
 #define UNPACK_2_BYTE_PARAMETER(ptr)  \
@@ -208,7 +174,6 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
             APP_DBG_MSG("-- APPLICATION ROUTER : ENDDEVICEMGT NOTIFICATION ENABLED\r\n");
 #endif
             /* USER CODE BEGIN EDS_STM_NOTIFY_ENABLED_EVT */
-            P2P_Router_App_Context.Notification_EndDevice_Status = 1;
             HW_TS_Start(P2P_Router_App_Context.Update_timer_Id, NAME_CHANGES_PERIODE);
             /* USER CODE END EDS_STM_NOTIFY_ENABLED_EVT */
             break;
@@ -218,7 +183,6 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
             APP_DBG_MSG("-- APPLICATION ROUTER : ENDDEVICEMGT NOTIFICATION DISABLED\r\n");
 #endif
             /* USER CODE BEGIN EDS_STM_NOTIFY_DISABLED_EVT */
-            P2P_Router_App_Context.Notification_EndDevice_Status = 0;
             HW_TS_Stop(P2P_Router_App_Context.Update_timer_Id);
             /* USER CODE END EDS_STM_NOTIFY_DISABLED_EVT */
             break;
@@ -273,7 +237,7 @@ void P2PS_STM_App_Notification(P2PS_STM_App_Notification_evt_t *pNotification)
             APP_DBG_MSG("-- APPLICATION ROUTER : BUTTON NOTIFICATION ENABLED\n\r");
 #endif
             /* USER CODE BEGIN P2PS_STM__NOTIFY_ENABLED_EVT */
-            P2P_Router_App_Context.Notification_Button_Status = 1;
+
             /* USER CODE END P2PS_STM__NOTIFY_ENABLED_EVT */
             break;
 
@@ -282,7 +246,6 @@ void P2PS_STM_App_Notification(P2PS_STM_App_Notification_evt_t *pNotification)
             APP_DBG_MSG("-- APPLICATION ROUTER : BUTTON NOTIFICATION DISABLED\n\r");
 #endif
             /* USER CODE BEGIN P2PS_STM_NOTIFY_DISABLED_EVT */
-            P2P_Router_App_Context.Notification_Button_Status = 0;
             /* USER CODE END P2PS_STM_NOTIFY_DISABLED_EVT */
             break;
 
@@ -300,9 +263,7 @@ void P2PS_STM_App_Notification(P2PS_STM_App_Notification_evt_t *pNotification)
             APP_DBG_MSG("-- APPLICATION ROUTER : WRITE LED CONFIG TO ALL END DEVICE \n\r");
 #endif
             /* USER CODE BEGIN P2PS_STM_WRITE_EVT */
-            P2P_Router_App_Context.LedControlEndDevice.Device_Led_Selection=pNotification->DataTransfered.pPayload[0];
-            P2P_Router_App_Context.LedControlEndDevice.Led1Control=pNotification->DataTransfered.pPayload[1];
-            Client_Update_Char( LED_CHAR_UUID, 0, (uint8_t *)&P2P_Router_App_Context.LedControlEndDevice);
+
             /* USER CODE END P2PS_STM_WRITE_EVT */
             break;
 
@@ -326,7 +287,7 @@ void P2PS_STM_App_Notification(P2PS_STM_App_Notification_evt_t *pNotification)
 void P2P_Router_APP_Init(void)
 {
     /* USER CODE BEGIN P2P_Router_APP_Init_1 */
-    P2PR_APP_Device_Status_t device_status;
+
     /* USER CODE END P2P_Router_APP_Init_1 */
 
     UTIL_SEQ_RegTask(1<<CFG_TASK_SEARCH_SERVICE_ID, UTIL_SEQ_RFU, Client_Update_Service );
@@ -337,10 +298,6 @@ void P2P_Router_APP_Init(void)
     /**
      * Initialize LedButton Service
      */
-    P2P_Router_App_Context.Notification_Button_Status=0;
-    P2P_Router_App_Context.Notification_EndDevice_Status=0;
-
-    P2P_Router_App_Context.EndDeviceStatus.Device1_Status=0x00;
 
     //tempo
     P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
@@ -351,25 +308,12 @@ void P2P_Router_APP_Init(void)
     }
 
 
-
-
-    device_status.Device1_Status = 0x80; /* Not connected */
 #if (CFG_P2P_DEMO_MULTI != 0 )   
-    P2P_Router_App_Context.EndDeviceStatus.Device2_Status=0x00;
-    P2P_Router_App_Context.EndDeviceStatus.Device3_Status=0x00;
-    P2P_Router_App_Context.EndDeviceStatus.Device4_Status=0x00;
-    P2P_Router_App_Context.EndDeviceStatus.Device5_Status=0x00;
-    P2P_Router_App_Context.EndDeviceStatus.Device6_Status=0x00;
-    device_status.Device2_Status = 0x80; /* Not connected */
-    device_status.Device3_Status = 0x80; /* Not connected */
-    device_status.Device4_Status = 0x80; /* Not connected */
-    device_status.Device5_Status = 0x80; /* Not connected */
-    device_status.Device6_Status = 0x80; /* Not connected */
+
 #endif
     /* Update EndDevice Management Service */
     
     
-    P2PR_APP_End_Device_Mgt_Connection_Update( &device_status );
 
     /* USER CODE END P2P_Router_APP_Init_2 */
 
@@ -379,58 +323,6 @@ void P2P_Router_APP_Init(void)
 
 
 
-/**
- * @brief  End Device Managment
- * @param  None
- * @retval None
- */
-void P2PR_APP_End_Device_Mgt_Connection_Update( P2PR_APP_Device_Status_t *p_device_status )
-{
-/* USER CODE BEGIN P2PR_APP_End_Device_Mgt_Connection_Update_1 */
-
-/* USER CODE END P2PR_APP_End_Device_Mgt_Connection_Update_1 */
-    if( (p_device_status->Device1_Status) & (0x80) )
-    {
-    /* USER CODE BEGIN Device1_Status */
-      P2P_Router_App_Context.EndDeviceStatus.Device1_Status = (p_device_status->Device1_Status) & (0x7F);
-    /* USER CODE END Device1_Status */
-    }
-#if (CFG_P2P_DEMO_MULTI != 0 )
-    /* USER CODE BEGIN CFG_P2P_DEMO_MULTI */
-    if( (p_device_status->Device2_Status) & (0x80) )
-    {
-        P2P_Router_App_Context.EndDeviceStatus.Device2_Status = (p_device_status->Device2_Status) & (0x7F);
-    }
-
-    if( (p_device_status->Device3_Status) & (0x80) )
-    {
-        P2P_Router_App_Context.EndDeviceStatus.Device3_Status = (p_device_status->Device3_Status) & (0x7F);
-    }
-
-    if( (p_device_status->Device4_Status) & (0x80) )
-    {
-        P2P_Router_App_Context.EndDeviceStatus.Device4_Status = (p_device_status->Device4_Status) & (0x7F);
-    }
-    if( (p_device_status->Device5_Status) & (0x80) )
-    {
-        P2P_Router_App_Context.EndDeviceStatus.Device5_Status = (p_device_status->Device5_Status) & (0x7F);
-    }
-
-    if( (p_device_status->Device6_Status) & (0x80) )
-    {
-        P2P_Router_App_Context.EndDeviceStatus.Device6_Status = (p_device_status->Device6_Status) & (0x7F);
-    }
-
-    /* USER CODE END CFG_P2P_DEMO_MULTI */
-#endif
-/* USER CODE BEGIN P2PR_APP_End_Device_Mgt_Connection_Update_2 */
-    //EDS_STM_Update_Char(END_DEVICE_STATUS_CHAR_UUID,
-    //        (uint8_t *)&P2P_Router_App_Context.EndDeviceStatus);
-
-
-/* USER CODE END P2PR_APP_End_Device_Mgt_Connection_Update_2 */
-    return;
-}
 
 /**
  * @brief  Notification from the Server
@@ -447,19 +339,6 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
     /* USER CODE BEGIN P2P_Client_Evt_Opcode */
       case P2P_BUTTON_INFO_RECEIVED_EVT:
         {
-           
-           if(P2P_Router_App_Context.Notification_Button_Status){
-            APP_DBG_MSG("-- APPLICATION : INFORM SMART PHONE DEVICE %x BUTTON PUSHED \n\r ",pNotification->DataTransfered.pPayload[0]);
-            APP_DBG_MSG("\r\n\r ");
-            P2P_Router_App_Context.ButtonStatusEndDevice.ButtonStatus=pNotification->DataTransfered.pPayload[1];
-            P2P_Router_App_Context.ButtonStatusEndDevice.Device_Button_Selection=pNotification->DataTransfered.pPayload[0];
-            P2PS_STM_App_Update_Char(P2P_NOTIFY_CHAR_UUID, (uint8_t *)&P2P_Router_App_Context.ButtonStatusEndDevice);
-        } else {
-            APP_DBG_MSG("-- APPLICATION : NOT POSSIBLE TO INFORM THE SMART PHONE - NOTIFICATION DISABLED  \n ");
-            APP_DBG_MSG("\r\n\r ");
-        }
-
-   
 
         }
         break;
