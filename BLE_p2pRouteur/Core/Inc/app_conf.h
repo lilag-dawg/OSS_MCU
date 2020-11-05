@@ -124,7 +124,7 @@
 /*****************************************************/
 
 #define CFG_MAX_CONNECTION                8
-#define UUID_128BIT_FORMAT                1
+#define UUID_128BIT_FORMAT                0
 
 #define CFG_DEV_ID_P2P_SERVER1                  (0x83)
 #define CFG_DEV_ID_P2P_SERVER2                  (0x84)

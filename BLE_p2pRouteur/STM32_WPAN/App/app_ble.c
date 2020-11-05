@@ -570,34 +570,34 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
             APP_DBG_MSG("-- GAP GENERAL DISCOVERY PROCEDURE_COMPLETED\n");
             /*if a device found, connect to it, device 1 being chosen first if both found*/
             if (BleApplicationContext.EndDevice1Found == 0x01
-                && BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED)
+                && BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED_CLIENT)
             {
               UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
             }
 #if (CFG_P2P_DEMO_MULTI != 0)
           /* USER CODE BEGIN EVT_BLUE_GAP_PROCEDURE_COMPLETE_Multi */
             else if (BleApplicationContext.EndDevice2Found == 0x01
-                && BleApplicationContext.EndDevice_Connection_Status[1] != APP_BLE_CONNECTED)
+                && BleApplicationContext.EndDevice_Connection_Status[1] != APP_BLE_CONNECTED_CLIENT)
             {
               UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_2_ID, CFG_SCH_PRIO_0);
             }
             else if (BleApplicationContext.EndDevice3Found == 0x01
-                && BleApplicationContext.EndDevice_Connection_Status[2] != APP_BLE_CONNECTED)
+                && BleApplicationContext.EndDevice_Connection_Status[2] != APP_BLE_CONNECTED_CLIENT)
             {
               UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_3_ID, CFG_SCH_PRIO_0);
             }
             else if (BleApplicationContext.EndDevice4Found == 0x01
-                && BleApplicationContext.EndDevice_Connection_Status[3] != APP_BLE_CONNECTED)
+                && BleApplicationContext.EndDevice_Connection_Status[3] != APP_BLE_CONNECTED_CLIENT)
             {
               UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_4_ID, CFG_SCH_PRIO_0);
             }
             else if (BleApplicationContext.EndDevice5Found == 0x01
-                && BleApplicationContext.EndDevice_Connection_Status[4] != APP_BLE_CONNECTED)
+                && BleApplicationContext.EndDevice_Connection_Status[4] != APP_BLE_CONNECTED_CLIENT)
             {
               UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_5_ID, CFG_SCH_PRIO_0);
             }
             else if (BleApplicationContext.EndDevice6Found == 0x01
-                && BleApplicationContext.EndDevice_Connection_Status[5] != APP_BLE_CONNECTED)
+                && BleApplicationContext.EndDevice_Connection_Status[5] != APP_BLE_CONNECTED_CLIENT)
             {
               UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_6_ID, CFG_SCH_PRIO_0);
             }
@@ -782,7 +782,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
             {
               /* Inform Application it is End Device 1 */
               APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 1\n");
-              BleApplicationContext.EndDevice_Connection_Status[0] = APP_BLE_CONNECTED;
+              BleApplicationContext.EndDevice_Connection_Status[0] = APP_BLE_CONNECTED_CLIENT;
               BleApplicationContext.connectionHandleEndDevice1 = connection_handle;
               BleApplicationContext.BleApplicationContext_legacy.connectionHandle[0] = connection_handle;
               handleNotification.P2P_Evt_Opcode = P2P_SERVER1_CONN_HANDLE_EVT;
@@ -801,7 +801,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 #if (CFG_P2P_DEMO_MULTI != 0)
           /* USER CODE BEGIN EVT_LE_CONN_COMPLETE_Multi_3 */
           /* Now try to connect to device 2 */
-              if ((BleApplicationContext.EndDevice_Connection_Status[1] != APP_BLE_CONNECTED)
+              if ((BleApplicationContext.EndDevice_Connection_Status[1] != APP_BLE_CONNECTED_CLIENT)
                   && (BleApplicationContext.EndDevice2Found == 0x01))
               {
                 UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_2_ID, CFG_SCH_PRIO_0);
@@ -817,7 +817,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
               /* Inform Application it is End Device 2 */
               APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 2\n");
 
-              BleApplicationContext.EndDevice_Connection_Status[1] = APP_BLE_CONNECTED;
+              BleApplicationContext.EndDevice_Connection_Status[1] = APP_BLE_CONNECTED_CLIENT;
               BleApplicationContext.connectionHandleEndDevice2 = connection_handle;
               BleApplicationContext.BleApplicationContext_legacy.connectionHandle[1] = connection_handle;
               handleNotification.P2P_Evt_Opcode = P2P_SERVER2_CONN_HANDLE_EVT;
@@ -833,7 +833,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 APP_DBG_MSG("BLE_CTRL_App_Notification(), All services discovery Failed \r\n\r");
               }
               /* Now try to connect to device 1 */
-              if ((BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED)
+              if ((BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED_CLIENT)
                   && (BleApplicationContext.EndDevice1Found == 0x01))
               {
 
@@ -845,7 +845,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
               /* Inform Application it is End Device 3 */
               APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 3\n");
 
-              BleApplicationContext.EndDevice_Connection_Status[2] = APP_BLE_CONNECTED;
+              BleApplicationContext.EndDevice_Connection_Status[2] = APP_BLE_CONNECTED_CLIENT;
               BleApplicationContext.connectionHandleEndDevice3 = connection_handle;
               BleApplicationContext.BleApplicationContext_legacy.connectionHandle[2] = connection_handle;
               handleNotification.P2P_Evt_Opcode = P2P_SERVER3_CONN_HANDLE_EVT;
@@ -861,7 +861,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 APP_DBG_MSG("BLE_CTRL_App_Notification(), All services discovery Failed \r\n\r");
               }
               /* Now try to connect to device 4 */
-              if ((BleApplicationContext.EndDevice_Connection_Status[3] != APP_BLE_CONNECTED)
+              if ((BleApplicationContext.EndDevice_Connection_Status[3] != APP_BLE_CONNECTED_CLIENT)
                   && (BleApplicationContext.EndDevice4Found == 0x01))
               {
 
@@ -873,7 +873,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
               /* Inform Application it is End Device 4 */
               APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 4\n");
 
-              BleApplicationContext.EndDevice_Connection_Status[3] = APP_BLE_CONNECTED;
+              BleApplicationContext.EndDevice_Connection_Status[3] = APP_BLE_CONNECTED_CLIENT;
               BleApplicationContext.connectionHandleEndDevice4 = connection_handle;
               BleApplicationContext.BleApplicationContext_legacy.connectionHandle[3] = connection_handle;
               handleNotification.P2P_Evt_Opcode = P2P_SERVER4_CONN_HANDLE_EVT;
@@ -889,7 +889,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 APP_DBG_MSG("BLE_CTRL_App_Notification(), All services discovery Failed \r\n\r");
               }
               /* Now try to connect to device 3 */
-              if ((BleApplicationContext.EndDevice_Connection_Status[2] != APP_BLE_CONNECTED)
+              if ((BleApplicationContext.EndDevice_Connection_Status[2] != APP_BLE_CONNECTED_CLIENT)
                   && (BleApplicationContext.EndDevice3Found == 0x01))
               {
 
@@ -901,7 +901,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
               /* Inform Application it is End Device 5 */
               APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 5\n");
 
-              BleApplicationContext.EndDevice_Connection_Status[4] = APP_BLE_CONNECTED;
+              BleApplicationContext.EndDevice_Connection_Status[4] = APP_BLE_CONNECTED_CLIENT;
               BleApplicationContext.connectionHandleEndDevice5 = connection_handle;
               BleApplicationContext.BleApplicationContext_legacy.connectionHandle[4] = connection_handle;
               handleNotification.P2P_Evt_Opcode = P2P_SERVER5_CONN_HANDLE_EVT;
@@ -917,7 +917,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 APP_DBG_MSG("BLE_CTRL_App_Notification(), All services discovery Failed \r\n\r");
               }
               /* Now try to connect to device 6 */
-              if ((BleApplicationContext.EndDevice_Connection_Status[5] != APP_BLE_CONNECTED)
+              if ((BleApplicationContext.EndDevice_Connection_Status[5] != APP_BLE_CONNECTED_CLIENT)
                   && (BleApplicationContext.EndDevice6Found == 0x01))
               {
 
@@ -929,7 +929,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
               /* Inform Application it is End Device 6 */
               APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 6\n");
 
-              BleApplicationContext.EndDevice_Connection_Status[5] = APP_BLE_CONNECTED;
+              BleApplicationContext.EndDevice_Connection_Status[5] = APP_BLE_CONNECTED_CLIENT;
               BleApplicationContext.connectionHandleEndDevice6 = connection_handle;
               BleApplicationContext.BleApplicationContext_legacy.connectionHandle[5] = connection_handle;
               handleNotification.P2P_Evt_Opcode = P2P_SERVER6_CONN_HANDLE_EVT;
@@ -945,7 +945,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 APP_DBG_MSG("BLE_CTRL_App_Notification(), All services discovery Failed \r\n\r");
               }
               /* Now try to connect to device 5 */
-              if ((BleApplicationContext.EndDevice_Connection_Status[4] != APP_BLE_CONNECTED)
+              if ((BleApplicationContext.EndDevice_Connection_Status[4] != APP_BLE_CONNECTED_CLIENT)
                   && (BleApplicationContext.EndDevice5Found == 0x01))
               {
 
@@ -1024,6 +1024,15 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 						strcpy(devicesList[device_list_index].deviceName, current_device_name);
 						devicesList[device_list_index].pairingStatus = 0;
 						devicesList[device_list_index].position = device_list_index;
+
+                        APP_DBG_MSG("-- P2P SERVER 1 DETECTED -- VIA MAN ID\n");
+                        BleApplicationContext.EndDevice1Found = 0x01;
+                        P2P_SERVER1_BDADDR[0] = le_advertising_event->Advertising_Report[0].Address[0];
+                        P2P_SERVER1_BDADDR[1] = le_advertising_event->Advertising_Report[0].Address[1];
+                        P2P_SERVER1_BDADDR[2] = le_advertising_event->Advertising_Report[0].Address[2];
+                        P2P_SERVER1_BDADDR[3] = le_advertising_event->Advertising_Report[0].Address[3];
+                        P2P_SERVER1_BDADDR[4] = le_advertising_event->Advertising_Report[0].Address[4];
+                        P2P_SERVER1_BDADDR[5] = le_advertising_event->Advertising_Report[0].Address[5];
 
 						printf("%s", devicesList[device_list_index].deviceName);
 						printf(" //////// %d /////////// \n", device_list_index);
@@ -1395,11 +1404,11 @@ static void Scan_Request( void )
   /* USER CODE END Scan_Request_1 */
   tBleStatus result;
 
-  if (BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED
+  if (BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED_CLIENT
 
 #if (CFG_P2P_DEMO_MULTI != 0)
-      || BleApplicationContext.EndDevice_Connection_Status[1] != APP_BLE_CONNECTED || BleApplicationContext.EndDevice_Connection_Status[2] != APP_BLE_CONNECTED
-      || BleApplicationContext.EndDevice_Connection_Status[3] != APP_BLE_CONNECTED|| BleApplicationContext.EndDevice_Connection_Status[4] != APP_BLE_CONNECTED || BleApplicationContext.EndDevice_Connection_Status[5] != APP_BLE_CONNECTED
+      || BleApplicationContext.EndDevice_Connection_Status[1] != APP_BLE_CONNECTED_CLIENT || BleApplicationContext.EndDevice_Connection_Status[2] != APP_BLE_CONNECTED_CLIENT
+      || BleApplicationContext.EndDevice_Connection_Status[3] != APP_BLE_CONNECTED_CLIENT|| BleApplicationContext.EndDevice_Connection_Status[4] != APP_BLE_CONNECTED_CLIENT || BleApplicationContext.EndDevice_Connection_Status[5] != APP_BLE_CONNECTED_CLIENT
 #endif
   )
   {
@@ -1439,7 +1448,7 @@ static void Adv_Request( void )
   /* USER CODE BEGIN Connect_Request_1 */
 
   /* USER CODE END Connect_Request_1 */
-  if (BleApplicationContext.SmartPhone_Connection_Status != APP_BLE_CONNECTED)
+  if (BleApplicationContext.SmartPhone_Connection_Status != APP_BLE_CONNECTED_SERVER)
   {
     tBleStatus result = 0x00;
     /*Start Advertising*/
@@ -1489,7 +1498,7 @@ static void ConnReq1( void )
 {
   tBleStatus result;
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 1 **  \r\n\r");
-  if (BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED)
+  if (BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED_CLIENT)
   {
     /* USER CODE BEGIN APP_BLE_CONNECTED_SUCCESS_END_DEVICE_1 */
 
@@ -1497,7 +1506,7 @@ static void ConnReq1( void )
         result = aci_gap_create_connection(
         SCAN_P,
         SCAN_L,
-        PUBLIC_ADDR,
+		RANDOM_ADDR,
         P2P_SERVER1_BDADDR,
         PUBLIC_ADDR,
         CONN_P1,
@@ -1512,7 +1521,7 @@ static void ConnReq1( void )
     /* USER CODE BEGIN BLE_STATUS_END_DEVICE_1_SUCCESS */
 
     /* USER CODE END BLE_STATUS_END_DEVICE_1_SUCCESS */
-    BleApplicationContext.EndDevice_Connection_Status[0] = APP_BLE_CONNECTING;
+    BleApplicationContext.EndDevice_Connection_Status[0] = APP_BLE_LP_CONNECTING;
     }
     else
     {
@@ -1538,7 +1547,7 @@ static void ConnReq2( void )
   tBleStatus result;
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 2 **  \r\n\r");
 
-  if (BleApplicationContext.EndDevice_Connection_Status[1] != APP_BLE_CONNECTED)
+  if (BleApplicationContext.EndDevice_Connection_Status[1] != APP_BLE_CONNECTED_CLIENT)
   {
     result = aci_gap_create_connection(
         SCAN_P,
@@ -1555,7 +1564,7 @@ static void ConnReq2( void )
 
     if (result == BLE_STATUS_SUCCESS)
     {
-      BleApplicationContext.EndDevice_Connection_Status[1] = APP_BLE_CONNECTING;
+      BleApplicationContext.EndDevice_Connection_Status[1] = APP_BLE_LP_CONNECTING;
 
     }
     else
@@ -1578,7 +1587,7 @@ static void ConnReq3( void )
 {
   tBleStatus result;
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 3 **  \r\n\r");
-  if (BleApplicationContext.EndDevice_Connection_Status[2] != APP_BLE_CONNECTED)
+  if (BleApplicationContext.EndDevice_Connection_Status[2] != APP_BLE_CONNECTED_CLIENT)
   {
     result = aci_gap_create_connection(
         SCAN_P,
@@ -1595,7 +1604,7 @@ static void ConnReq3( void )
 
     if (result == BLE_STATUS_SUCCESS)
     {
-      BleApplicationContext.EndDevice_Connection_Status[2] = APP_BLE_CONNECTING;
+      BleApplicationContext.EndDevice_Connection_Status[2] = APP_BLE_LP_CONNECTING;
 
     }
     else
@@ -1618,7 +1627,7 @@ static void ConnReq4( void )
 {
   tBleStatus result;
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 4 **  \r\n\r");
-  if (BleApplicationContext.EndDevice_Connection_Status[3] != APP_BLE_CONNECTED)
+  if (BleApplicationContext.EndDevice_Connection_Status[3] != APP_BLE_CONNECTED_CLIENT)
   {
     result = aci_gap_create_connection(
         SCAN_P,
@@ -1635,7 +1644,7 @@ static void ConnReq4( void )
 
     if (result == BLE_STATUS_SUCCESS)
     {
-      BleApplicationContext.EndDevice_Connection_Status[3] = APP_BLE_CONNECTING;
+      BleApplicationContext.EndDevice_Connection_Status[3] = APP_BLE_LP_CONNECTING;
 
     }
     else
@@ -1658,7 +1667,7 @@ static void ConnReq5( void )
 {
   tBleStatus result;
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 5 **  \r\n\r");
-  if (BleApplicationContext.EndDevice_Connection_Status[4] != APP_BLE_CONNECTED)
+  if (BleApplicationContext.EndDevice_Connection_Status[4] != APP_BLE_CONNECTED_CLIENT)
   {
     result = aci_gap_create_connection(
         SCAN_P,
@@ -1675,7 +1684,7 @@ static void ConnReq5( void )
 
     if (result == BLE_STATUS_SUCCESS)
     {
-      BleApplicationContext.EndDevice_Connection_Status[4] = APP_BLE_CONNECTING;
+      BleApplicationContext.EndDevice_Connection_Status[4] = APP_BLE_LP_CONNECTING;
 
     }
     else
@@ -1697,7 +1706,7 @@ static void ConnReq6( void )
 {
   tBleStatus result;
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 6 **  \r\n\r");
-  if (BleApplicationContext.EndDevice_Connection_Status[5] != APP_BLE_CONNECTED)
+  if (BleApplicationContext.EndDevice_Connection_Status[5] != APP_BLE_CONNECTED_CLIENT)
   {
     result = aci_gap_create_connection(
         SCAN_P,
@@ -1714,7 +1723,7 @@ static void ConnReq6( void )
 
     if (result == BLE_STATUS_SUCCESS)
     {
-      BleApplicationContext.EndDevice_Connection_Status[5] = APP_BLE_CONNECTING;
+      BleApplicationContext.EndDevice_Connection_Status[5] = APP_BLE_LP_CONNECTING;
 
     }
     else
