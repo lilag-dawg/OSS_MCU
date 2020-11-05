@@ -84,21 +84,29 @@ typedef struct{
 typedef struct{
 	uint8_t Value;
 	uint8_t CurrentPosition;
-}gestion_conn_NbrSensor_t;
+}Gestion_Conn_NbrSensor_t;
 
 
 typedef struct{
 	uint8_t Pairing;
 	char SensorName[19];
-}gestion_conn_PairingRequest_t;
+}Gestion_Conn_PairingRequest_t;
+
+typedef struct{
+	char SensorName[19];
+	uint8_t dataType;
+}Gestion_Conn_Datatype_t;
 
 typedef struct
 {
+	P2P_Router_Notification_evt_t state;
 
-    gestion_conn_NbrSensor_t 		NumberOfSensorNearbyStruct;
-    gestion_conn_PairingRequest_t	PairingRequestStruct;
+	Gestion_Conn_NbrSensor_t 		NumberOfSensorNearbyStruct;
+	Gestion_Conn_PairingRequest_t	PairingRequestStruct;
+	Gestion_Conn_Datatype_t			SensorDataTypeStruct;
 
-    uint8_t Update_timer_Id;
+    uint8_t Update_timer_Id_CONN_HAND_CARA_2;
+    uint8_t Update_timer_Id_CONN_HAND_CARA_4;
    
 
 } P2P_Router_App_Context_t;
@@ -140,7 +148,7 @@ PLACE_IN_SECTION("BLE_APP_CONTEXT") static P2P_Router_App_Context_t P2P_Router_A
 
 static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *pckt);
 static tBleStatus Client_Update_Char(uint16_t UUID, uint8_t Service_Instance, uint8_t *pPayload);
-static void Client_Update_Service( void );
+static void Server_Update_Service( void );
 void P2P_Router_APP_Init(void);
 void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotification);
 void P2P_Client_Init(void);
@@ -148,6 +156,10 @@ void P2P_Client_Init(void);
 
 static void P2P_SensorName_Timer_Callback(void){
 	UTIL_SEQ_SetTask(1<<CFG_TASK_SEARCH_SERVICE_ID, CFG_SCH_PRIO_0 );
+}
+
+static void P2P_SensorDataType_Timer_Callback(void){
+	UTIL_SEQ_SetTask(1<<CFG_TASK_SEND_DATA_TYPE_ID, CFG_SCH_PRIO_0 );
 }
 
 
@@ -169,30 +181,51 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
         /* USER CODE BEGIN EDS_Evt_Opcode */
 
         /* USER CODE END EDS_Evt_Opcode */
-        case EDS_STM_NOTIFY_ENABLED_EVT:
+        case EDS_CONNEX_HAND_CARA_2_NOTIFY_ENABLED_EVT:
 #if(CFG_DEBUG_APP_TRACE != 0)
             APP_DBG_MSG("-- APPLICATION ROUTER : ENDDEVICEMGT NOTIFICATION ENABLED\r\n");
 #endif
             /* USER CODE BEGIN EDS_STM_NOTIFY_ENABLED_EVT */
-            HW_TS_Start(P2P_Router_App_Context.Update_timer_Id, NAME_CHANGES_PERIODE);
+            P2P_Router_App_Context.state = EDS_CONNEX_HAND_CARA_2;
+            HW_TS_Start(P2P_Router_App_Context.Update_timer_Id_CONN_HAND_CARA_2, NAME_CHANGES_PERIODE);
             /* USER CODE END EDS_STM_NOTIFY_ENABLED_EVT */
             break;
 
-        case EDS_STM_NOTIFY_DISABLED_EVT:
+        case EDS_CONNEX_HAND_CARA_2_NOTIFY_DISABLED_EVT:
 #if(CFG_DEBUG_APP_TRACE != 0)
             APP_DBG_MSG("-- APPLICATION ROUTER : ENDDEVICEMGT NOTIFICATION DISABLED\r\n");
 #endif
             /* USER CODE BEGIN EDS_STM_NOTIFY_DISABLED_EVT */
-            HW_TS_Stop(P2P_Router_App_Context.Update_timer_Id);
+            HW_TS_Stop(P2P_Router_App_Context.Update_timer_Id_CONN_HAND_CARA_2);
             /* USER CODE END EDS_STM_NOTIFY_DISABLED_EVT */
             break;
-        case EDS_STM_WRITE_EVT:
+        case EDS_CONNEX_HAND_CARA_4_NOTIFY_ENABLED_EVT:
+#if(CFG_DEBUG_APP_TRACE != 0)
+            APP_DBG_MSG("-- APPLICATION ROUTER : ENDDEVICEMGT NOTIFICATION ENABLED\r\n");
+#endif
+            /* USER CODE BEGIN EDS_STM_NOTIFY_ENABLED_EVT */
+            P2P_Router_App_Context.state = EDS_CONNEX_HAND_CARA_4;
+            HW_TS_Start(P2P_Router_App_Context.Update_timer_Id_CONN_HAND_CARA_4, NAME_CHANGES_PERIODE);
+            /* USER CODE END EDS_STM_NOTIFY_ENABLED_EVT */
+            break;
+
+        case EDS_CONNEX_HAND_CARA_4_NOTIFY_DISABLED_EVT:
+#if(CFG_DEBUG_APP_TRACE != 0)
+            APP_DBG_MSG("-- APPLICATION ROUTER : ENDDEVICEMGT NOTIFICATION DISABLED\r\n");
+#endif
+            /* USER CODE BEGIN EDS_STM_NOTIFY_DISABLED_EVT */
+            HW_TS_Stop(P2P_Router_App_Context.Update_timer_Id_CONN_HAND_CARA_4);
+            /* USER CODE END EDS_STM_NOTIFY_DISABLED_EVT */
+            break;
+        case EDS_CONNEX_HAND_CARA_3_WRITE_EVT:
 #if(CFG_DEBUG_APP_TRACE != 0)
         	APP_DBG_MSG("-- GATT : WRITE CHAR INFO RECEIVED\n");
 #endif
-            /* USER CODE BEGIN EDS_STM_WRITE_EVT */
+            /* USER CODE BEGIN EDS_CONNEX_HAND_CARA_3_WRITE_EVT */
 
         	P2P_Router_App_Context.PairingRequestStruct.Pairing = pNotification->DataTransfered.pPayload[0];
+
+        	//envoyer la demande de connexion ou de deconnexion ici
 
             for(int i=0; i<(sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));i++){
             	P2P_Router_App_Context.PairingRequestStruct.SensorName[i] = 0;
@@ -203,7 +236,15 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
             	printf("%c", P2P_Router_App_Context.PairingRequestStruct.SensorName[i]);
             }
 
-            /* USER CODE END EDS_STM_WRITE_EVT */
+            /* USER CODE END EDS_CONNEX_HAND_CARA_3_WRITE_EVT */
+            break;
+        case EDS_CALIBRATION_CARA_1_WRITE_EVT:
+#if(CFG_DEBUG_APP_TRACE != 0)
+        	APP_DBG_MSG("-- GATT : WRITE CHAR INFO RECEIVED\n");
+#endif
+            /* USER CODE BEGIN EDS_CALIBRATION_CARA_1_WRITE_EVT */
+
+            /* USER CODE END EDS_CALIBRATION_CARA_1_WRITE_EVT */
             break;
 
         default:
@@ -290,9 +331,14 @@ void P2P_Router_APP_Init(void)
 
     /* USER CODE END P2P_Router_APP_Init_1 */
 
-    UTIL_SEQ_RegTask(1<<CFG_TASK_SEARCH_SERVICE_ID, UTIL_SEQ_RFU, Client_Update_Service );
 
-    HW_TS_Create(CFG_TIM_PROC_ID_ISR, &(P2P_Router_App_Context.Update_timer_Id), hw_ts_Repeated, P2P_SensorName_Timer_Callback);
+	// for CONNEX_HAND_CARA_2
+    UTIL_SEQ_RegTask(1<<CFG_TASK_SEARCH_SERVICE_ID, UTIL_SEQ_RFU, Server_Update_Service );
+    HW_TS_Create(CFG_TIM_PROC_ID_ISR, &(P2P_Router_App_Context.Update_timer_Id_CONN_HAND_CARA_2), hw_ts_Repeated, P2P_SensorName_Timer_Callback);
+
+    // for CONNEX_HAND_CARA_4
+    UTIL_SEQ_RegTask(1<<CFG_TASK_SEND_DATA_TYPE_ID, UTIL_SEQ_RFU, Server_Update_Service );
+    HW_TS_Create(CFG_TIM_PROC_ID_ISR, &(P2P_Router_App_Context.Update_timer_Id_CONN_HAND_CARA_4), hw_ts_Repeated, P2P_SensorDataType_Timer_Callback);
 
     /* USER CODE BEGIN P2P_Router_APP_Init_2 */
     /**
@@ -408,50 +454,63 @@ void P2PR_APP_Init( void )
  * LOCAL FUNCTIONS
  *
  *************************************************************/
-static void Client_Update_Service( void )
+static void Server_Update_Service( void )
 {
-    /* USER CODE BEGIN Client_Update_Service_1 */
+	switch(P2P_Router_App_Context.state){
+		case EDS_CONNEX_HAND_CARA_2:
+		{
+		    /* USER CODE BEGIN Client_Update_Service_1 */
 
-	uint8_t value[20];
-	uint8_t index =  P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition;
+			uint8_t value[20];
+			uint8_t index =  P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition;
 
-	if(strcmp(devicesList[index].deviceName, P2P_Router_App_Context.PairingRequestStruct.SensorName) == 0){
-		devicesList[index].pairingStatus = P2P_Router_App_Context.PairingRequestStruct.Pairing;
+			if(strcmp(devicesList[index].deviceName, P2P_Router_App_Context.PairingRequestStruct.SensorName) == 0){
+				devicesList[index].pairingStatus = P2P_Router_App_Context.PairingRequestStruct.Pairing;
+			}
+
+			value[0] = (uint8_t)((devicesList[index].position) << 1) + devicesList[index].pairingStatus; // PPPP PPPC
+
+		    //green led is on when notifying
+		    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+
+			printf("Size: %d \n\r",sizeof(devicesList[index].deviceName));
+			printf("Position: %d \n\r",devicesList[index].position);
+			printf("[");
+
+			printf("%x,",value[0]);
+
+			for(int i = 1; i<(sizeof(value));i++){
+				value[i] = (uint8_t)(devicesList[index].deviceName[i-1]);
+				printf("%x,",value[i]);
+			}
+
+			P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition ++;
+
+			if (P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition >= device_list_index){
+				P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
+			}
+
+			printf("]\n\r");
+
+			EDS_STM_Update_Char(0x0000,(uint8_t *)&value);
+		}
+
+			break;
+		case EDS_CONNEX_HAND_CARA_4:
+		{
+			printf("wussup");
+		}
+			break;
+	    default:
+
+	        break;
 	}
 
-	value[0] = (uint8_t)((devicesList[index].position) << 1) + devicesList[index].pairingStatus; // PPPP PPPC
-
-    //green led is on when notifying
-    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-
-	printf("Size: %d \n\r",sizeof(devicesList[index].deviceName));
-	printf("Position: %d \n\r",devicesList[index].position);
-	printf("[");
-
-	printf("%x,",value[0]);
-
-	for(int i = 1; i<(sizeof(value));i++){
-		value[i] = (uint8_t)(devicesList[index].deviceName[i-1]);
-		printf("%x,",value[i]);
-	}
-
-	P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition ++;
-
-	if (P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition >= device_list_index){
-		P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
-	}
-
-	printf("]\n\r");
-
-	EDS_STM_Update_Char(0x0000,(uint8_t *)&value);
-
-    /* USER CODE END Client_Update_Service_1 */
-
-    /* USER CODE BEGIN Client_Update_Service_2 */
-
-    /* USER CODE END Client_Update_Service_2 */
     return;
 }
+
+
+
 
 /**
  * @brief  Feature Characteristic update
