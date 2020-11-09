@@ -165,6 +165,10 @@ static void P2P_SensorDataType_Timer_Callback(void){
 	UTIL_SEQ_SetTask(1<<CFG_TASK_SEND_DATA_TYPE_ID, CFG_SCH_PRIO_0 );
 }
 
+static void P2P_SensorName_Timer_Callback(void){
+	UTIL_SEQ_SetTask(1<<CFG_TASK_SEND_SENSOR_NAMES_ID, CFG_SCH_PRIO_0 );
+}
+
 
 /* USER CODE END PFP */
 
@@ -337,7 +341,7 @@ void P2P_Router_APP_Init(void)
     //UTIL_SEQ_RegTask(1<<CFG_TASK_SEARCH_SERVICE_ID, UTIL_SEQ_RFU, Client_Update_Service );
 
 	// for CONNEX_HAND_CARA_2
-    UTIL_SEQ_RegTask(1<<CFG_TASK_SEARCH_SERVICE_ID, UTIL_SEQ_RFU, Server_Update_Service );
+    UTIL_SEQ_RegTask(1<<CFG_TASK_SEND_SENSOR_NAMES_ID, UTIL_SEQ_RFU, Server_Update_Service );
     HW_TS_Create(CFG_TIM_PROC_ID_ISR, &(P2P_Router_App_Context.Update_timer_Id_CONN_HAND_CARA_2), hw_ts_Repeated, P2P_SensorName_Timer_Callback);
 
     // for CONNEX_HAND_CARA_4
@@ -522,15 +526,76 @@ static void Server_Update_Service( void )
  * @param  pFeatureValue: The address of the new value to be written
  * @retval None
  */
-static tBleStatus Client_Update_Char(uint16_t UUID, uint8_t Service_Instance, uint8_t *pPayload)
-{
-    /* USER CODE BEGIN Client_Update_Char_1 */
 
-/**
- * @brief  Event handler
- * @param  Event: Address of the buffer holding the Event
- * @retval Ack: Return whether the Event has been managed or not
- */
+static void Client_Update_Service( void )
+{
+	  uint16_t enable = 0x0001;
+	  uint16_t disable = 0x0000;
+
+	  uint8_t index;
+
+	  index = 0;
+	  while((index < BLE_CFG_CLT_MAX_NBR_CB) &&
+	          (aP2PClientContext[index].state != APP_BLE_IDLE))
+	  {
+
+
+	    switch(aP2PClientContext[index].state)
+	    {
+
+	      case APP_BLE_DISCOVER_SERVICES:
+	        APP_DBG_MSG("P2P_DISCOVER_SERVICES\n");
+	        break;
+	      case APP_BLE_DISCOVER_CHARACS:
+	        APP_DBG_MSG("* GATT : Discover P2P Characteristics\n");
+	        aci_gatt_disc_all_char_of_service(aP2PClientContext[index].connHandle,
+	                                          aP2PClientContext[index].P2PServiceHandle,
+	                                          aP2PClientContext[index].P2PServiceEndHandle);
+
+	        break;
+	      case APP_BLE_DISCOVER_WRITE_DESC: /* Not Used - No decriptor */
+	        APP_DBG_MSG("* GATT : Discover Descriptor of TX - Write Characteritic\n");
+	        aci_gatt_disc_all_char_desc(aP2PClientContext[index].connHandle,
+	                                    aP2PClientContext[index].P2PWriteToServerCharHdle,
+	                                    aP2PClientContext[index].P2PWriteToServerCharHdle+2);
+
+	        break;
+	      case APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC:
+	        APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic\n");
+	        aci_gatt_disc_all_char_desc(aP2PClientContext[index].connHandle,
+	                                    aP2PClientContext[index].P2PNotificationCharHdle,
+	                                    aP2PClientContext[index].P2PNotificationCharHdle+2);
+
+	        break;
+	      case APP_BLE_ENABLE_NOTIFICATION_DESC:
+	        APP_DBG_MSG("* GATT : Enable Server Notification\n");
+	        aci_gatt_write_char_desc(aP2PClientContext[index].connHandle,
+	                                 aP2PClientContext[index].P2PNotificationDescHandle,
+	                                 2,
+	                                 (uint8_t *)&enable);
+
+	        aP2PClientContext[index].state = APP_BLE_CONNECTED_CLIENT;
+	        BSP_LED_Off(LED_RED);
+
+	        break;
+	      case APP_BLE_DISABLE_NOTIFICATION_DESC :
+	        APP_DBG_MSG("* GATT : Disable Server Notification\n");
+	        aci_gatt_write_char_desc(aP2PClientContext[index].connHandle,
+	                                 aP2PClientContext[index].P2PNotificationDescHandle,
+	                                 2,
+	                                 (uint8_t *)&disable);
+
+	        aP2PClientContext[index].state = APP_BLE_CONNECTED_CLIENT;
+
+	        break;
+	      default:
+	        break;
+	    }
+	    index++;
+	  }
+	  return;
+}
+
 static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 {
     /* USER CODE BEGIN Client_Event_Handler_1 */
