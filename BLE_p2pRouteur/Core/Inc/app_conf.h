@@ -124,7 +124,7 @@
 /*****************************************************/
 
 #define CFG_MAX_CONNECTION                8
-#define UUID_128BIT_FORMAT                1
+#define UUID_128BIT_FORMAT                0
 
 #define CFG_DEV_ID_P2P_SERVER1                  (0x83)
 #define CFG_DEV_ID_P2P_SERVER2                  (0x84)
@@ -500,6 +500,7 @@ typedef enum
     CFG_TASK_CONN_DEV_6_ID,
     CFG_TASK_SEARCH_SERVICE_ID,
 	CFG_TASK_SEND_DATA_TYPE_ID,
+	CFG_TASK_SEND_SENSOR_NAMES_ID,
     CFG_TASK_HCI_ASYNCH_EVT_ID,
 /* USER CODE BEGIN CFG_Task_Id_With_HCI_Cmd_t */
 
