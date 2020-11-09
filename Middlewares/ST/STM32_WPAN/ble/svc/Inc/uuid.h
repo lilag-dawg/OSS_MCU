@@ -299,9 +299,6 @@
 #define END_DEVICE_STATUS_NOTIFY_UUID								  (0x0001)
 /* USER CODE END */
 
-#define SENSOR_SERVICE_UUID											  (0x1816)
-#define SENSOR_NOTIFY_CHAR_UUID   									  (0x2A5B)
-
 #define P2P_SERVICE_UUID                                              (0xFE40)
 #define P2P_WRITE_CHAR_UUID                                           (0xFE41)
 #define P2P_NOTIFY_CHAR_UUID                                          (0xFE42)

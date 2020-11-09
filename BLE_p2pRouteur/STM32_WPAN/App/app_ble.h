@@ -89,6 +89,7 @@ typedef struct
 
 #define MAX_DEVICES					127
 #define MAX_DEVICE_NAME_LENGHT		19
+#define SENSOR_NAME		 			"	Ridesense"
 
 typedef struct{
 	bool cadence;
@@ -108,6 +109,7 @@ struct DeviceInformations_t{
 
 extern struct DeviceInformations_t devicesList[MAX_DEVICES];
 extern int device_list_index;
+
 
 /* USER CODE END ET */
 
@@ -132,9 +134,7 @@ extern int device_list_index;
   APP_BLE_ConnStatus_t APP_BLE_Get_Client_Connection_Status( uint16_t Connection_Handle );
 
 /* USER CODE BEGIN EF */
-  void APP_BLE_Key_Button1_Action(void);
-  void APP_BLE_Key_Button2_Action(void);
-  void APP_BLE_Key_Button3_Action(void);
+  int getSensorIndex(char* sensorName);
 /* USER CODE END EF */
 
 #ifdef __cplusplus

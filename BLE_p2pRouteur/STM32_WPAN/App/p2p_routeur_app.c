@@ -158,6 +158,7 @@ static void Client_Update_Service( void );
 void P2P_Router_APP_Init(void);
 void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotification);
 void P2P_Client_Init(void);
+int getSensorIndex(char* sensorName);
 /* USER CODE BEGIN PFP */
 
 
@@ -388,12 +389,10 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
 /* USER CODE BEGIN P2P_Client_App_Notification_1 */
 	int sensorData[11] = {0};
 
-	printf("Value: [");
 	for(int i = 0; i<pNotification->DataTransfered.Length; i++){
-		printf("%d,", pNotification->DataTransfered.pPayload[i]);
 		sensorData[i] = pNotification->DataTransfered.pPayload[i];
 	}
-	printf("]\n\r");
+
 	switchCase(sensorData);
 
 /* USER CODE END P2P_Client_App_Notification_1 */
@@ -441,7 +440,14 @@ void P2P_Client_Init(void)
 }
 
 /* USER CODE BEGIN FD */
-
+int getSensorIndex(char* sensorName){
+	for(int i = 0; i<device_list_index;i++){
+		if(strcmp(sensorName, devicesList[i].deviceName) == 0){
+			return i;
+		}
+	}
+	return -1;
+}
 /* USER CODE END FD */
 /*************************************************************
  *
@@ -679,7 +685,16 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                 for (i=0; i<numServ; i++)
                                 {
                                     uuid = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx]);
-                                    if(uuid == SENSOR_SERVICE_UUID )
+
+                                    int sensorIndex = 0;
+                                    sensorIndex = getSensorIndex(SENSOR_NAME);
+
+                                    if (sensorIndex == -1){
+                                    	APP_DBG_MSG("-- GATT : SENSOR NAME NOT IN THE ARRAY \n");
+                                    	return(return_value);
+                                    }
+
+                                    if(uuid == CYCLING_SPEED_CADENCE_SERVICE_UUID )
                                     {
 #if(CFG_DEBUG_APP_TRACE != 0)
                                         APP_DBG_MSG("-- GATT : SENSOR_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
@@ -692,6 +707,12 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                         aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
 #endif
                                         aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
+                                    }
+                                    else if (uuid == BATTERY_SERVICE_UUID){
+                                    	devicesList[sensorIndex].supportedDataType.battery = true;
+                                    }
+                                    else if (uuid == CYCLING_POWER_SERVICE_UUID){
+                                    	devicesList[sensorIndex].supportedDataType.power = true;
                                     }
                                     idx += 6;
                                 }
@@ -746,7 +767,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 #else
                                 handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-2]);
 #endif
-                                if(uuid == SENSOR_NOTIFY_CHAR_UUID)
+                                if(uuid == CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID)
                                 {
 #if(CFG_DEBUG_APP_TRACE != 0)
                                 	  APP_DBG_MSG("-- GATT : SENSOR_NOTIFY_CHAR_UUID FOUND  - connection handle 0x%x\n", aP2PClientContext[index].connHandle);

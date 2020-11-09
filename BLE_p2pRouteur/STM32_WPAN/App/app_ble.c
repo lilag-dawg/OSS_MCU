@@ -763,10 +763,12 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
           /* USER CODE END EVT_LE_CONN_COMPLETE_Multi */
 #endif
                 ;
+            int sensorIndex = 0;
+            sensorIndex = getSensorIndex(SENSOR_NAME);
 
             for (int i = 0; i < 6; i++)
             {
-              dev1 &= (P2P_SERVER1_BDADDR[i] == connection_complete_event->Peer_Address[i]);
+              dev1 &= (devicesList[sensorIndex].deviceAddress[i] == connection_complete_event->Peer_Address[i]);
 #if (CFG_P2P_DEMO_MULTI != 0)
           /* USER CODE BEGIN EVT_LE_CONN_COMPLETE_Multi_2 */
               dev2 &= (P2P_SERVER2_BDADDR[i] == connection_complete_event->Peer_Address[i]);
@@ -1031,14 +1033,10 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 						devicesList[device_list_index].deviceAddress[4] = le_advertising_event->Advertising_Report[0].Address[4];
 						devicesList[device_list_index].deviceAddress[5] = le_advertising_event->Advertising_Report[0].Address[5];
 
-                        APP_DBG_MSG("-- P2P SERVER 1 DETECTED -- VIA MAN ID\n");
-                        BleApplicationContext.EndDevice1Found = 0x01;
-                        P2P_SERVER1_BDADDR[0] = le_advertising_event->Advertising_Report[0].Address[0];
-                        P2P_SERVER1_BDADDR[1] = le_advertising_event->Advertising_Report[0].Address[1];
-                        P2P_SERVER1_BDADDR[2] = le_advertising_event->Advertising_Report[0].Address[2];
-                        P2P_SERVER1_BDADDR[3] = le_advertising_event->Advertising_Report[0].Address[3];
-                        P2P_SERVER1_BDADDR[4] = le_advertising_event->Advertising_Report[0].Address[4];
-                        P2P_SERVER1_BDADDR[5] = le_advertising_event->Advertising_Report[0].Address[5];
+						if(strcmp(current_device_name, SENSOR_NAME) == 0){
+							APP_DBG_MSG("-- P2P SERVER 1 DETECTED -- VIA MAN ID\n");
+							BleApplicationContext.EndDevice1Found = 0x01;
+						}
 
 						printf("%s", devicesList[device_list_index].deviceName);
 						printf(" //////// %d /////////// \n", device_list_index);
@@ -1507,13 +1505,14 @@ static void ConnReq1( void )
   if (BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED_CLIENT)
   {
     /* USER CODE BEGIN APP_BLE_CONNECTED_SUCCESS_END_DEVICE_1 */
-
+	  int index = 0;
+	  index = getSensorIndex(SENSOR_NAME);
     /* USER CODE END APP_BLE_CONNECTED_SUCCESS_END_DEVICE_1 */
         result = aci_gap_create_connection(
         SCAN_P,
         SCAN_L,
 		RANDOM_ADDR,
-        P2P_SERVER1_BDADDR,
+        devicesList[index].deviceAddress,
         PUBLIC_ADDR,
         CONN_P1,
         CONN_P2,

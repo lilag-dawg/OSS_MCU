@@ -98,11 +98,8 @@ void wheelRevFunction(int* wheelValue){
     if(currentWheelEvent < prevWheelEvent){
         currentWheelEvent = currentWheelEvent + 64; // Ce if est pour gerer le cas ou nous avons un overflow
     }
-    printf("current data: %f /// prev data: %f /// current event: %f /// prev event: %f\n\r", currentWheelData,prevWheelData,currentWheelEvent,prevWheelEvent);
 
     float kmhValue = 3.6*((currentWheelData - prevWheelData)/(currentWheelEvent - prevWheelEvent)); // le 64 est pour passer de RPS a RPM
-
-    printf("Votre vitesse est de: %f km/h\n\r", kmhValue);
 }
 
 void crankRevFunction(int* CrankValue){
@@ -165,5 +162,4 @@ void crankRevFunction(int* CrankValue){
 		}
 	}
 
-	printf("Votre RPM est de : %f \n\r", rpmValue);
 }
