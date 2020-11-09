@@ -571,7 +571,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                 for (i=0; i<numServ; i++)
                                 {
                                     uuid = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx]);
-                                    if(uuid == SENSOR_SERVICE_UUID)
+                                    if(uuid == SENSOR_SERVICE_UUID )
                                     {
 #if(CFG_DEBUG_APP_TRACE != 0)
                                         APP_DBG_MSG("-- GATT : SENSOR_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
