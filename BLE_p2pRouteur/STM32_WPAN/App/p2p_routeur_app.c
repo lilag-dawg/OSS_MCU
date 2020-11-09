@@ -90,21 +90,29 @@ typedef struct
 typedef struct{
 	uint8_t Value;
 	uint8_t CurrentPosition;
-}gestion_conn_NbrSensor_t;
+}Gestion_Conn_NbrSensor_t;
 
 
 typedef struct{
 	uint8_t Pairing;
 	char SensorName[19];
-}gestion_conn_PairingRequest_t;
+}Gestion_Conn_PairingRequest_t;
+
+typedef struct{
+	char SensorName[19];
+	uint8_t dataType;
+}Gestion_Conn_Datatype_t;
 
 typedef struct
 {
+	P2P_Router_Notification_evt_t state;
 
-    gestion_conn_NbrSensor_t 		NumberOfSensorNearbyStruct;
-    gestion_conn_PairingRequest_t	PairingRequestStruct;
+	Gestion_Conn_NbrSensor_t 		NumberOfSensorNearbyStruct;
+	Gestion_Conn_PairingRequest_t	PairingRequestStruct;
+	Gestion_Conn_Datatype_t			SensorDataTypeStruct;
 
-    uint8_t Update_timer_Id;
+    uint8_t Update_timer_Id_CONN_HAND_CARA_2;
+    uint8_t Update_timer_Id_CONN_HAND_CARA_4;
    
 
 } P2P_Router_App_Context_t;
@@ -145,11 +153,17 @@ PLACE_IN_SECTION("BLE_APP_CONTEXT") static P2P_Router_App_Context_t P2P_Router_A
 /* Private function prototypes -----------------------------------------------*/
 
 static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *pckt);
+static void Server_Update_Service( void );
 static void Client_Update_Service( void );
 void P2P_Router_APP_Init(void);
 void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotification);
 void P2P_Client_Init(void);
 /* USER CODE BEGIN PFP */
+
+
+static void P2P_SensorDataType_Timer_Callback(void){
+	UTIL_SEQ_SetTask(1<<CFG_TASK_SEND_DATA_TYPE_ID, CFG_SCH_PRIO_0 );
+}
 
 
 /* USER CODE END PFP */
@@ -170,30 +184,51 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
         /* USER CODE BEGIN EDS_Evt_Opcode */
 
         /* USER CODE END EDS_Evt_Opcode */
-        case EDS_STM_NOTIFY_ENABLED_EVT:
+        case EDS_CONNEX_HAND_CARA_2_NOTIFY_ENABLED_EVT:
 #if(CFG_DEBUG_APP_TRACE != 0)
             APP_DBG_MSG("-- APPLICATION ROUTER : ENDDEVICEMGT NOTIFICATION ENABLED\r\n");
 #endif
             /* USER CODE BEGIN EDS_STM_NOTIFY_ENABLED_EVT */
-            //HW_TS_Start(P2P_Router_App_Context.Update_timer_Id, NAME_CHANGES_PERIODE);
+            P2P_Router_App_Context.state = EDS_CONNEX_HAND_CARA_2;
+            HW_TS_Start(P2P_Router_App_Context.Update_timer_Id_CONN_HAND_CARA_2, NAME_CHANGES_PERIODE);
             /* USER CODE END EDS_STM_NOTIFY_ENABLED_EVT */
             break;
 
-        case EDS_STM_NOTIFY_DISABLED_EVT:
+        case EDS_CONNEX_HAND_CARA_2_NOTIFY_DISABLED_EVT:
 #if(CFG_DEBUG_APP_TRACE != 0)
             APP_DBG_MSG("-- APPLICATION ROUTER : ENDDEVICEMGT NOTIFICATION DISABLED\r\n");
 #endif
             /* USER CODE BEGIN EDS_STM_NOTIFY_DISABLED_EVT */
-            //HW_TS_Stop(P2P_Router_App_Context.Update_timer_Id);
+            HW_TS_Stop(P2P_Router_App_Context.Update_timer_Id_CONN_HAND_CARA_2);
             /* USER CODE END EDS_STM_NOTIFY_DISABLED_EVT */
             break;
-        case EDS_STM_WRITE_EVT:
+        case EDS_CONNEX_HAND_CARA_4_NOTIFY_ENABLED_EVT:
+#if(CFG_DEBUG_APP_TRACE != 0)
+            APP_DBG_MSG("-- APPLICATION ROUTER : ENDDEVICEMGT NOTIFICATION ENABLED\r\n");
+#endif
+            /* USER CODE BEGIN EDS_STM_NOTIFY_ENABLED_EVT */
+            P2P_Router_App_Context.state = EDS_CONNEX_HAND_CARA_4;
+            HW_TS_Start(P2P_Router_App_Context.Update_timer_Id_CONN_HAND_CARA_4, NAME_CHANGES_PERIODE);
+            /* USER CODE END EDS_STM_NOTIFY_ENABLED_EVT */
+            break;
+
+        case EDS_CONNEX_HAND_CARA_4_NOTIFY_DISABLED_EVT:
+#if(CFG_DEBUG_APP_TRACE != 0)
+            APP_DBG_MSG("-- APPLICATION ROUTER : ENDDEVICEMGT NOTIFICATION DISABLED\r\n");
+#endif
+            /* USER CODE BEGIN EDS_STM_NOTIFY_DISABLED_EVT */
+            HW_TS_Stop(P2P_Router_App_Context.Update_timer_Id_CONN_HAND_CARA_4);
+            /* USER CODE END EDS_STM_NOTIFY_DISABLED_EVT */
+            break;
+        case EDS_CONNEX_HAND_CARA_3_WRITE_EVT:
 #if(CFG_DEBUG_APP_TRACE != 0)
         	APP_DBG_MSG("-- GATT : WRITE CHAR INFO RECEIVED\n");
 #endif
-            /* USER CODE BEGIN EDS_STM_WRITE_EVT */
+            /* USER CODE BEGIN EDS_CONNEX_HAND_CARA_3_WRITE_EVT */
 
         	P2P_Router_App_Context.PairingRequestStruct.Pairing = pNotification->DataTransfered.pPayload[0];
+
+        	//envoyer la demande de connexion ou de deconnexion ici
 
             for(int i=0; i<(sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));i++){
             	P2P_Router_App_Context.PairingRequestStruct.SensorName[i] = 0;
@@ -204,7 +239,15 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
             	printf("%c", P2P_Router_App_Context.PairingRequestStruct.SensorName[i]);
             }
 
-            /* USER CODE END EDS_STM_WRITE_EVT */
+            /* USER CODE END EDS_CONNEX_HAND_CARA_3_WRITE_EVT */
+            break;
+        case EDS_CALIBRATION_CARA_1_WRITE_EVT:
+#if(CFG_DEBUG_APP_TRACE != 0)
+        	APP_DBG_MSG("-- GATT : WRITE CHAR INFO RECEIVED\n");
+#endif
+            /* USER CODE BEGIN EDS_CALIBRATION_CARA_1_WRITE_EVT */
+
+            /* USER CODE END EDS_CALIBRATION_CARA_1_WRITE_EVT */
             break;
 
         default:
@@ -293,7 +336,13 @@ void P2P_Router_APP_Init(void)
 
     //UTIL_SEQ_RegTask(1<<CFG_TASK_SEARCH_SERVICE_ID, UTIL_SEQ_RFU, Client_Update_Service );
 
-    //HW_TS_Create(CFG_TIM_PROC_ID_ISR, &(P2P_Router_App_Context.Update_timer_Id), hw_ts_Repeated, P2P_SensorName_Timer_Callback);
+	// for CONNEX_HAND_CARA_2
+    UTIL_SEQ_RegTask(1<<CFG_TASK_SEARCH_SERVICE_ID, UTIL_SEQ_RFU, Server_Update_Service );
+    HW_TS_Create(CFG_TIM_PROC_ID_ISR, &(P2P_Router_App_Context.Update_timer_Id_CONN_HAND_CARA_2), hw_ts_Repeated, P2P_SensorName_Timer_Callback);
+
+    // for CONNEX_HAND_CARA_4
+    UTIL_SEQ_RegTask(1<<CFG_TASK_SEND_DATA_TYPE_ID, UTIL_SEQ_RFU, Server_Update_Service );
+    HW_TS_Create(CFG_TIM_PROC_ID_ISR, &(P2P_Router_App_Context.Update_timer_Id_CONN_HAND_CARA_4), hw_ts_Repeated, P2P_SensorDataType_Timer_Callback);
 
     /* USER CODE BEGIN P2P_Router_APP_Init_2 */
     /**
@@ -413,75 +462,69 @@ void P2PR_APP_Init( void )
  * LOCAL FUNCTIONS
  *
  *************************************************************/
-static void Client_Update_Service( void )
+static void Server_Update_Service( void )
 {
-	  uint16_t enable = 0x0001;
-	  uint16_t disable = 0x0000;
+	switch(P2P_Router_App_Context.state){
+		case EDS_CONNEX_HAND_CARA_2:
+		{
+		    /* USER CODE BEGIN Client_Update_Service_1 */
 
-	  uint8_t index;
+			uint8_t value[20];
+			uint8_t index =  P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition;
 
-	  index = 0;
-	  while((index < BLE_CFG_CLT_MAX_NBR_CB) &&
-	          (aP2PClientContext[index].state != APP_BLE_IDLE))
-	  {
+			if(strcmp(devicesList[index].deviceName, P2P_Router_App_Context.PairingRequestStruct.SensorName) == 0){
+				devicesList[index].pairingStatus = P2P_Router_App_Context.PairingRequestStruct.Pairing;
+			}
 
+			value[0] = (uint8_t)((devicesList[index].position) << 1) + devicesList[index].pairingStatus; // PPPP PPPC
 
-	    switch(aP2PClientContext[index].state)
-	    {
+		    //green led is on when notifying
+		    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
 
-	      case APP_BLE_DISCOVER_SERVICES:
-	        APP_DBG_MSG("P2P_DISCOVER_SERVICES\n");
-	        break;
-	      case APP_BLE_DISCOVER_CHARACS:
-	        APP_DBG_MSG("* GATT : Discover P2P Characteristics\n");
-	        aci_gatt_disc_all_char_of_service(aP2PClientContext[index].connHandle,
-	                                          aP2PClientContext[index].P2PServiceHandle,
-	                                          aP2PClientContext[index].P2PServiceEndHandle);
+			printf("Size: %d \n\r",sizeof(devicesList[index].deviceName));
+			printf("Position: %d \n\r",devicesList[index].position);
+			printf("[");
 
-	        break;
-	      case APP_BLE_DISCOVER_WRITE_DESC: /* Not Used - No decriptor */
-	        APP_DBG_MSG("* GATT : Discover Descriptor of TX - Write Characteritic\n");
-	        aci_gatt_disc_all_char_desc(aP2PClientContext[index].connHandle,
-	                                    aP2PClientContext[index].P2PWriteToServerCharHdle,
-	                                    aP2PClientContext[index].P2PWriteToServerCharHdle+2);
+			printf("%x,",value[0]);
 
-	        break;
-	      case APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC:
-	        APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic\n");
-	        aci_gatt_disc_all_char_desc(aP2PClientContext[index].connHandle,
-	                                    aP2PClientContext[index].P2PNotificationCharHdle,
-	                                    aP2PClientContext[index].P2PNotificationCharHdle+2);
+			for(int i = 1; i<(sizeof(value));i++){
+				value[i] = (uint8_t)(devicesList[index].deviceName[i-1]);
+				printf("%x,",value[i]);
+			}
 
-	        break;
-	      case APP_BLE_ENABLE_NOTIFICATION_DESC:
-	        APP_DBG_MSG("* GATT : Enable Server Notification\n");
-	        aci_gatt_write_char_desc(aP2PClientContext[index].connHandle,
-	                                 aP2PClientContext[index].P2PNotificationDescHandle,
-	                                 2,
-	                                 (uint8_t *)&enable);
+			P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition ++;
 
-	        aP2PClientContext[index].state = APP_BLE_CONNECTED_CLIENT;
-	        BSP_LED_Off(LED_RED);
+			if (P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition >= device_list_index){
+				P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
+			}
 
-	        break;
-	      case APP_BLE_DISABLE_NOTIFICATION_DESC :
-	        APP_DBG_MSG("* GATT : Disable Server Notification\n");
-	        aci_gatt_write_char_desc(aP2PClientContext[index].connHandle,
-	                                 aP2PClientContext[index].P2PNotificationDescHandle,
-	                                 2,
-	                                 (uint8_t *)&disable);
+			printf("]\n\r");
 
-	        aP2PClientContext[index].state = APP_BLE_CONNECTED_CLIENT;
+			EDS_STM_Update_Char(0x0000,(uint8_t *)&value);
+		}
+
+			break;
+		case EDS_CONNEX_HAND_CARA_4:
+		{
+			printf("wussup");
+		}
+			break;
+	    default:
 
 	        break;
-	      default:
-	        break;
-	    }
-	    index++;
-	  }
-	  return;
+	}
+
+    return;
 }
 
+/**
+ * @brief  Feature Characteristic update
+ * @param  pFeatureValue: The address of the new value to be written
+ * @retval None
+ */
+static tBleStatus Client_Update_Char(uint16_t UUID, uint8_t Service_Instance, uint8_t *pPayload)
+{
+    /* USER CODE BEGIN Client_Update_Char_1 */
 
 /**
  * @brief  Event handler
