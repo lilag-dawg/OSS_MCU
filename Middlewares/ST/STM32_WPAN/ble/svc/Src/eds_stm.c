@@ -27,7 +27,8 @@ typedef struct{
   uint16_t	EndDeviceManagementSvcHdle;				/**< Service handle */
   uint16_t	EndDeviceStatusCharHdle;	                /**< Characteristic handle */
   uint16_t	EndDeviceStatusWriteClientToServerCharHdle;	  /**< Characteristic handle */
-  uint16_t	EndDeviceStatusNotifyServerToClientCharHdle;	/**< Characteristic handle */
+  uint16_t	EndDeviceStatusNotifyServerToClientCharHdle1;	/**< Characteristic handle */
+  uint16_t	EndDeviceStatusNotifyServerToClientCharHdle2;	/**< Characteristic handle */
 
 }EndDeviceManagementContext_t;
 
@@ -65,6 +66,7 @@ do {\
 #define COPY_EDM_CONNEX_HAND_CARA_1_UUID(uuid_struct)	 COPY_UUID_16(uuid_struct,0x16A1)
 #define COPY_EDM_CONNEX_HAND_CARA_2_UUID(uuid_struct)    COPY_UUID_16(uuid_struct,0x16A2)
 #define COPY_EDM_CONNEX_HAND_CARA_3_UUID(uuid_struct)    COPY_UUID_16(uuid_struct,0x16A3)
+#define COPY_EDM_CONNEX_HAND_CARA_4_UUID(uuid_struct)    COPY_UUID_16(uuid_struct,0x16A4)
 
 #define COPY_EDM_CALIBRATION_SERVICE_UUID(uuid_struct)   COPY_UUID_16(uuid_struct,0x1803)
 #define COPY_EDM_CALIBRATION_CARA_1_UUID(uuid_struct)    COPY_UUID_16(uuid_struct,0x16B1)
@@ -96,7 +98,7 @@ static SVCCTL_EvtAckStatus_t EndDeviceManagement_Event_Handler(void *Event)
        {
           attribute_modified = (aci_gatt_attribute_modified_event_rp0*)blue_evt->data;
           
-            if(attribute_modified->Attr_Handle == (aEndDeviceManagementContext.EndDeviceStatusNotifyServerToClientCharHdle + 2))
+            if(attribute_modified->Attr_Handle == (aEndDeviceManagementContext.EndDeviceStatusNotifyServerToClientCharHdle1 + 2))
             {
               /**
                * Descriptor handle
@@ -108,22 +110,52 @@ static SVCCTL_EvtAckStatus_t EndDeviceManagement_Event_Handler(void *Event)
               if(attribute_modified->Attr_Data[0] & COMSVC_Notification)
               {
                
-                Notification.EDS_Evt_Opcode = EDS_STM_NOTIFY_ENABLED_EVT;
+                Notification.EDS_Evt_Opcode = EDS_CONNEX_HAND_CARA_2_NOTIFY_ENABLED_EVT;
+                EDS_STM_App_Notification(&Notification);
+
+              }
+              else
+              {
+
+                Notification.EDS_Evt_Opcode = EDS_CONNEX_HAND_CARA_2_NOTIFY_DISABLED_EVT;
+                EDS_STM_App_Notification(&Notification);
+
+              }
+            }
+            else if(attribute_modified->Attr_Handle == (aEndDeviceManagementContext.EndDeviceStatusNotifyServerToClientCharHdle2 + 2))
+            {
+              /**
+               * Descriptor handle
+               */
+              return_value = SVCCTL_EvtAckFlowEnable;
+              /**
+               * Notify to application
+               */
+              if(attribute_modified->Attr_Data[0] & COMSVC_Notification)
+              {
+
+                Notification.EDS_Evt_Opcode = EDS_CONNEX_HAND_CARA_4_NOTIFY_ENABLED_EVT;
                 EDS_STM_App_Notification(&Notification);
 
               }
               else
               {
               
-                Notification.EDS_Evt_Opcode = EDS_STM_NOTIFY_DISABLED_EVT;
+                Notification.EDS_Evt_Opcode = EDS_CONNEX_HAND_CARA_4_NOTIFY_DISABLED_EVT;
                 EDS_STM_App_Notification(&Notification);
 
               }
             }
-            
             else if(attribute_modified->Attr_Handle == (aEndDeviceManagementContext.EndDeviceStatusWriteClientToServerCharHdle + 1))
             {
-            	Notification.EDS_Evt_Opcode = EDS_STM_WRITE_EVT;
+            	Notification.EDS_Evt_Opcode = EDS_CONNEX_HAND_CARA_3_WRITE_EVT;
+                Notification.DataTransfered.Length=attribute_modified->Attr_Data_Length;
+                Notification.DataTransfered.pPayload=attribute_modified->Attr_Data;
+            	EDS_STM_App_Notification(&Notification);
+            }
+            else if(attribute_modified->Attr_Handle == (bEndDeviceManagementContext.EndDeviceStatusWriteClientToServerCharHdle + 1))
+            {
+            	Notification.EDS_Evt_Opcode = EDS_CALIBRATION_CARA_1_WRITE_EVT;
                 Notification.DataTransfered.Length=attribute_modified->Attr_Data_Length;
                 Notification.DataTransfered.pPayload=attribute_modified->Attr_Data;
             	EDS_STM_App_Notification(&Notification);
@@ -175,7 +207,7 @@ void EDS_STM_Init(void)
     aci_gatt_add_service(UUID_TYPE_16,
                       (Service_UUID_t *) &uuid16,
                       PRIMARY_SERVICE,
-                      10,
+                      12,
                       &(aEndDeviceManagementContext.EndDeviceManagementSvcHdle));
 
     /**
@@ -194,7 +226,7 @@ void EDS_STM_Init(void)
                       &(aEndDeviceManagementContext.EndDeviceStatusCharHdle));
 
     /**
-     *  Add Notify Characteristic
+     *  Add Notify Characteristic 1
      */
     COPY_EDM_CONNEX_HAND_CARA_2_UUID(uuid16.Char_UUID_16);
     aci_gatt_add_char(aEndDeviceManagementContext.EndDeviceManagementSvcHdle,
@@ -206,7 +238,7 @@ void EDS_STM_Init(void)
 					  GATT_NOTIFY_ATTRIBUTE_WRITE, /* gattEvtMask */
                       10, /* encryKeySize */
                       1, /* isVariable */
-                      &(aEndDeviceManagementContext.EndDeviceStatusNotifyServerToClientCharHdle));
+                      &(aEndDeviceManagementContext.EndDeviceStatusNotifyServerToClientCharHdle1));
     /**
      *  Add write Characteristic select
      */
@@ -222,6 +254,21 @@ void EDS_STM_Init(void)
                       1, /* isVariable */
                       &(aEndDeviceManagementContext.EndDeviceStatusWriteClientToServerCharHdle));
     
+    /**
+     *  Add Notify Characteristic 2
+     */
+    COPY_EDM_CONNEX_HAND_CARA_4_UUID(uuid16.Char_UUID_16);
+    aci_gatt_add_char(aEndDeviceManagementContext.EndDeviceManagementSvcHdle,
+                      UUID_TYPE_16,
+                      &uuid16,
+                      20,
+                      CHAR_PROP_NOTIFY,
+                      ATTR_PERMISSION_NONE,
+					  GATT_NOTIFY_ATTRIBUTE_WRITE, /* gattEvtMask */
+                      10, /* encryKeySize */
+                      1, /* isVariable */
+                      &(aEndDeviceManagementContext.EndDeviceStatusNotifyServerToClientCharHdle2));
+
      BLE_DBG_EDS_STM_MSG("-- End Device Managment Service (EDMS) is added Successfully %04X\n",
                  aEndDeviceManagementContext.EndDeviceManagementSvcHdle);
      
@@ -232,12 +279,14 @@ void EDS_STM_Init(void)
                       PRIMARY_SERVICE,
                       10,
                       &(bEndDeviceManagementContext.EndDeviceManagementSvcHdle));
-    
+    /**
+     *  Add write Characteristic select
+     */
     COPY_EDM_CALIBRATION_CARA_1_UUID(uuid16.Char_UUID_16);
     aci_gatt_add_char(bEndDeviceManagementContext.EndDeviceManagementSvcHdle,
                       UUID_TYPE_16,
                       &uuid16,
-                      20,
+                      2,
 					  CHAR_PROP_WRITE,
                       ATTR_PERMISSION_NONE,
 					  GATT_NOTIFY_ATTRIBUTE_WRITE, /* gattEvtMask */
@@ -276,7 +325,7 @@ tBleStatus EDS_STM_Update_Char(uint16_t UUID, uint8_t *pPayload)
     case 0x0000:
 
         result = aci_gatt_update_char_value(aEndDeviceManagementContext.EndDeviceManagementSvcHdle,
-                               aEndDeviceManagementContext.EndDeviceStatusNotifyServerToClientCharHdle,
+                               aEndDeviceManagementContext.EndDeviceStatusNotifyServerToClientCharHdle1,
                                0, /* charValOffset */
                                20, /* charValueLen */
                                (uint8_t *)  pPayload);
@@ -295,6 +344,24 @@ tBleStatus EDS_STM_Update_Char(uint16_t UUID, uint8_t *pPayload)
 
         result = aci_gatt_update_char_value(aEndDeviceManagementContext.EndDeviceManagementSvcHdle,
                                aEndDeviceManagementContext.EndDeviceStatusWriteClientToServerCharHdle,
+                               0, /* charValOffset */
+                               20, /* charValueLen */
+                               (uint8_t *)  pPayload);
+
+       break;
+
+    case 0x0003:
+
+        result = aci_gatt_update_char_value(aEndDeviceManagementContext.EndDeviceManagementSvcHdle,
+                               aEndDeviceManagementContext.EndDeviceStatusNotifyServerToClientCharHdle2,
+                               0, /* charValOffset */
+                               20, /* charValueLen */
+                               (uint8_t *)  pPayload);
+       break;
+    case 0x0004:
+
+        result = aci_gatt_update_char_value(bEndDeviceManagementContext.EndDeviceManagementSvcHdle,
+                               bEndDeviceManagementContext.EndDeviceStatusWriteClientToServerCharHdle,
                                0, /* charValOffset */
                                2, /* charValueLen */
                                (uint8_t *)  pPayload);

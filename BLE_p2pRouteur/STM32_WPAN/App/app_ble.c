@@ -1024,6 +1024,12 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 						strcpy(devicesList[device_list_index].deviceName, current_device_name);
 						devicesList[device_list_index].pairingStatus = 0;
 						devicesList[device_list_index].position = device_list_index;
+						devicesList[device_list_index].deviceAddress[0] = le_advertising_event->Advertising_Report[0].Address[0];
+						devicesList[device_list_index].deviceAddress[1] = le_advertising_event->Advertising_Report[0].Address[1];
+						devicesList[device_list_index].deviceAddress[2] = le_advertising_event->Advertising_Report[0].Address[2];
+						devicesList[device_list_index].deviceAddress[3] = le_advertising_event->Advertising_Report[0].Address[3];
+						devicesList[device_list_index].deviceAddress[4] = le_advertising_event->Advertising_Report[0].Address[4];
+						devicesList[device_list_index].deviceAddress[5] = le_advertising_event->Advertising_Report[0].Address[5];
 
 						printf("%s", devicesList[device_list_index].deviceName);
 						printf(" //////// %d /////////// \n", device_list_index);

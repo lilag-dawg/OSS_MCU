@@ -29,6 +29,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "hci_tl.h"
+#include <stdbool.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -54,6 +55,13 @@ extern "C" {
       APP_BLE_ENABLE_NOTIFICATION_BUTTON_DESC,
       APP_BLE_DISABLE_NOTIFICATION_TX_DESC
     } APP_BLE_ConnStatus_t;
+
+
+typedef enum
+{
+  EDS_CONNEX_HAND_CARA_2,
+  EDS_CONNEX_HAND_CARA_4,
+} P2P_Router_Notification_evt_t;
 
 typedef enum
 {
@@ -82,11 +90,20 @@ typedef struct
 #define MAX_DEVICES					127
 #define MAX_DEVICE_NAME_LENGHT		19
 
+typedef struct{
+	bool cadence;
+	bool speed;
+	bool power;
+	bool battery;
+	bool gear;
+}DeviceSupportedDataType;
+
 struct DeviceInformations_t{
     char deviceName[MAX_DEVICE_NAME_LENGHT];
-    uint64_t deviceAddress;
+    uint8_t deviceAddress[6];
     uint8_t pairingStatus;
     uint8_t position;
+    DeviceSupportedDataType supportedDataType;
 };
 
 extern struct DeviceInformations_t devicesList[MAX_DEVICES];
