@@ -516,7 +516,38 @@ static void Server_Update_Service( void )
 			break;
 		case EDS_CONNEX_HAND_CARA_4:
 		{
-			printf("wussup");
+			uint8_t value[20];
+			uint8_t index =  P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition;
+
+			uint8_t isCadenceSupported = (uint8_t)((devicesList[index].supportedDataType.cadence) << 4);
+			uint8_t isSpeedSupported = (uint8_t)((devicesList[index].supportedDataType.speed) << 3);
+			uint8_t isPowerSupported = (uint8_t)((devicesList[index].supportedDataType.power) << 2);
+			uint8_t isBatteryupported = (uint8_t)((devicesList[index].supportedDataType.battery) << 1);
+			uint8_t isGearSupported = (uint8_t)((devicesList[index].supportedDataType.gear));
+
+
+			value[0] = (uint8_t)(isCadenceSupported + isSpeedSupported + isPowerSupported + isBatteryupported + isGearSupported);
+
+			for(int i = 1; i<(sizeof(value));i++){
+				value[i] = (uint8_t)(devicesList[index].deviceName[i-1]);
+			}
+
+			P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition ++;
+
+			if (P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition >= device_list_index){
+				P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
+			}
+
+			printf("[");
+
+			for(int i = 0; i<(sizeof(value));i++){
+				printf("%d,",value[i]);
+			}
+
+			printf("]\n\r");
+
+			EDS_STM_Update_Char(0x0003,(uint8_t *)&value);
+
 		}
 			break;
 	    default:
@@ -864,7 +895,6 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         if ( (pr->Attribute_Handle == aP2PClientContext[index].P2PNotificationCharHdle))
                         {
 #if(CFG_DEBUG_APP_TRACE != 0)
-                            APP_DBG_MSG("-- GATT : BUTTON CHARACTERISTICS RECEIVED_EVT - connection handle 0x%x\n", aP2PClientContext[index].connHandle);
 #endif
                             Notification.P2P_Client_Evt_Opcode = P2P_NOTIFICATION_INFO_RECEIVED_EVT;
                             Notification.DataTransfered.Length = pr->Attribute_Value_Length;
