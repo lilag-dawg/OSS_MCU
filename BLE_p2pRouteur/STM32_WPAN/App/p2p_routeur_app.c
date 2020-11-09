@@ -333,6 +333,15 @@ void P2P_Router_APP_Init(void)
 void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotification)
 {
 /* USER CODE BEGIN P2P_Client_App_Notification_1 */
+	int sensorData[11] = {0};
+
+	printf("Value: [");
+	for(int i = 0; i<pNotification->DataTransfered.Length; i++){
+		printf("%d,", pNotification->DataTransfered.pPayload[i]);
+		sensorData[i] = pNotification->DataTransfered.pPayload[i];
+	}
+	printf("]\n\r");
+	switchCase(sensorData);
 
 /* USER CODE END P2P_Client_App_Notification_1 */
     switch(pNotification->P2P_Client_Evt_Opcode)
