@@ -83,6 +83,18 @@ typedef struct
    */
   uint16_t P2PNotificationDescHandle;
 
+  /**
+   * handle of the Rx characteristic - Notification From Server
+   *
+   */
+  uint16_t P2PReadCharHdle;
+
+  /**
+   * handle of the client configuration
+   * descriptor of Rx characteristic
+   */
+  uint16_t P2PReadDescHandle;
+
 }P2P_ClientContext_t;
 
 /* USER CODE BEGIN PTD */
@@ -604,6 +616,17 @@ static void Client_Update_Service( void )
 	                                    aP2PClientContext[index].P2PNotificationCharHdle+2);
 
 	        break;
+	      case APP_BLE_DISCOVER_READ_CHAR_DESC:
+	        APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Read Characteritic\n");
+	        aci_gatt_read_using_char_uuid(aP2PClientContext[index].connHandle,
+	        								aP2PClientContext[index].P2PReadCharHdle,
+											aP2PClientContext[index].P2PReadCharHdle+2,
+											0x01,
+											CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID);
+
+	        aP2PClientContext[index].state = APP_BLE_CONNECTED_CLIENT;
+	        break;
+
 	      case APP_BLE_ENABLE_NOTIFICATION_DESC:
 	        APP_DBG_MSG("* GATT : Enable Server Notification\n");
 	        aci_gatt_write_char_desc(aP2PClientContext[index].connHandle,
@@ -724,26 +747,36 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                     	APP_DBG_MSG("-- GATT : SENSOR NAME NOT IN THE ARRAY \n");
                                     	return(return_value);
                                     }
-
-                                    if(uuid == CYCLING_SPEED_CADENCE_SERVICE_UUID )
+                                    switch(uuid)
                                     {
-#if(CFG_DEBUG_APP_TRACE != 0)
-                                        APP_DBG_MSG("-- GATT : SENSOR_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
-#endif
-                                        #if (UUID_128BIT_FORMAT==1)
-                                        aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
-                                        aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
-#else
-                                        aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
-                                        aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
-#endif
-                                        aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
-                                    }
-                                    else if (uuid == BATTERY_SERVICE_UUID){
-                                    	devicesList[sensorIndex].supportedDataType.battery = true;
-                                    }
-                                    else if (uuid == CYCLING_POWER_SERVICE_UUID){
-                                    	devicesList[sensorIndex].supportedDataType.power = true;
+                                    	case(CYCLING_SPEED_CADENCE_SERVICE_UUID ):
+										{
+	#if(CFG_DEBUG_APP_TRACE != 0)
+											APP_DBG_MSG("-- GATT : SENSOR_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
+	#endif
+											#if (UUID_128BIT_FORMAT==1)
+											aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
+											aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
+	#else
+											aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
+											aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
+	#endif
+											aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
+											break;
+										}
+                                    	case(BATTERY_SERVICE_UUID):
+                                    	{
+											devicesList[sensorIndex].supportedDataType.battery = true;
+											break;
+										}
+                                    	case(CYCLING_POWER_SERVICE_UUID):
+                                    	{
+											devicesList[sensorIndex].supportedDataType.power = true;
+											break;
+										}
+//                                    	case() a ajouter avec pour avoir le gear
+                                    	default:
+                                    		break;
                                     }
                                     idx += 6;
                                 }
@@ -806,6 +839,15 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                     aP2PClientContext[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
                                     aP2PClientContext[index].P2PNotificationCharHdle = handle;
                                 }
+                                else if (uuid == CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID)
+                                {
+#if(CFG_DEBUG_APP_TRACE != 0)
+                                	APP_DBG_MSG("-- GATT : SENSOR_READ_CHAR_UUID FOUND  - connection handle 0x%x\n", aP2PClientContext[index].connHandle);
+#endif
+									aP2PClientContext[index].state = APP_BLE_DISCOVER_READ_CHAR_DESC;
+									aP2PClientContext[index].P2PReadCharHdle = handle;
+                                }
+
 #if (UUID_128BIT_FORMAT==1)
                                 pr->Data_Length -= 21;
                                 idx += 21;
@@ -818,6 +860,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                     }
                 }
                 break;
+
 
                 case EVT_BLUE_ATT_FIND_INFORMATION_RESP:
                 {
@@ -895,6 +938,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         if ( (pr->Attribute_Handle == aP2PClientContext[index].P2PNotificationCharHdle))
                         {
 #if(CFG_DEBUG_APP_TRACE != 0)
+                        	APP_DBG_MSG("In the notification loop");
 #endif
                             Notification.P2P_Client_Evt_Opcode = P2P_NOTIFICATION_INFO_RECEIVED_EVT;
                             Notification.DataTransfered.Length = pr->Attribute_Value_Length;
@@ -909,6 +953,30 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                 }
                 break;/* end EVT_BLUE_GATT_NOTIFICATION */
 
+                case EVT_BLUE_ATT_READ_RESP:
+                {
+                	aci_gatt_disc_read_char_by_uuid_resp_event_rp0 *pr = (void*)blue_evt->data;
+                    uint8_t index;
+
+                    index = 0;
+                    while((index < BLE_CFG_CLT_MAX_NBR_CB) &&
+                            (aP2PClientContext[index].connHandle != pr->Connection_Handle))
+                        index++;
+
+                    if(index < BLE_CFG_CLT_MAX_NBR_CB)
+                    {
+
+                        if ( (pr->Attribute_Handle == aP2PClientContext[index].P2PReadCharHdle))
+                        {
+#if(CFG_DEBUG_APP_TRACE != 0)
+#endif
+                            printf("Value of read char: %x \n\r", pr->Attribute_Value);
+
+                        }
+                    }
+
+                	break;
+                }
                 case EVT_BLUE_GATT_PROCEDURE_COMPLETE:
                 {
                     /* USER CODE BEGIN EVT_BLUE_GATT_PROCEDURE_COMPLETE */
