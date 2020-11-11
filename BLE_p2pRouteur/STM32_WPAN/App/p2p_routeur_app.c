@@ -734,7 +734,12 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                     uuid = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx]);
 
                                     int sensorIndex = 0;
-                                    sensorIndex = getSensorIndex(SENSOR_NAME);
+                                    for (int indx = 0; indx<4;i++){
+                                    	sensorIndex = getSensorIndex(sensorUsedNames[indx]);
+                                    	if (sensorIndex != -1){
+                                    		break;
+                                    	}
+                                    }
 
                                     if (sensorIndex == -1){
                                     	APP_DBG_MSG("-- GATT : SENSOR NAME NOT IN THE ARRAY \n");
@@ -933,7 +938,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         if ( (pr->Attribute_Handle == aP2PClientContext[index].P2PNotificationCharHdle))
                         {
 #if(CFG_DEBUG_APP_TRACE != 0)
-                        	APP_DBG_MSG("In the notification loop");
+
 #endif
                             Notification.P2P_Client_Evt_Opcode = P2P_NOTIFICATION_INFO_RECEIVED_EVT;
                             Notification.DataTransfered.Length = pr->Attribute_Value_Length;

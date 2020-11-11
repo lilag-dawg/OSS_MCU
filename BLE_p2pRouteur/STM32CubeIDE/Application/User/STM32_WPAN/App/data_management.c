@@ -100,6 +100,7 @@ void wheelRevFunction(int* wheelValue){
     }
 
     float kmhValue = 3.6*((currentWheelData - prevWheelData)/(currentWheelEvent - prevWheelEvent)); // le 64 est pour passer de RPS a RPM
+    printf("Votre vitesse est: %f km/h\n\r", kmhValue);
 }
 
 void crankRevFunction(int* CrankValue){
@@ -159,6 +160,7 @@ void crankRevFunction(int* CrankValue){
 			}
 
 			rpmValue = ((currentCrankData-prevCrankData)/(currentCrankEvent-prevCrankEvent))*60;
+			printf("Votre RMP est: %f RPM\n\r", rpmValue);
 		}
 	}
 
