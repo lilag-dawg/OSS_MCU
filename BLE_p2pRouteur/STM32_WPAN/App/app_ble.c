@@ -253,6 +253,7 @@ typedef struct
 
 } BleApplicationContext_t;
 
+
 typedef struct
 {
   uint16_t Connection_Handle;
@@ -763,17 +764,23 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
           /* USER CODE END EVT_LE_CONN_COMPLETE_Multi */
 #endif
                 ;
-            int sensorIndex = 0;
-            sensorIndex = getSensorIndex(SENSOR_NAME);
+            int sensorIndex1 = 0;
+            int sensorIndex2 = 0;
+            int sensorIndex3 = 0;
+            int sensorIndex4 = 0;
+            sensorIndex1 = getSensorIndex(sensorUsedNames[0]);
+            sensorIndex2 = getSensorIndex(sensorUsedNames[1]);
+            sensorIndex3 = getSensorIndex(sensorUsedNames[2]);
+            sensorIndex4 = getSensorIndex(sensorUsedNames[3]);
 
             for (int i = 0; i < 6; i++)
             {
-              dev1 &= (devicesList[sensorIndex].deviceAddress[i] == connection_complete_event->Peer_Address[i]);
+              dev1 &= (devicesList[sensorIndex1].deviceAddress[i] == connection_complete_event->Peer_Address[i]);
 #if (CFG_P2P_DEMO_MULTI != 0)
           /* USER CODE BEGIN EVT_LE_CONN_COMPLETE_Multi_2 */
-              dev2 &= (P2P_SERVER2_BDADDR[i] == connection_complete_event->Peer_Address[i]);
-              dev3 &= (P2P_SERVER3_BDADDR[i] == connection_complete_event->Peer_Address[i]);
-              dev4 &= (P2P_SERVER4_BDADDR[i] == connection_complete_event->Peer_Address[i]);
+              dev2 &= (devicesList[sensorIndex2].deviceAddress[i] == connection_complete_event->Peer_Address[i]);
+              dev3 &= (devicesList[sensorIndex3].deviceAddress[i] == connection_complete_event->Peer_Address[i]);
+              dev4 &= (devicesList[sensorIndex4].deviceAddress[i] == connection_complete_event->Peer_Address[i]);
               dev5 &= (P2P_SERVER5_BDADDR[i] == connection_complete_event->Peer_Address[i]);
               dev6 &= (P2P_SERVER6_BDADDR[i] == connection_complete_event->Peer_Address[i]);
           /* USER CODE END EVT_LE_CONN_COMPLETE_Multi_2 */
@@ -1012,6 +1019,10 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 break;
                 case 0x09: /* now get local name */
                 /* USER CODE BEGIN get_local_name */
+
+                	strcpy(sensorUsedNames[0], "	Ridesense");
+                	strcpy(sensorUsedNames[1], "	CAD-BLE0967095");
+
                 	for (int i=0; i<adlength;i++){
                 		current_device_name[i] = adv_report_data[k+i+1];
 					}
@@ -1033,9 +1044,22 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 						devicesList[device_list_index].deviceAddress[4] = le_advertising_event->Advertising_Report[0].Address[4];
 						devicesList[device_list_index].deviceAddress[5] = le_advertising_event->Advertising_Report[0].Address[5];
 
-						if(strcmp(current_device_name, SENSOR_NAME) == 0){
+						if(strcmp(current_device_name, sensorUsedNames[0]) == 0){
 							APP_DBG_MSG("-- P2P SERVER 1 DETECTED -- VIA MAN ID\n");
 							BleApplicationContext.EndDevice1Found = 0x01;
+						}
+
+						else if(strcmp(current_device_name, sensorUsedNames[1]) == 0){
+							APP_DBG_MSG("-- P2P SERVER 2 DETECTED -- VIA MAN ID\n");
+							BleApplicationContext.EndDevice2Found = 0x01;
+						}
+						else if(strcmp(current_device_name, sensorUsedNames[2]) == 0){
+							APP_DBG_MSG("-- P2P SERVER 3 DETECTED -- VIA MAN ID\n");
+							BleApplicationContext.EndDevice3Found = 0x01;
+						}
+						else if(strcmp(current_device_name, sensorUsedNames[3]) == 0){
+							APP_DBG_MSG("-- P2P SERVER 4 DETECTED -- VIA MAN ID\n");
+							BleApplicationContext.EndDevice4Found = 0x01;
 						}
 
 						printf("%s", devicesList[device_list_index].deviceName);
@@ -1506,7 +1530,7 @@ static void ConnReq1( void )
   {
     /* USER CODE BEGIN APP_BLE_CONNECTED_SUCCESS_END_DEVICE_1 */
 	  int index = 0;
-	  index = getSensorIndex(SENSOR_NAME);
+	  index = getSensorIndex(sensorUsedNames[0]);
     /* USER CODE END APP_BLE_CONNECTED_SUCCESS_END_DEVICE_1 */
         result = aci_gap_create_connection(
         SCAN_P,
@@ -1554,11 +1578,14 @@ static void ConnReq2( void )
 
   if (BleApplicationContext.EndDevice_Connection_Status[1] != APP_BLE_CONNECTED_CLIENT)
   {
+	  int index = 0;
+	  index = getSensorIndex(sensorUsedNames[1]);
+
     result = aci_gap_create_connection(
         SCAN_P,
         SCAN_L,
-        PUBLIC_ADDR,
-        P2P_SERVER2_BDADDR,
+		RANDOM_ADDR,
+		devicesList[index].deviceAddress,
         PUBLIC_ADDR,
         CONN_P1,
         CONN_P2,
@@ -1594,11 +1621,14 @@ static void ConnReq3( void )
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 3 **  \r\n\r");
   if (BleApplicationContext.EndDevice_Connection_Status[2] != APP_BLE_CONNECTED_CLIENT)
   {
+	  int index = 0;
+	  index = getSensorIndex(sensorUsedNames[2]);
+
     result = aci_gap_create_connection(
         SCAN_P,
         SCAN_L,
-        PUBLIC_ADDR,
-        P2P_SERVER3_BDADDR,
+		RANDOM_ADDR,
+		devicesList[index].deviceAddress,
         PUBLIC_ADDR,
         CONN_P1,
         CONN_P2,
@@ -1634,11 +1664,14 @@ static void ConnReq4( void )
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 4 **  \r\n\r");
   if (BleApplicationContext.EndDevice_Connection_Status[3] != APP_BLE_CONNECTED_CLIENT)
   {
+	  int index = 0;
+	  index = getSensorIndex(sensorUsedNames[3]);
+
     result = aci_gap_create_connection(
         SCAN_P,
         SCAN_L,
-        PUBLIC_ADDR,
-        P2P_SERVER4_BDADDR,
+		RANDOM_ADDR,
+		devicesList[index].deviceAddress,
         PUBLIC_ADDR,
         CONN_P1,
         CONN_P2,

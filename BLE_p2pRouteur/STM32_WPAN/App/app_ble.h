@@ -91,8 +91,10 @@ typedef struct
 
 #define MAX_DEVICES					127
 #define MAX_DEVICE_NAME_LENGHT		19
-#define SENSOR_NAME		 			"	Ridesense"
-//#define SENSOR_NAME		 			"	CAD-BLE0967095"
+#define SENSOR_NAME		 			"	Rideesense"
+#define SENSOR_NAME2		 		"	CAD-BLE0967095"
+
+char sensorUsedNames[4][20];
 
 
 typedef struct{
@@ -102,6 +104,21 @@ typedef struct{
 	bool battery;
 	bool gear;
 }DeviceSupportedDataType;
+
+typedef struct
+{
+  float time;
+  float value
+} Algorithme_data;
+
+typedef struct
+{
+	Algorithme_data cadence;
+	Algorithme_data speed;
+	Algorithme_data power;
+	Algorithme_data pinion_fd;
+	Algorithme_data pinion_rd;
+} bike_data;
 
 struct DeviceInformations_t{
     char deviceName[MAX_DEVICE_NAME_LENGHT];
