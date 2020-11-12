@@ -28,6 +28,7 @@
 #include "app_ble.h"
 #include "p2p_routeur_app.h"
 #include "stm32_seq.h"
+#include "data_management.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */

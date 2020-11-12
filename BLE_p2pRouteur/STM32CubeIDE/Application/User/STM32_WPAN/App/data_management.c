@@ -13,6 +13,8 @@
 #include <float.h>
 
 #include "data_management.h"
+#include "algorithme_function.h"
+#include "app_ble.h"
 
 #define bufferMaxValue	10
 
