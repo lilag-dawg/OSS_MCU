@@ -49,6 +49,7 @@
 #include "dbg_trace.h"
 #include "hw_conf.h"
 #include "otp.h"
+#include "saveToFlash.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -134,7 +135,32 @@ int main(void)
   MX_RF_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
-
+//  	struct settings settingsToWrite;
+//	memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
+//	settingsToWrite.preferences.ftp = 111;
+//	settingsToWrite.preferences.shiftingResponsiveness = 1.8;
+//	settingsToWrite.preferences.desiredRpm = 32;
+//	settingsToWrite.preferences.desiredBpm = 7;
+//
+//	settingsToWrite.cranksets.bigGear = 45;
+//	settingsToWrite.cranksets.gear2 = 35;
+//
+//	settingsToWrite.sprockets.smallGear = 3;
+//	settingsToWrite.sprockets.gear2 = 5;
+//	settingsToWrite.sprockets.gear3 = 6;
+//	settingsToWrite.sprockets.gear4 = 7;
+//	settingsToWrite.sprockets.gear5 = 9;
+//	settingsToWrite.sprockets.gear6 = 11;
+//	settingsToWrite.sprockets.gear7 = 13;
+//	settingsToWrite.sprockets.gear8 = 16;
+//	settingsToWrite.sprockets.gear9 = 20;
+//	settingsToWrite.sprockets.gear10 = 23;
+//	settingsToWrite.sprockets.gear11 = 28;
+//
+//	saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
+//
+//	struct settings readSettings;
+//	readFlash((uint8_t*)&readSettings);
   /* USER CODE END 2 */
 
   /* Init code for STM32_WPAN */
