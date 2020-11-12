@@ -396,13 +396,25 @@ void P2P_Router_APP_Init(void)
 void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotification)
 {
 /* USER CODE BEGIN P2P_Client_App_Notification_1 */
-	int sensorData[11] = {0};
+	/*int sensorData[11] = {0};
 
 	for(int i = 0; i<pNotification->DataTransfered.Length; i++){
 		sensorData[i] = pNotification->DataTransfered.pPayload[i];
 	}
 
-	switchCase(sensorData);
+	switchCase(sensorData);*/
+
+	int cassette = 0;
+	int plateau = 0;
+	int tab[17] = {0};
+
+	for(int i = 0; i<pNotification->DataTransfered.Length; i++){
+				tab[i] = pNotification->DataTransfered.pPayload[i];
+			}
+
+			GetRatio(tab, &cassette, &plateau);
+
+			printf("Cassette : %d	Plateau : %d\n\r",cassette, plateau);
 
 /* USER CODE END P2P_Client_App_Notification_1 */
     switch(pNotification->P2P_Client_Evt_Opcode)
@@ -732,14 +744,11 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                 for (i=0; i<numServ; i++)
                                 {
                                     uuid = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx]);
-
+                                    printf("uuid : %x\n\r",uuid);
                                     int sensorIndex = 0;
-                                    for (int indx = 0; indx<4;i++){
-                                    	sensorIndex = getSensorIndex(sensorUsedNames[indx]);
-                                    	if (sensorIndex != -1){
-                                    		break;
-                                    	}
-                                    }
+
+                                    	sensorIndex = getSensorIndex(sensorUsedNames[2]);
+
 
                                     if (sensorIndex == -1){
                                     	APP_DBG_MSG("-- GATT : SENSOR NAME NOT IN THE ARRAY \n");
@@ -772,6 +781,22 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 											devicesList[sensorIndex].supportedDataType.power = true;
 											break;
 										}
+                                    	case(SHIMANO_SERVICE_UUID ):
+                                    											{
+#if(CFG_DEBUG_APP_TRACE != 0)
+                                    	APP_DBG_MSG("-- GATT : SENSOR_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
+#endif
+                                        #if (UUID_128BIT_FORMAT==1)
+                                        aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
+                                        aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
+#else
+                                        aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
+                                        aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
+#endif
+                                        aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
+                                    		break;
+                                    	}
+
 //                                    	case() a ajouter avec pour avoir le gear
                                     	default:
                                     		break;
@@ -835,6 +860,14 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                 	  APP_DBG_MSG("-- GATT : SENSOR_NOTIFY_CHAR_UUID FOUND  - connection handle 0x%x\n", aP2PClientContext[index].connHandle);
 #endif
                                     aP2PClientContext[index].P2PNotificationCharHdle = handle;
+                                }
+                                if(uuid == SHIMANO_CHAR_UUID){
+#if(CFG_DEBUG_APP_TRACE != 0)
+                                	  APP_DBG_MSG("-- GATT : SENSOR_NOTIFY_CHAR_UUID FOUND  - connection handle 0x%x\n", aP2PClientContext[index].connHandle);
+#endif
+                                	aP2PClientContext[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
+                                    aP2PClientContext[index].P2PNotificationCharHdle = handle;
+
                                 }
                                 else if (uuid == CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID)
                                 {

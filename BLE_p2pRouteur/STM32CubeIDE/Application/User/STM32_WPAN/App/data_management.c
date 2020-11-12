@@ -165,3 +165,10 @@ void crankRevFunction(int* CrankValue){
 	}
 
 }
+
+void GetRatio(int *tableau, int *pCassette, int *pPlateaux){
+
+*pPlateaux = tableau[3];
+*pCassette = tableau[5];
+}
+

@@ -998,7 +998,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
           /* search AD TYPE 0x09 (Complete Local Name) */
           /* search AD Type 0x02 (16 bits UUIDS) */
-          if (event_type == ADV_IND)
+          if (event_type == ADV_IND ||event_type==SCAN_RSP)
           {
 
             /* ISOLATION OF BD ADDRESS AND LOCAL NAME */
@@ -1022,6 +1022,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
                 	strcpy(sensorUsedNames[0], "	Ridesense");
                 	strcpy(sensorUsedNames[1], "	CAD-BLE0967095");
+                	strcpy(sensorUsedNames[2], "	EWWU111");
 
                 	for (int i=0; i<adlength;i++){
                 		current_device_name[i] = adv_report_data[k+i+1];
