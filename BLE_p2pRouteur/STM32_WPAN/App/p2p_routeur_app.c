@@ -91,6 +91,7 @@ typedef struct
 
   uint16_t P2PcurrentCharBeingRead;
 
+  P2P_Client_Opcode_Notification_evt_t sensor_evt_type;
 
 }P2P_ClientContext_t;
 
@@ -396,37 +397,46 @@ void P2P_Router_APP_Init(void)
 void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotification)
 {
 /* USER CODE BEGIN P2P_Client_App_Notification_1 */
-	/*int sensorData[11] = {0};
-
-	for(int i = 0; i<pNotification->DataTransfered.Length; i++){
-		sensorData[i] = pNotification->DataTransfered.pPayload[i];
-	}
-
-	switchCase(sensorData);*/
-
+	int sensorData[11] = {0};
 	int cassette = 0;
 	int plateau = 0;
 	int tab[17] = {0};
-
-	for(int i = 0; i<pNotification->DataTransfered.Length; i++){
-				tab[i] = pNotification->DataTransfered.pPayload[i];
-			}
-
-			GetRatio(tab, &cassette, &plateau);
-
-			printf("Cassette : %d	Plateau : %d\n\r",cassette, plateau);
 
 /* USER CODE END P2P_Client_App_Notification_1 */
     switch(pNotification->P2P_Client_Evt_Opcode)
     {
     /* USER CODE BEGIN P2P_Client_Evt_Opcode */
+    case P2P_NOTIFICATION_SHIMANO_RECEIVED_EVT:
 
+    	for(int i = 0; i<pNotification->DataTransfered.Length; i++){
+    					tab[i] = pNotification->DataTransfered.pPayload[i];
+    				}
+
+    				GetRatio(tab, &cassette, &plateau);
+
+    				printf("Cassette : %d	Plateau : %d\n\r",cassette, plateau);
+
+	break;
+
+    case P2P_NOTIFICATION_CSC_RECEIVED_EVT:
+
+    	for(int i = 0; i<pNotification->DataTransfered.Length; i++){
+    			sensorData[i] = pNotification->DataTransfered.pPayload[i];
+    		}
+
+    		switchCase(sensorData);
+	break;
+
+    case P2P_NOTIFICATION_CP_RECEIVED_EVT:
+
+
+    break;
     /* USER CODE END P2P_Client_Evt_Opcode */
         default:
     /* USER CODE BEGIN P2P_Client_Evt_Opcode_default */
 
     /* USER CODE END P2P_Client_Evt_Opcode_default */
-            break;
+        break;
 
     }
 /* USER CODE BEGIN P2P_Client_App_Notification_2 */
@@ -744,10 +754,13 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                 for (i=0; i<numServ; i++)
                                 {
                                     uuid = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx]);
-                                    printf("uuid : %x\n\r",uuid);
                                     int sensorIndex = 0;
-
-                                    	sensorIndex = getSensorIndex(sensorUsedNames[2]);
+                                    for (int indx = 0; indx<4;i++){
+                                          sensorIndex = getSensorIndex(sensorUsedNames[indx]);
+                                          if (sensorIndex != -1){
+                                               break;
+                                          }
+                                    }
 
 
                                     if (sensorIndex == -1){
@@ -769,6 +782,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 											aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
 	#endif
 											aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
+											aP2PClientContext[index].sensor_evt_type = P2P_NOTIFICATION_CSC_RECEIVED_EVT;
 											break;
 										}
                                     	case(BATTERY_SERVICE_UUID):
@@ -779,6 +793,8 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                     	case(CYCLING_POWER_SERVICE_UUID):
                                     	{
 											devicesList[sensorIndex].supportedDataType.power = true;
+
+											aP2PClientContext[index].sensor_evt_type = P2P_NOTIFICATION_CP_RECEIVED_EVT;
 											break;
 										}
                                     	case(SHIMANO_SERVICE_UUID ):
@@ -794,6 +810,9 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                         aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
 #endif
                                         aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
+
+                                        aP2PClientContext[index].sensor_evt_type = P2P_NOTIFICATION_SHIMANO_RECEIVED_EVT;
+
                                     		break;
                                     	}
 
@@ -973,7 +992,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 #if(CFG_DEBUG_APP_TRACE != 0)
 
 #endif
-                            Notification.P2P_Client_Evt_Opcode = P2P_NOTIFICATION_INFO_RECEIVED_EVT;
+                            Notification.P2P_Client_Evt_Opcode = aP2PClientContext[index].sensor_evt_type;
                             Notification.DataTransfered.Length = pr->Attribute_Value_Length;
                             Notification.DataTransfered.pPayload = pr->Attribute_Value;
 
