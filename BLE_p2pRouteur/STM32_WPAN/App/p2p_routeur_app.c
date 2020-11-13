@@ -401,6 +401,7 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
 	int cassette = 0;
 	int plateau = 0;
 	int tab[17] = {0};
+	int shimano_rsp = 0;
 
 /* USER CODE END P2P_Client_App_Notification_1 */
     switch(pNotification->P2P_Client_Evt_Opcode)
@@ -412,10 +413,11 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
     					tab[i] = pNotification->DataTransfered.pPayload[i];
     				}
 
-    				GetRatio(tab, &cassette, &plateau);
+    				shimano_rsp = GetRatio(tab, &cassette, &plateau);
 
-    				printf("Cassette : %d	Plateau : %d\n\r",cassette, plateau);
-
+    				if(shimano_rsp == 1){
+    					printf("Cassette : %d	Plateau : %d\n\r",cassette, plateau);
+    				}
 	break;
 
     case P2P_NOTIFICATION_CSC_RECEIVED_EVT:
@@ -755,7 +757,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                 {
                                     uuid = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx]);
                                     int sensorIndex = 0;
-                                    for (int indx = 0; indx<4;i++){
+                                    /*for (int indx = 0; indx<4;i++){
                                           sensorIndex = getSensorIndex(sensorUsedNames[indx]);
                                           if (sensorIndex != -1){
                                                break;
@@ -766,7 +768,9 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                     if (sensorIndex == -1){
                                     	APP_DBG_MSG("-- GATT : SENSOR NAME NOT IN THE ARRAY \n");
                                     	return(return_value);
-                                    }
+                                    }*/
+
+                                    sensorIndex = getSensorIndex(sensorUsedNames[2]);
                                     switch(uuid)
                                     {
                                     	case(CYCLING_SPEED_CADENCE_SERVICE_UUID ):

@@ -166,9 +166,17 @@ void crankRevFunction(int* CrankValue){
 
 }
 
-void GetRatio(int *tableau, int *pCassette, int *pPlateaux){
+int GetRatio(int *tableau, int *pCassette, int *pPlateaux){
 
-*pPlateaux = tableau[3];
-*pCassette = tableau[5];
+if(tableau[3]<1 || tableau[3]>2){
+	if(tableau[5]<1 || tableau[5]>11){
+		return -1;
+	}
+}
+else{
+	*pPlateaux = tableau[3];
+	*pCassette = tableau[5];
+	return 1;
+}
 }
 
