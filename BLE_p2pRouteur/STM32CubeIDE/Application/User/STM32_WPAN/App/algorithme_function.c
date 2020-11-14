@@ -55,6 +55,21 @@ int Obtenir_indice_ratio(float ratio, float *tab_ratio)
     return i;
 }
 
+// Déclaration de la fonction qui nous donne l'indice du ratio minimum en cas de repos
+int Obtenir_indice_ratio_min_repos(float *tab_ratio)
+{
+    int i = 0;
+    float ratio_tmp = 0;
+    while (ratio_tmp < 2)
+        {
+        i++;
+        ratio_tmp = tab_ratio[i];
+        //printf ("indice du ratio min lors du repos %d\n", indice_ratio_min_repos);
+        //printf ("tab_ratio %f\n", tab_ratio[i]);
+        }
+    return i;
+}
+
 // Déclaration de la fonction qui gère les situations de sprints
 void Sprint(float puissance, float cadence, float vitesse, float ratio,int *pointeur_flag_sprint)
 {
@@ -68,45 +83,32 @@ void Sprint(float puissance, float cadence, float vitesse, float ratio,int *poin
 }
 
 // Déclaration de la fonction qui gère les situations de repos
-void Repos(float puissance, float cadence, float vitesse, float ratio, int *pointeur_flag_repos, float *tab_vitesse, float *tab_ratio, int *pointeur_nbr_ratio)
+void Repos(float puissance, float cadence, float vitesse, float ratio, int *pointeur_flag_repos, int Diametre_roues, float *tab_ratio)
 {
     printf ("Repos à %f Watt\n", puissance);
-    int i = 0;
-    int indice_ratio_min_repos = 0;
-    float ratio_tmp = 0;
-    while (ratio_tmp < 2)
+
+    int i = Obtenir_indice_ratio_min_repos(tab_ratio);
+    //printf ("indice %d\n", i);
+    //printf ("tab_ratio %f\n", tab_ratio[i]);
+
+    int j = Obtenir_indice_ratio(ratio, tab_ratio);
+    //printf ("indice %d\n", j);
+    //printf ("ratio %f et tab_ratio %f\n", ratio, tab_ratio[j]);
+
+    if(cadence > 1 && j > i)
         {
-        i++;
-        ratio_tmp = tab_ratio[i];
-        indice_ratio_min_repos = i;
-        //printf ("indice du ratio min lors du repos %d\n", indice_ratio_min_repos);
-        //printf ("tab_ratio %f\n", tab_ratio[i]);
-        }
-    for(int j=indice_ratio_min_repos; j<*pointeur_nbr_ratio; j++)
-    {
-        if(vitesse < tab_vitesse[j+1] && vitesse >= tab_vitesse[j])
+        float Cadence_theorique = (vitesse/3.6)/((float)Diametre_roues/1000*3.14159)*60/tab_ratio[j];
+        printf ("cadence théorique %f\n", Cadence_theorique);
+        if(Cadence_theorique < 80)
             {
-            //printf ("Vitesse entre %f et %f = %f\n", tab_vitesse[j], tab_vitesse[j+1], vitesse);
-
-            if(ratio > tab_ratio[j] && cadence > 1)
-                {
-                //printf ("ratio %f et tab_ratio %f\n", ratio, tab_ratio[j]);
-                Diminuer_ratio();
-                }
-
-            if(ratio < tab_ratio[j] && cadence > 1)
-                {
-                //printf ("ratio %f et tab_ratio %f\n", ratio, tab_ratio[j]);
-                Augmenter_ratio();
-                }
-
-            else
-                {
-                //printf("Rester sur le meme pignon\n");
-                //printf ("ratio %f et tab_ratio %f\n", ratio, tab_ratio[j]);
-                }
+            Diminuer_ratio();
             }
-    }
+
+        if(Cadence_theorique > 100)
+            {
+            Augmenter_ratio();
+            }
+        }
 
 }
 
@@ -229,55 +231,5 @@ void init_tab_ratio(int nbr_pignon, int nbr_plateau, int *cassette, int *pedalie
     //for(int j=0; j<*pointeur_nbr_ratio; j++)
     //{
     //printf("%f ",tab_ratio[j]);
-    //}
-}
-
-// Déclaration de la fonction d'initialisation de la table donnant la vitesse optimale de chaque ratios séquentiels disponibles
-void init_tab_vitesse(float *tab_vitesse, int *pointeur_nbr_ratio, float *tab_ratio, int Diametre_roues, int Cadence_des)
-{
-    for(int i=0; i<*pointeur_nbr_ratio; i++)
-    {
-    tab_vitesse[i] = tab_ratio[i]*(Cadence_des*0.92)*((float)Diametre_roues/1000*3.14159)*60/1000;
-    }
-
-    //for(int j=0; j<*pointeur_nbr_ratio; j++)
-    //{
-    //printf("%f ",tab_vitesse[j]);
-    //}
-}
-
-// Déclaration de la fonction d'initialisation de la table de ratios
-void init_tab_ratio_repos(int nbr_pignon, int nbr_plateau, int *cassette, int *pedalier, float *tab_ratio_repos)
-{
-    for(int i=0; i<nbr_pignon; i++)
-    {
-    tab_ratio_repos[i] = (float)pedalier[0]/cassette[i];
-    }
-
-     if (nbr_plateau == 2)
-    {
-        for(int j=0; j<nbr_pignon; j++)
-        {
-        tab_ratio_repos[nbr_pignon+j] = (float)pedalier[1]/cassette[j];
-        }
-    }
-
-    //for(int j=0; j<(nbr_plateau * nbr_pignon); j++)
-    //{
-    //printf("%f ",tab_ratio_repos[j]);
-    //}
-}
-
-// Déclaration de la fonction d'initialisation de la table donnant la vitesse optimale de chaque ratios possible
-void init_tab_vitesse_repos(int nbr_pignon, int nbr_plateau, float *tab_vitesse_repos, float *tab_ratio_repos, int Diametre_roues, int Cadence_des)
-{
-    for(int i=0; i<(nbr_plateau * nbr_pignon); i++)
-    {
-    tab_vitesse_repos[i] = tab_ratio_repos[i]*(Cadence_des)*((float)Diametre_roues/1000*3.14159)*60/1000;
-    }
-
-    //for(int j=0; j<(nbr_plateau * nbr_pignon); j++)
-    //{
-    //printf("%f ",tab_vitesse_repos[j]);
     //}
 }

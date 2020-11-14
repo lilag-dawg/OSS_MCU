@@ -111,14 +111,13 @@ typedef struct
   float value
 } Algorithme_type_data;
 
-typedef struct
-{
+struct BikeDataInformation_t{
 	Algorithme_type_data cadence;
 	Algorithme_type_data speed;
 	Algorithme_type_data power;
 	Algorithme_type_data pinion_fd;
 	Algorithme_type_data pinion_rd;
-} Bike_data_information;
+};
 
 struct DeviceInformations_t{
     char deviceName[MAX_DEVICE_NAME_LENGHT];
@@ -129,7 +128,7 @@ struct DeviceInformations_t{
 };
 
 extern struct DeviceInformations_t devicesList[MAX_DEVICES];
-extern struct Bike_data_information bikeDataInformation;
+extern struct BikeDataInformation_t bikeDataInformation;
 extern int device_list_index;
 
 

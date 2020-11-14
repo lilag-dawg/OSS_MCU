@@ -11,5 +11,6 @@
 void switchCase(int* value);
 void wheelRevFunction(int* wheelValue);
 void crankRevFunction(int* CrankValue);
+void algoCases(void);
 
 #endif /* APPLICATION_USER_STM32_WPAN_APP_DATA_MANAGEMENT_H_ */
