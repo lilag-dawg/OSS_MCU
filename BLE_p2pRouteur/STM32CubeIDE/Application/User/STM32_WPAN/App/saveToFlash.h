@@ -85,7 +85,7 @@ struct sprockets {
 
 struct sensor {
 	char name[19];
-	uint8_t macAddress[5];
+	uint8_t macAddress[6];
 };
 
 struct settings {

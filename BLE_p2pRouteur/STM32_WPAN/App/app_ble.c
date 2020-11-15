@@ -45,10 +45,6 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
-
-struct DeviceInformations_t devicesList[MAX_DEVICES] = {0};
-
-int device_list_index = 0;
 /* USER CODE END PTD */
 
 /**
@@ -308,7 +304,8 @@ typedef struct
 /* USER CODE BEGIN PD */
 #define MAX_NMBR_DEVICES      127
 
-struct DeviceInformations_t *DeviceFound[MAX_NMBR_DEVICES];
+//struct DeviceInformations_t *DeviceFound[MAX_NMBR_DEVICES];
+ ScannedDevicesPackage_t scannedDevicesPackage;
 
 /* USER CODE END PD */
 
@@ -518,8 +515,25 @@ void APP_BLE_Init( void )
   UTIL_SEQ_SetTask(1 << CFG_TASK_START_ADV_ID, CFG_SCH_PRIO_0);
 /* USER CODE BEGIN APP_BLE_Init_2 */
 
+  UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_1);
+
+  //reset list of scanned devices
+
+  memset(&scannedDevicesPackage, 0 , sizeof(scannedDevicesPackage));
+
+
+  //reset flash
+  struct settings settingsToWrite;
+  memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
+  saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
+
+
 /* USER CODE END APP_BLE_Init_2 */
   return;
+}
+
+void Trigger_Scan_Request( void ){
+	UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_1);
 }
 
 SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
@@ -566,6 +580,38 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
           {
             /* USER CODE BEGIN GAP_GENERAL_DISCOVERY_PROC */
             BSP_LED_Off(LED_BLUE);
+
+            struct settings readSettings;
+            readFlash((uint8_t*)&readSettings);
+
+            uint8_t deviceFoundIndex = 0;
+
+
+            for(int i = 0; i < sizeof(readSettings.sensors); i++){
+            	for(int k = 0; k < scannedDevicesPackage.numberOfScannedDevices; k++){
+            		if(strcmp(scannedDevicesPackage.scannedDevicesList[k].deviceName, readSettings.sensors[i].name) == 0){
+            			deviceFoundIndex += 1;
+            			switch(deviceFoundIndex){
+							case 1:
+								BleApplicationContext.EndDevice1Found = 0x01;
+								break;
+							case 2:
+								BleApplicationContext.EndDevice2Found = 0x01;
+								break;
+							case 3:
+								BleApplicationContext.EndDevice3Found = 0x01;
+								break;
+							case 4:
+								BleApplicationContext.EndDevice4Found = 0x01;
+								break;
+							default:
+								break;
+            			}
+            		}
+            	}
+            }
+
+
             /* USER CODE END GAP_GENERAL_DISCOVERY_PROC */
 
             APP_DBG_MSG("-- GAP GENERAL DISCOVERY PROCEDURE_COMPLETED\n");
@@ -764,23 +810,26 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
           /* USER CODE END EVT_LE_CONN_COMPLETE_Multi */
 #endif
                 ;
-            int sensorIndex1 = 0;
+            /*int sensorIndex1 = 0;
             int sensorIndex2 = 0;
             int sensorIndex3 = 0;
             int sensorIndex4 = 0;
             sensorIndex1 = getSensorIndex(sensorUsedNames[0]);
             sensorIndex2 = getSensorIndex(sensorUsedNames[1]);
             sensorIndex3 = getSensorIndex(sensorUsedNames[2]);
-            sensorIndex4 = getSensorIndex(sensorUsedNames[3]);
+            sensorIndex4 = getSensorIndex(sensorUsedNames[3]);*/
+
+            struct settings readSettings;
+            readFlash((uint8_t*)&readSettings);
 
             for (int i = 0; i < 6; i++)
             {
-              dev1 &= (devicesList[sensorIndex1].deviceAddress[i] == connection_complete_event->Peer_Address[i]);
+              dev1 &= (readSettings.sensors[0].macAddress[i] == connection_complete_event->Peer_Address[i]);
 #if (CFG_P2P_DEMO_MULTI != 0)
           /* USER CODE BEGIN EVT_LE_CONN_COMPLETE_Multi_2 */
-              dev2 &= (devicesList[sensorIndex2].deviceAddress[i] == connection_complete_event->Peer_Address[i]);
-              dev3 &= (devicesList[sensorIndex3].deviceAddress[i] == connection_complete_event->Peer_Address[i]);
-              dev4 &= (devicesList[sensorIndex4].deviceAddress[i] == connection_complete_event->Peer_Address[i]);
+              dev2 &= (readSettings.sensors[1].macAddress[i] == connection_complete_event->Peer_Address[i]);
+              dev3 &= (readSettings.sensors[2].macAddress[i] == connection_complete_event->Peer_Address[i]);
+              dev4 &= (readSettings.sensors[3].macAddress[i] == connection_complete_event->Peer_Address[i]);
               dev5 &= (P2P_SERVER5_BDADDR[i] == connection_complete_event->Peer_Address[i]);
               dev6 &= (P2P_SERVER6_BDADDR[i] == connection_complete_event->Peer_Address[i]);
           /* USER CODE END EVT_LE_CONN_COMPLETE_Multi_2 */
@@ -998,7 +1047,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
           /* search AD TYPE 0x09 (Complete Local Name) */
           /* search AD Type 0x02 (16 bits UUIDS) */
-          if (event_type == ADV_IND)
+          if (event_type == ADV_IND || event_type == SCAN_RSP)
           {
 
             /* ISOLATION OF BD ADDRESS AND LOCAL NAME */
@@ -1007,7 +1056,8 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
             {
               adlength = adv_report_data[k];
               adtype = adv_report_data[k + 1];
-              char current_device_name[MAX_DEVICE_NAME_LENGHT] = {0};
+              char current_device_name[MAX_DEVICE_NAME_LENGHT];
+              memset(current_device_name, 0, MAX_DEVICE_NAME_LENGHT);
               bool isStringFound = false;
 
               switch (adtype)
@@ -1020,51 +1070,31 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 case 0x09: /* now get local name */
                 /* USER CODE BEGIN get_local_name */
 
-                	strcpy(sensorUsedNames[0], "	Ridesense");
-                	strcpy(sensorUsedNames[1], "	CAD-BLE0967095");
 
                 	for (int i=0; i<adlength;i++){
                 		current_device_name[i] = adv_report_data[k+i+1];
 					}
 
-                	for(int j=0;j<device_list_index;j++){
-                		if (strcmp(current_device_name, devicesList[j].deviceName) == 0){
+                	for(int j=0;j<scannedDevicesPackage.numberOfScannedDevices;j++){ //todo probleme avec numberofScannedDevices
+                		if (strcmp(current_device_name, scannedDevicesPackage.scannedDevicesList[j].deviceName) == 0){
                 			isStringFound = true;
                 			break;
                 		}
                 	}
 					if (isStringFound == false){
-						strcpy(devicesList[device_list_index].deviceName, current_device_name);
-						devicesList[device_list_index].pairingStatus = 0;
-						devicesList[device_list_index].position = device_list_index;
-						devicesList[device_list_index].deviceAddress[0] = le_advertising_event->Advertising_Report[0].Address[0];
-						devicesList[device_list_index].deviceAddress[1] = le_advertising_event->Advertising_Report[0].Address[1];
-						devicesList[device_list_index].deviceAddress[2] = le_advertising_event->Advertising_Report[0].Address[2];
-						devicesList[device_list_index].deviceAddress[3] = le_advertising_event->Advertising_Report[0].Address[3];
-						devicesList[device_list_index].deviceAddress[4] = le_advertising_event->Advertising_Report[0].Address[4];
-						devicesList[device_list_index].deviceAddress[5] = le_advertising_event->Advertising_Report[0].Address[5];
+						strcpy(scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.numberOfScannedDevices].deviceName, current_device_name);
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.numberOfScannedDevices].pairingStatus = 0;
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.numberOfScannedDevices].position = scannedDevicesPackage.numberOfScannedDevices;
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.numberOfScannedDevices].macAddress[0] = le_advertising_event->Advertising_Report[0].Address[0];
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.numberOfScannedDevices].macAddress[1] = le_advertising_event->Advertising_Report[0].Address[1];
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.numberOfScannedDevices].macAddress[2] = le_advertising_event->Advertising_Report[0].Address[2];
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.numberOfScannedDevices].macAddress[3] = le_advertising_event->Advertising_Report[0].Address[3];
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.numberOfScannedDevices].macAddress[4] = le_advertising_event->Advertising_Report[0].Address[4];
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.numberOfScannedDevices].macAddress[5] = le_advertising_event->Advertising_Report[0].Address[5];
 
-						if(strcmp(current_device_name, sensorUsedNames[0]) == 0){
-							APP_DBG_MSG("-- P2P SERVER 1 DETECTED -- VIA MAN ID\n");
-							BleApplicationContext.EndDevice1Found = 0x01;
-						}
-
-						else if(strcmp(current_device_name, sensorUsedNames[1]) == 0){
-							APP_DBG_MSG("-- P2P SERVER 2 DETECTED -- VIA MAN ID\n");
-							BleApplicationContext.EndDevice2Found = 0x01;
-						}
-						else if(strcmp(current_device_name, sensorUsedNames[2]) == 0){
-							APP_DBG_MSG("-- P2P SERVER 3 DETECTED -- VIA MAN ID\n");
-							BleApplicationContext.EndDevice3Found = 0x01;
-						}
-						else if(strcmp(current_device_name, sensorUsedNames[3]) == 0){
-							APP_DBG_MSG("-- P2P SERVER 4 DETECTED -- VIA MAN ID\n");
-							BleApplicationContext.EndDevice4Found = 0x01;
-						}
-
-						printf("%s", devicesList[device_list_index].deviceName);
-						printf(" //////// %d /////////// \n", device_list_index);
-						device_list_index ++;
+						printf("%s", scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.numberOfScannedDevices].deviceName);
+						printf(" //////// %d /////////// new\n", scannedDevicesPackage.numberOfScannedDevices);
+						scannedDevicesPackage.numberOfScannedDevices ++;
 					}
 
 
@@ -1447,7 +1477,7 @@ static void Scan_Request( void )
     if (result == BLE_STATUS_SUCCESS)
     {
     /* USER CODE BEGIN BLE_SCAN_SUCCESS */
-    device_list_index = 0;
+    //device_list_index = 0;
 
     /* USER CODE END BLE_SCAN_SUCCESS */
       APP_DBG_MSG(" \r\n\r** START GENERAL DISCOVERY (SCAN) **  \r\n\r");
@@ -1502,6 +1532,8 @@ static void Adv_Request( void )
     /* USER CODE END BLE_CONNECT_SUCCESS */
       APP_DBG_MSG("  \r\n\r");
       APP_DBG_MSG("** START ADVERTISING **  \r\n\r");
+
+      scannedDevicesPackage.numberOfScannedDevices = 0;
     }
     else
     {
@@ -1529,14 +1561,15 @@ static void ConnReq1( void )
   if (BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED_CLIENT)
   {
     /* USER CODE BEGIN APP_BLE_CONNECTED_SUCCESS_END_DEVICE_1 */
-	  int index = 0;
-	  index = getSensorIndex(sensorUsedNames[0]);
+	  struct settings readSettings;
+	  readFlash((uint8_t*)&readSettings);
+
     /* USER CODE END APP_BLE_CONNECTED_SUCCESS_END_DEVICE_1 */
         result = aci_gap_create_connection(
         SCAN_P,
         SCAN_L,
 		RANDOM_ADDR,
-        devicesList[index].deviceAddress,
+		readSettings.sensors[0].macAddress,
         PUBLIC_ADDR,
         CONN_P1,
         CONN_P2,
@@ -1578,14 +1611,14 @@ static void ConnReq2( void )
 
   if (BleApplicationContext.EndDevice_Connection_Status[1] != APP_BLE_CONNECTED_CLIENT)
   {
-	  int index = 0;
-	  index = getSensorIndex(sensorUsedNames[1]);
+	  struct settings readSettings;
+	  readFlash((uint8_t*)&readSettings);
 
     result = aci_gap_create_connection(
         SCAN_P,
         SCAN_L,
 		RANDOM_ADDR,
-		devicesList[index].deviceAddress,
+		readSettings.sensors[1].macAddress,
         PUBLIC_ADDR,
         CONN_P1,
         CONN_P2,
@@ -1621,14 +1654,14 @@ static void ConnReq3( void )
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 3 **  \r\n\r");
   if (BleApplicationContext.EndDevice_Connection_Status[2] != APP_BLE_CONNECTED_CLIENT)
   {
-	  int index = 0;
-	  index = getSensorIndex(sensorUsedNames[2]);
+	  struct settings readSettings;
+	  readFlash((uint8_t*)&readSettings);
 
     result = aci_gap_create_connection(
         SCAN_P,
         SCAN_L,
 		RANDOM_ADDR,
-		devicesList[index].deviceAddress,
+		readSettings.sensors[2].macAddress,
         PUBLIC_ADDR,
         CONN_P1,
         CONN_P2,
@@ -1664,14 +1697,14 @@ static void ConnReq4( void )
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 4 **  \r\n\r");
   if (BleApplicationContext.EndDevice_Connection_Status[3] != APP_BLE_CONNECTED_CLIENT)
   {
-	  int index = 0;
-	  index = getSensorIndex(sensorUsedNames[3]);
+	  struct settings readSettings;
+	  readFlash((uint8_t*)&readSettings);
 
     result = aci_gap_create_connection(
         SCAN_P,
         SCAN_L,
 		RANDOM_ADDR,
-		devicesList[index].deviceAddress,
+		readSettings.sensors[3].macAddress,
         PUBLIC_ADDR,
         CONN_P1,
         CONN_P2,
@@ -1797,7 +1830,7 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
     /* USER CODE END P2P_Evt_Opcode */
     case SMART_PHONE1_CONN_HANDLE_EVT:
         EDS_STM_Update_Char(0x0001,
-                (uint8_t *)&device_list_index);
+                (uint8_t *)&scannedDevicesPackage.numberOfScannedDevices);
       break;
 
     case P2P_SERVER1_CONN_HANDLE_EVT:
