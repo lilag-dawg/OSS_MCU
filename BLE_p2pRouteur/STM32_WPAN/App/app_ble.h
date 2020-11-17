@@ -48,6 +48,7 @@ extern "C" {
       APP_BLE_LP_CONNECTING,
       APP_BLE_CONNECTED_SERVER,
       APP_BLE_CONNECTED_CLIENT,
+	  APP_BLE_CONNECTED_CLIENT_NOTIFICATION_ENABLED,
 
       APP_BLE_DISCOVER_SERVICES,
       APP_BLE_DISCOVER_CHARACS,
@@ -134,7 +135,7 @@ typedef struct
 {
     char deviceName[MAX_DEVICE_NAME_LENGHT];
     uint8_t macAddress[6];
-    Pairing_request_status pairingStatus;
+    APP_BLE_ConnStatus_t pairingStatus;
     uint8_t position;
     DeviceSupportedDataType supportedDataType;
 } DeviceInformations_t;
@@ -143,6 +144,7 @@ typedef struct
 {
 	DeviceInformations_t scannedDevicesList[MAX_DEVICES];
 	uint8_t numberOfScannedDevices;
+	uint8_t iterator;
 } ScannedDevicesPackage_t;
 
 
@@ -171,6 +173,7 @@ typedef struct
   APP_BLE_ConnStatus_t APP_BLE_Get_Client_Connection_Status( uint16_t Connection_Handle );
 
   void Trigger_Scan_Request( void );
+  void Trigger_Connection_Request( int index );
 
 /* USER CODE BEGIN EF */
   int getCorrespondingIndex(char* sensorName);

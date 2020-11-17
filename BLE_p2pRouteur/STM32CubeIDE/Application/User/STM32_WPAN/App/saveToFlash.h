@@ -92,7 +92,7 @@ struct settings {
 	struct preferences preferences;
 	struct cranksets cranksets;
 	struct sprockets sprockets;
-	struct sensor sensors[50];
+	struct sensor sensors[4]; //4 sensors max in flash
 };
 
 
