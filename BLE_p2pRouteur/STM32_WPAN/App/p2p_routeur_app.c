@@ -127,6 +127,8 @@ typedef struct
 
 } P2P_Router_App_Context_t;
 
+bool uuid_bit_format = 0;
+
 /* Private defines ------------------------------------------------------------*/
 #define UNPACK_2_BYTE_PARAMETER(ptr)  \
         (uint16_t)((uint16_t)(*((uint8_t *)ptr))) |   \
@@ -682,7 +684,6 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
     hci_event_pckt *event_pckt;
     evt_blue_aci *blue_evt;
     P2P_Client_App_Notification_evt_t Notification;
-
     return_value = SVCCTL_EvtNotAck;
     event_pckt = (hci_event_pckt *)(((hci_uart_pckt*)Event)->data);
 
@@ -730,6 +731,10 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         index++;
                     }
 
+                    //Debut format 128bit ou 16bit
+                    uuid_bit_format = 0;
+                    //Fin format 128 bit ou 16 bit
+
                     if(index < BLE_CFG_CLT_MAX_NBR_CB)
                     {
                         aP2PClientContext[index].connHandle= handle;
@@ -744,33 +749,17 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                          * we are intersted only if the UUID is 128 bit.
                          * So check if the data length is 20
                          */
-#if (UUID_128BIT_FORMAT==1)
-                        if (pr->Attribute_Data_Length == 20)
-                        {
-                            idx = 16;
-#else
-                            if (pr->Attribute_Data_Length == 6)
-                            {
-                                idx = 4;
-#endif
+
+                                if (uuid_bit_format==1){idx = 16;}
+                                else if (uuid_bit_format==0){idx = 4;}
+
+                                if (pr->Attribute_Data_Length == 20 || pr->Attribute_Data_Length == 6)
+                                {
+
                                 for (i=0; i<numServ; i++)
                                 {
                                     uuid = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx]);
-                                    int sensorIndex = 0;
-                                    /*for (int indx = 0; indx<4;i++){
-                                          sensorIndex = getSensorIndex(sensorUsedNames[indx]);
-                                          if (sensorIndex != -1){
-                                               break;
-                                          }
-                                    }
 
-
-                                    if (sensorIndex == -1){
-                                    	APP_DBG_MSG("-- GATT : SENSOR NAME NOT IN THE ARRAY \n");
-                                    	return(return_value);
-                                    }*/
-
-                                    sensorIndex = getSensorIndex(sensorUsedNames[2]);
                                     switch(uuid)
                                     {
                                     	case(CYCLING_SPEED_CADENCE_SERVICE_UUID ):
@@ -778,17 +767,22 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 	#if(CFG_DEBUG_APP_TRACE != 0)
 											APP_DBG_MSG("-- GATT : SENSOR_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
 	#endif
-											#if (UUID_128BIT_FORMAT==1)
-											aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
-											aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
-	#else
-											aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
-											aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
-	#endif
+
+											if(uuid_bit_format==1){
+												aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
+									            aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
+											}
+											else if(uuid_bit_format==0){
+												aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
+										        aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
+											}
 											aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
 											aP2PClientContext[index].sensor_evt_type = P2P_NOTIFICATION_CSC_RECEIVED_EVT;
 											break;
 										}
+
+
+
                                     	case(BATTERY_SERVICE_UUID):
                                     	{
 											devicesList[sensorIndex].supportedDataType.battery = true;
@@ -806,15 +800,17 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 #if(CFG_DEBUG_APP_TRACE != 0)
                                     	APP_DBG_MSG("-- GATT : SENSOR_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
 #endif
-                                        #if (UUID_128BIT_FORMAT==1)
-                                        aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
-                                        aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
-#else
-                                        aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
-                                        aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
-#endif
-                                        aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
 
+                                        if(uuid_bit_format==1){
+                                        	aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
+                                            aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
+                                        }
+                                        else if(uuid_bit_format==0){
+                                        	aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
+                                        	aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
+                                        }
+
+                                        aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
                                         aP2PClientContext[index].sensor_evt_type = P2P_NOTIFICATION_SHIMANO_RECEIVED_EVT;
 
                                     		break;
@@ -829,7 +825,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                             }
                         }
                     }
-                    break;
+                    break;//ok
 
                 case EVT_BLUE_ATT_READ_BY_TYPE_RESP:
                 {
@@ -859,24 +855,23 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                     {
 
                         /* we are interested in only 16 bit UUIDs */
-#if (UUID_128BIT_FORMAT==1)
-                        idx = 17;
-                        if (pr->Handle_Value_Pair_Length == 21)
-#else
-                            idx = 5;
-                        if (pr->Handle_Value_Pair_Length == 7)
-#endif
+
+                        if (uuid_bit_format == 1){idx=17;}
+                        else if (uuid_bit_format==0){idx=5;}
+
+                        if(pr->Handle_Value_Pair_Length == 21 || pr->Handle_Value_Pair_Length == 7)
+
                         {
-                            pr->Data_Length -= 1;
+
+                        	pr->Data_Length -= 1;
                             while(pr->Data_Length > 0)
                             {
                                 uuid = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx]);
                                 /* store the characteristic handle not the attribute handle */
-#if (UUID_128BIT_FORMAT==1)
-                                handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-14]);
-#else
-                                handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-2]);
-#endif
+
+                                if(uuid_bit_format==1){handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-14]);}
+                                else if(uuid_bit_format==0){handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-2]);}
+
                                 if(uuid == CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID)
                                 {
 #if(CFG_DEBUG_APP_TRACE != 0)
@@ -904,18 +899,21 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 
                                 }
 
-#if (UUID_128BIT_FORMAT==1)
-                                pr->Data_Length -= 21;
-                                idx += 21;
-#else
-                                pr->Data_Length -= 7;;
-                                idx += 7;;
-#endif
+                                if(uuid_bit_format==1){
+                                    pr->Data_Length -= 21;
+                                    idx += 21;
+                                }
+                                else if (uuid_bit_format==0){
+                                    pr->Data_Length -= 7;;
+                                    idx += 7;;
+                                }
+
+
                             }
                         }
                     }
                 }
-                break;
+                break; //ok
 
 
                 case EVT_BLUE_ATT_FIND_INFORMATION_RESP:
@@ -948,7 +946,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         numDesc = (pr->Event_Data_Length) / 4;
                         /* we are interested only in 16 bit UUIDs */
                         idx = 0;
-                        if (pr->Format == UUID_TYPE_16)
+                        if (pr->Format == UUID_TYPE_16) //À REGARDER-----------------------------------------------------------
                         {
                             for (i=0; i<numDesc; i++)
                             {
@@ -973,7 +971,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         }
                     }
                 }
-                break; /*EVT_BLUE_ATT_FIND_INFORMATION_RESP*/
+                break; /*EVT_BLUE_ATT_FIND_INFORMATION_RESP*/ //ok
 
                 case EVT_BLUE_GATT_NOTIFICATION:
                 {
@@ -1007,7 +1005,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         }
                     }
                 }
-                break;/* end EVT_BLUE_GATT_NOTIFICATION */
+                break;/* end EVT_BLUE_GATT_NOTIFICATION */ //ok
 
                 case EVT_BLUE_ATT_READ_RESP:
                 {
@@ -1034,7 +1032,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         devicesList[sensorIndex].supportedDataType.speed = pr->Attribute_Value[0] & 0x1;
                     }
 
-                	break;
+                	break; //ok
                 }
                 case EVT_BLUE_GATT_PROCEDURE_COMPLETE:
                 {
@@ -1057,7 +1055,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         UTIL_SEQ_SetTask(  1<<CFG_TASK_SEARCH_SERVICE_ID, CFG_SCH_PRIO_0 );
                     }
                 }
-                break; /*EVT_BLUE_GATT_PROCEDURE_COMPLETE*/
+                break; /*EVT_BLUE_GATT_PROCEDURE_COMPLETE*/ //ok
                 default:
                     /* USER CODE BEGIN ecode_default */
 

@@ -1072,6 +1072,11 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
                 /* USER CODE END get_local_name */
                   break;
+
+                case 0x07: //manufacture name
+
+                break;
+
                 case 0x02: /* now get UID */
                 /* USER CODE BEGIN get_UID */
 

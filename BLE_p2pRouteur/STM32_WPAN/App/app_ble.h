@@ -128,12 +128,13 @@ struct DeviceInformations_t{
     uint8_t deviceAddress[6];
     uint8_t pairingStatus;
     uint8_t position;
+    bool uuid_format;
     DeviceSupportedDataType supportedDataType;
 };
 
 extern struct DeviceInformations_t devicesList[MAX_DEVICES];
 extern int device_list_index;
-
+extern bool uuid_bit_format;
 
 /* USER CODE END ET */
 
