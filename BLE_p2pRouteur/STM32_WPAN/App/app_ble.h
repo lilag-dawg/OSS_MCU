@@ -112,16 +112,15 @@ typedef struct
 {
   float time;
   float value
-} Algorithme_data;
+} Algorithme_type_data;
 
-typedef struct
-{
-	Algorithme_data cadence;
-	Algorithme_data speed;
-	Algorithme_data power;
-	Algorithme_data pinion_fd;
-	Algorithme_data pinion_rd;
-} bike_data;
+struct BikeDataInformation_t{
+	Algorithme_type_data cadence;
+	Algorithme_type_data speed;
+	Algorithme_type_data power;
+	Algorithme_type_data pinion_fd;
+	Algorithme_type_data pinion_rd;
+};
 
 struct DeviceInformations_t{
     char deviceName[MAX_DEVICE_NAME_LENGHT];
@@ -133,6 +132,7 @@ struct DeviceInformations_t{
 };
 
 extern struct DeviceInformations_t devicesList[MAX_DEVICES];
+extern struct BikeDataInformation_t bikeDataInformation;
 extern int device_list_index;
 extern bool uuid_bit_format;
 

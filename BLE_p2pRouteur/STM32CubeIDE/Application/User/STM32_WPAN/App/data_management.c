@@ -13,8 +13,13 @@
 #include <float.h>
 
 #include "data_management.h"
+#include "algorithme_function.h"
+#include "app_ble.h"
 
 #define bufferMaxValue	10
+#define NBR_RATIO		15
+
+struct BikeDataInformation_t bikeDataInformation = {0};
 
 float prevWheelData = 0;
 float currentWheelData = 0;
@@ -34,6 +39,7 @@ int indexCrankRevValue = 0;
 
 float wheelRevValue[bufferMaxValue][6] = {0};
 int indexWheelRevValue = 0;
+bool init = true;
 
 void switchCase(int* value){
 
@@ -100,6 +106,8 @@ void wheelRevFunction(int* wheelValue){
     }
 
     float kmhValue = 3.6*((currentWheelData - prevWheelData)/(currentWheelEvent - prevWheelEvent)); // le 64 est pour passer de RPS a RPM
+    bikeDataInformation.speed.value = kmhValue;
+    bikeDataInformation.speed.time = 0;    // a changer avec le timer
     printf("Votre vitesse est: %f km/h\n\r", kmhValue);
 }
 
@@ -160,10 +168,80 @@ void crankRevFunction(int* CrankValue){
 			}
 
 			rpmValue = ((currentCrankData-prevCrankData)/(currentCrankEvent-prevCrankEvent))*60;
+			bikeDataInformation.cadence.value = rpmValue;
+			bikeDataInformation.cadence.time = 0;    // a changer avec le timer
 			printf("Votre RMP est: %f RPM\n\r", rpmValue);
 		}
 	}
 
+}
+
+
+void algoCases(void){
+//	float puissance = bikeDataInformation.power.value;
+	float puissance = 240;
+	float cadence = bikeDataInformation.cadence.value;
+	float vitesse = bikeDataInformation.speed.value;
+//	float plateau = bikeDataInformation.pinion_fd.value;
+//	float pignon = bikeDataInformation.pinion_rd.value;
+	float plateau = 0;
+	float pignon = 5;
+	float tab_ratio[NBR_RATIO];
+
+	if (init == true){
+		ordonnerTableau_int(cassette,nbr_pignon);
+
+		ordonnerTableau_int(pedalier,nbr_plateau);
+
+		init_nbr_ratio(nbr_pignon, nbr_plateau, pointeur_nbr_ratio);
+
+
+		init_tab_ratio(nbr_pignon, nbr_plateau, cassette, pedalier, pointeur_nbr_ratio, tab_ratio);
+		init = false;
+	}
+
+	// Algorithme de changements de vitesses automatisés
+	if (*pointeur_flag_sprint == 0 && *pointeur_flag_repos == 0 && *pointeur_flag_normale == 0 && *pointeur_flag_manuel == 0)
+	{
+		float ratio = Obtenir_ratio(pignon, plateau, cassette, pedalier);
+
+		if (puissance >= ftp*1.51)
+		{
+			Sprint(puissance, cadence, vitesse, ratio, pointeur_flag_sprint);
+		}
+
+		if (puissance <= ftp*0.24)
+		{
+			Repos(puissance, cadence, vitesse, ratio, pointeur_flag_repos, Diametre_roues, tab_ratio);
+		}
+
+		if (puissance < ftp*1.51 && puissance > ftp*0.24)
+		{
+			Normale(puissance, cadence, vitesse, ratio, pointeur_flag_normale, Diametre_roues, Cadence_des, tab_ratio);
+		}
+	}
+	else
+	{
+		if (*pointeur_flag_sprint != 0)
+		{
+			*pointeur_flag_sprint = *pointeur_flag_sprint-1;
+		}
+
+		if (*pointeur_flag_repos != 0)
+		{
+			*pointeur_flag_repos = *pointeur_flag_repos-1;
+		}
+
+		if (*pointeur_flag_normale != 0)
+		{
+			*pointeur_flag_normale = *pointeur_flag_normale-1;
+		}
+
+		if (*pointeur_flag_manuel != 0)
+		{
+			*pointeur_flag_manuel = *pointeur_flag_manuel-1;
+		}
+	}
 }
 
 int GetRatio(int *tableau, int *pCassette, int *pPlateaux){

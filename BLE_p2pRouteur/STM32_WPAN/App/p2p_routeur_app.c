@@ -28,6 +28,7 @@
 #include "app_ble.h"
 #include "p2p_routeur_app.h"
 #include "stm32_seq.h"
+#include "data_management.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -999,6 +1000,8 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                             Notification.DataTransfered.pPayload = pr->Attribute_Value;
 
                             P2P_Client_App_Notification(&Notification);
+
+                            algoCases();
 
                             /* INFORM APPLICATION BUTTON IS PUSHED BY END DEVICE */
 
