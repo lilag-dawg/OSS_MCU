@@ -129,6 +129,7 @@ typedef struct
 } P2P_Router_App_Context_t;
 
 bool uuid_bit_format = 0;
+bool uuid_format_char = 0;
 
 /* Private defines ------------------------------------------------------------*/
 #define UNPACK_2_BYTE_PARAMETER(ptr)  \
@@ -687,6 +688,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
     P2P_Client_App_Notification_evt_t Notification;
     return_value = SVCCTL_EvtNotAck;
     event_pckt = (hci_event_pckt *)(((hci_uart_pckt*)Event)->data);
+    int sensorIndex = 0;
 
     switch(event_pckt->evt)
     {
@@ -731,16 +733,25 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         }
                         index++;
                     }
-
                     //Debut format 128bit ou 16bit
-                    uuid_bit_format = 0;
+                    	switch(pr->Attribute_Data_Length)
+                    	{
+                    	case 20:
+                    		uuid_bit_format = 1;
+                    		break;
+                    	case 6:
+                    		uuid_bit_format = 0;
+                    		break;
+                    	default:
+
+                    	break;
+                    	}
                     //Fin format 128 bit ou 16 bit
 
                     if(index < BLE_CFG_CLT_MAX_NBR_CB)
                     {
                         aP2PClientContext[index].connHandle= handle;
                         numServ = (pr->Data_Length) / pr->Attribute_Data_Length;
-
                         /* the event data will be
                          * 2bytes start handle
                          * 2bytes end handle
@@ -760,13 +771,13 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                 for (i=0; i<numServ; i++)
                                 {
                                     uuid = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx]);
-
                                     switch(uuid)
                                     {
                                     	case(CYCLING_SPEED_CADENCE_SERVICE_UUID ):
 										{
 	#if(CFG_DEBUG_APP_TRACE != 0)
 											APP_DBG_MSG("-- GATT : SENSOR_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
+											uuid_format_char = 0;
 	#endif
 
 											if(uuid_bit_format==1){
@@ -787,12 +798,13 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                     	case(BATTERY_SERVICE_UUID):
                                     	{
 											devicesList[sensorIndex].supportedDataType.battery = true;
+											uuid_format_char = 0;
 											break;
 										}
                                     	case(CYCLING_POWER_SERVICE_UUID):
                                     	{
 											devicesList[sensorIndex].supportedDataType.power = true;
-
+											uuid_format_char = 0;
 											aP2PClientContext[index].sensor_evt_type = P2P_NOTIFICATION_CP_RECEIVED_EVT;
 											break;
 										}
@@ -800,6 +812,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                     											{
 #if(CFG_DEBUG_APP_TRACE != 0)
                                     	APP_DBG_MSG("-- GATT : SENSOR_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
+                                    	uuid_format_char = 1;
 #endif
 
                                         if(uuid_bit_format==1){
@@ -856,9 +869,8 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                     {
 
                         /* we are interested in only 16 bit UUIDs */
-
-                        if (uuid_bit_format == 1){idx=17;}
-                        else if (uuid_bit_format==0){idx=5;}
+                        if (uuid_format_char == 1){idx=17;}
+                        else if (uuid_format_char==0){idx=5;}
 
                         if(pr->Handle_Value_Pair_Length == 21 || pr->Handle_Value_Pair_Length == 7)
 
@@ -870,8 +882,8 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                 uuid = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx]);
                                 /* store the characteristic handle not the attribute handle */
 
-                                if(uuid_bit_format==1){handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-14]);}
-                                else if(uuid_bit_format==0){handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-2]);}
+                                if(uuid_format_char==1){handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-14]);}
+                                else if(uuid_format_char==0){handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-2]);}
 
                                 if(uuid == CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID)
                                 {
@@ -900,11 +912,11 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 
                                 }
 
-                                if(uuid_bit_format==1){
+                                if(uuid_format_char==1){
                                     pr->Data_Length -= 21;
                                     idx += 21;
                                 }
-                                else if (uuid_bit_format==0){
+                                else if (uuid_format_char==0){
                                     pr->Data_Length -= 7;;
                                     idx += 7;;
                                 }
