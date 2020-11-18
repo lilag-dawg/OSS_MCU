@@ -1020,8 +1020,11 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 case 0x09: /* now get local name */
                 /* USER CODE BEGIN get_local_name */
 
-                	strcpy(sensorUsedNames[0], "	Ridesense");
+//                	strcpy(sensorUsedNames[0], "	Ridesense");
+                	strcpy(sensorUsedNames[0], "	Tacx Vortex 18043");
                 	strcpy(sensorUsedNames[1], "	CAD-BLE0967095");
+                	strcpy(sensorUsedNames[1], "	EWWU-111");
+
 
                 	for (int i=0; i<adlength;i++){
                 		current_device_name[i] = adv_report_data[k+i+1];
@@ -1535,7 +1538,7 @@ static void ConnReq1( void )
         result = aci_gap_create_connection(
         SCAN_P,
         SCAN_L,
-		RANDOM_ADDR,
+		STATIC_RANDOM_ADDR,
         devicesList[index].deviceAddress,
         PUBLIC_ADDR,
         CONN_P1,
