@@ -850,6 +850,8 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 //											aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
 //											break;
 //										}
+                                    	case(CYCLING_POWER_SERVICE_UUID):
+										{
 	#if(CFG_DEBUG_APP_TRACE != 0)
 											APP_DBG_MSG("-- GATT : CYCLING_POWER_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
 	#endif
@@ -861,17 +863,13 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 											aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
 	#endif
 											aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
-											devicesList[1].supportedDataType.power = true;
-											break;
-										}*/
-                                    	case(BATTERY_SERVICE_UUID):
-                                    	{
-                                    		scannedDevicesPackage.scannedDevicesList[sensorIndex].supportedDataType.battery = true;
+											scannedDevicesPackage.scannedDevicesList[1].supportedDataType.power = true;
+											//devicesList[1].supportedDataType.power = true;
 											break;
 										}
-                                    	case(CYCLING_POWER_SERVICE_UUID):
+                                    	case(BATTERY_SERVICE_UUID):
                                     	{
-                                    		scannedDevicesPackage.scannedDevicesList[sensorIndex].supportedDataType.power = true;
+                                    		scannedDevicesPackage.scannedDevicesList[1].supportedDataType.battery = true;
 											break;
 										}
 //                                    	case() a ajouter avec pour avoir le gear

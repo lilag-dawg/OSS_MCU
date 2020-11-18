@@ -531,11 +531,11 @@ void APP_BLE_Init( void )
   memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
 
   //initilase sensor hardcode
-  strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
-  memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
+  //strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
+  //memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
 
-  strcpy(settingsToWrite.sensors[1].name,"	Ridesense");
-  memcpy(settingsToWrite.sensors[1].macAddress, macRidesense, sizeof(settingsToWrite.sensors[1].macAddress));
+  strcpy(settingsToWrite.sensors[0].name,"	Ridesense");
+  memcpy(settingsToWrite.sensors[0].macAddress, macRidesense, sizeof(settingsToWrite.sensors[0].macAddress));
 
   //strcpy(settingsToWrite.sensors[2].name,"	EWWU-111");
   //memcpy(settingsToWrite.sensors[2].macAddress, macShimano, sizeof(settingsToWrite.sensors[2].macAddress));
