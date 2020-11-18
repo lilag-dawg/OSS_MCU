@@ -30,6 +30,7 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "hci_tl.h"
 #include <stdbool.h>
+#include "saveToFlash.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -47,6 +48,7 @@ extern "C" {
       APP_BLE_LP_CONNECTING,
       APP_BLE_CONNECTED_SERVER,
       APP_BLE_CONNECTED_CLIENT,
+	  APP_BLE_CONNECTED_CLIENT_NOTIFICATION_ENABLED,
 
       APP_BLE_DISCOVER_SERVICES,
       APP_BLE_DISCOVER_CHARACS,
@@ -70,40 +72,49 @@ typedef enum
   P2P_START_TIMER_EVT,
   P2P_STOP_TIMER_EVT,
   P2P_NOTIFICATION_INFO_RECEIVED_EVT,
+  P2P_NOTIFICATION_CSC_INFO_RECEIVED_EVT
 } P2P_Client_Opcode_Notification_evt_t;
 
 typedef struct
 {
   uint8_t * pPayload;
   uint8_t     Length;
-}P2P_Client_Data_t;
+} P2P_Client_Data_t;
 
 typedef struct
 {
   P2P_Client_Opcode_Notification_evt_t  P2P_Client_Evt_Opcode;
   P2P_Client_Data_t DataTransfered;
   uint8_t   ServiceInstance;
-}P2P_Client_App_Notification_evt_t;
+} P2P_Client_App_Notification_evt_t;
 
 
 
 /* USER CODE BEGIN ET */
 
-#define MAX_DEVICES					127
+#define MAX_DEVICES					63
 #define MAX_DEVICE_NAME_LENGHT		19
 #define SENSOR_NAME		 			"	Rideesense"
 #define SENSOR_NAME2		 		"	CAD-BLE0967095"
 
-char sensorUsedNames[4][20];
+typedef enum
+{
+  DISCONNECT,
+  CONNECT,
+  DISCONNECTING,
+  CONNECTING,
+} Pairing_request_status;
 
 
-typedef struct{
+
+typedef struct
+{
 	bool cadence;
 	bool speed;
 	bool power;
 	bool battery;
 	bool gear;
-}DeviceSupportedDataType;
+} DeviceSupportedDataType;
 
 typedef struct
 {
@@ -119,17 +130,23 @@ struct BikeDataInformation_t{
 	Algorithme_type_data pinion_rd;
 };
 
-struct DeviceInformations_t{
+typedef struct
+{
     char deviceName[MAX_DEVICE_NAME_LENGHT];
-    uint8_t deviceAddress[6];
-    uint8_t pairingStatus;
+    uint8_t macAddress[6];
+    APP_BLE_ConnStatus_t pairingStatus;
     uint8_t position;
     DeviceSupportedDataType supportedDataType;
-};
+} DeviceInformations_t;
 
-extern struct DeviceInformations_t devicesList[MAX_DEVICES];
-extern struct BikeDataInformation_t bikeDataInformation;
-extern int device_list_index;
+typedef struct
+{
+	DeviceInformations_t scannedDevicesList[MAX_DEVICES];
+	uint8_t numberOfScannedDevices;
+	uint8_t iterator;
+} ScannedDevicesPackage_t;
+
+
 
 
 /* USER CODE END ET */
@@ -154,8 +171,11 @@ extern int device_list_index;
 
   APP_BLE_ConnStatus_t APP_BLE_Get_Client_Connection_Status( uint16_t Connection_Handle );
 
+  void Trigger_Scan_Request( void );
+  void Trigger_Connection_Request( int index );
+
 /* USER CODE BEGIN EF */
-  int getSensorIndex(char* sensorName);
+  int getCorrespondingIndex(char* sensorName);
 /* USER CODE END EF */
 
 #ifdef __cplusplus
