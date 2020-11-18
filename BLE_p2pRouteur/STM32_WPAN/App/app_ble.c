@@ -307,8 +307,9 @@ typedef struct
 //struct DeviceInformations_t *DeviceFound[MAX_NMBR_DEVICES];
  ScannedDevicesPackage_t scannedDevicesPackage;
 
- uint8_t mac1[6] = {21,42,96,10,26,236};
- uint8_t mac2[6] = {159,110,155,254,115,235};
+ uint8_t macRidesense[6] = {21,42,96,10,26,236};
+ uint8_t macShimano[6] = {159,110,155,254,115,235};
+ uint8_t macTackx[6] = {48,94,167,136,151,216};
 
 /* USER CODE END PD */
 
@@ -528,6 +529,18 @@ void APP_BLE_Init( void )
   //reset flash
   struct settings settingsToWrite;
   memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
+
+  //initilase sensor hardcode
+  strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
+  memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
+
+  strcpy(settingsToWrite.sensors[1].name,"	Ridesense");
+  memcpy(settingsToWrite.sensors[1].macAddress, macRidesense, sizeof(settingsToWrite.sensors[1].macAddress));
+
+  //strcpy(settingsToWrite.sensors[2].name,"	EWWU-111");
+  //memcpy(settingsToWrite.sensors[2].macAddress, macShimano, sizeof(settingsToWrite.sensors[2].macAddress));
+
+
   saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
 
 
@@ -761,7 +774,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
       /* USER CODE BEGIN EVT_DISCONN_COMPLETE_Multi */
       if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice2)
       {
-    	int index =  getCorrespondingIndex(readSettings.sensors[0].name);
+    	int index =  getCorrespondingIndex(readSettings.sensors[1].name);
 
 
         APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 2 \n");
@@ -859,7 +872,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
               dev1 &= (readSettings.sensors[0].macAddress[i] == connection_complete_event->Peer_Address[i]);
 #if (CFG_P2P_DEMO_MULTI != 0)
           /* USER CODE BEGIN EVT_LE_CONN_COMPLETE_Multi_2 */
-              dev2 &= (mac2[i] == connection_complete_event->Peer_Address[i]);
+              dev2 &= (readSettings.sensors[1].macAddress[i] == connection_complete_event->Peer_Address[i]);
               dev3 &= (readSettings.sensors[2].macAddress[i] == connection_complete_event->Peer_Address[i]);
               dev4 &= (readSettings.sensors[3].macAddress[i] == connection_complete_event->Peer_Address[i]);
               dev5 &= (P2P_SERVER5_BDADDR[i] == connection_complete_event->Peer_Address[i]);
@@ -894,11 +907,11 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 #if (CFG_P2P_DEMO_MULTI != 0)
           /* USER CODE BEGIN EVT_LE_CONN_COMPLETE_Multi_3 */
           /* Now try to connect to device 2 */
-              /*if ((BleApplicationContext.EndDevice_Connection_Status[1] != APP_BLE_CONNECTED_CLIENT)
+              if ((BleApplicationContext.EndDevice_Connection_Status[1] != APP_BLE_CONNECTED_CLIENT)
                   && (BleApplicationContext.EndDevice2Found == 0x01))
               {
                 UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_2_ID, CFG_SCH_PRIO_0);
-              }*/
+              }
           /* USER CODE END EVT_LE_CONN_COMPLETE_Multi_3 */
 #endif
 
@@ -1599,7 +1612,7 @@ static void ConnReq2( void )
         SCAN_P,
         SCAN_L,
 		STATIC_RANDOM_ADDR,
-		mac2,
+		readSettings.sensors[1].macAddress,
         PUBLIC_ADDR,
         CONN_P1,
         CONN_P2,

@@ -20,14 +20,15 @@ void saveToFlash(uint8_t *data, uint32_t size)
 
 	for(int i = 0; i< data_length; i++)
 	{ //sending data from lsb to msb (lsb stored first in flash)
-		data_to_FLASH[i] = 	(uint64_t)(*(data+i*8))+
-							(uint64_t)(*(data+i*8+1) << 8)+
-							(uint64_t)(*(data+i*8+2) << 16)+
-							(uint64_t)(*(data+i*8+3) << 24)+
+		data_to_FLASH[i] = 	(uint64_t)((uint64_t)*(data+i*8))+
+							(uint64_t)((uint64_t)*(data+i*8+1) << 8)+
+							(uint64_t)((uint64_t)*(data+i*8+2) << 16)+
+							(uint64_t)((uint64_t)*(data+i*8+3) << 24)+
 							(uint64_t)((uint64_t)*(data+i*8+4) << 32)+
 							(uint64_t)((uint64_t)*(data+i*8+5) << 40)+
 							(uint64_t)((uint64_t)*(data+i*8+6) << 48)+
 							(uint64_t)((uint64_t)*(data+i*8+7) << 56);
+
 	}
 
 	  // Unlock the Flash to enable the flash control register access

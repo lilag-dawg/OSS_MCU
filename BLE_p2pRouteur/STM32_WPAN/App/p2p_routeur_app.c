@@ -561,27 +561,36 @@ static void Server_Update_Service( void )
 			uint8_t value[20];
 			uint8_t index =  P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition;
 
-			if(strcmp(scannedDevicesPackage.scannedDevicesList[index].deviceName, P2P_Router_App_Context.PairingRequestStruct.SensorName) == 0){
-				//scannedDevicesPackage.scannedDevicesList[index].pairingStatus = P2P_Router_App_Context.PairingRequestStruct.Pairing;
-				//need to add switchcase
-				printf("code: %d\n",scannedDevicesPackage.scannedDevicesList[index].pairingStatus);
+			Pairing_request_status status = DISCONNECT;
 
+			switch(scannedDevicesPackage.scannedDevicesList[index].pairingStatus){
+				case APP_BLE_LP_CONNECTING:
+					status = CONNECTING;
+					break;
+				case APP_BLE_CONNECTED_CLIENT:
+					status = CONNECT;
+					break;
+				case APP_BLE_IDLE:
+					status = DISCONNECT;
+					break;
+				default:
+					break;
 			}
 
-			value[0] = (uint8_t)((scannedDevicesPackage.scannedDevicesList[index].position) << 2) + scannedDevicesPackage.scannedDevicesList[index].pairingStatus; // PPPP PPCC
+			value[0] = (uint8_t)((scannedDevicesPackage.scannedDevicesList[index].position) << 2) + status; // PPPP PPCC
 
 		    //green led is on when notifying
 		    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
 
-			// printf("Size: %d \n\r",sizeof(scannedDevicesPackage.scannedDevicesList[index].deviceName));
-			// printf("Position: %d \n\r",scannedDevicesPackage.scannedDevicesList[index].position);
-			// printf("[");
+			printf("Size: %d \n\r",sizeof(scannedDevicesPackage.scannedDevicesList[index].deviceName));
+			printf("Position: %d \n\r",scannedDevicesPackage.scannedDevicesList[index].position);
+			printf("[");
 
-			// printf("%x,",value[0]);
+			printf("%x,",value[0]);
 
 			for(int i = 1; i<(sizeof(value));i++){
 				value[i] = (uint8_t)(scannedDevicesPackage.scannedDevicesList[index].deviceName[i-1]);
-				// printf("%x,",value[i]);
+				printf("%x,",value[i]);
 			}
 
 			P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition ++;
@@ -590,7 +599,7 @@ static void Server_Update_Service( void )
 				P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
 			}
 
-			// printf("]\n\r");
+			printf("]\n\r");
 
 			EDS_STM_Update_Char(0x0000,(uint8_t *)&value);
 		}
@@ -782,14 +791,6 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         }
                         index++;
                     }
-
-                    int indexOfScannedSensor = getCorrespondingIndex(readSettings.sensors[index].name);
-                    if(scannedDevicesPackage.scannedDevicesList[indexOfScannedSensor].pairingStatus == APP_BLE_CONNECTED_CLIENT)
-                    {
-                    	P2P_Router_App_Context.PairingRequestStruct.status = CONNECT;
-                    }
-
-
 
                     if(index < BLE_CFG_CLT_MAX_NBR_CB)
                     {
