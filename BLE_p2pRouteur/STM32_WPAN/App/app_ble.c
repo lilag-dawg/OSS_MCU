@@ -1552,6 +1552,7 @@ static void ConnReq1( void )
 	  struct settings readSettings;
 	  readFlash((uint8_t*)&readSettings);
 
+
 	  //readSettings.sensors[0].macAddress
 
     /* USER CODE END APP_BLE_CONNECTED_SUCCESS_END_DEVICE_1 */
