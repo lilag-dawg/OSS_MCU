@@ -52,6 +52,7 @@ typedef enum
 	CSC_SENSOR,
 	POWER_SENSOR,
 	TRAINER,
+	SHIMANO_SENSOR,
 	OTHER
 } SENSOR_TYPE_t;
 
@@ -64,6 +65,10 @@ typedef struct
 	// POWER
 	uint8_t P2PServiceHandle_POWER;
 	uint8_t P2PServiceEndHandle_POWER;
+
+	//Shimano
+	uint8_t P2PServiceHandle_SHIMANO;
+	uint8_t P2PServiceEndHandle_SHIMANO;
 } SERVICES_HANDLE_t;
 
 SERVICES_HANDLE_t SERVICES_HANDLE[6];

@@ -480,10 +480,7 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
 {
 /* USER CODE BEGIN P2P_Client_App_Notification_1 */
 	int sensorData[11] = {0};
-	int cassette = 0;
-	int plateau = 0;
-	int tab[17] = {0};
-	int shimano_rsp = 0;
+	float tab[17] = {0};
 
 /* USER CODE END P2P_Client_App_Notification_1 */
     switch(pNotification->P2P_Client_Evt_Opcode)
@@ -494,12 +491,7 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
     	for(int i = 0; i<pNotification->DataTransfered.Length; i++){
     					tab[i] = pNotification->DataTransfered.pPayload[i];
     				}
-
-    				shimano_rsp = GetRatio(tab, &cassette, &plateau);
-
-    				if(shimano_rsp == 1){
-    					printf("Cassette : %d	Plateau : %d\n\r",cassette, plateau);
-    				}
+    				GetRatio(tab);
 	break;
 
     case P2P_NOTIFICATION_CSC_RECEIVED_EVT:
@@ -889,11 +881,14 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 										}
 										case(CYCLING_POWER_SERVICE_UUID):
 										{
+											uuid_format_char = 0;
+											aP2PClientContext[index].sensor_evt_type = P2P_NOTIFICATION_CP_RECEIVED_EVT;
 											scannedDevicesPackage.scannedDevicesList[index].supportedDataType.power = true;
 											break;
 										}
 										case(BATTERY_SERVICE_UUID):
 										{
+											uuid_format_char = 0;
 											scannedDevicesPackage.scannedDevicesList[index].supportedDataType.battery = true;
 											break;
 										}
@@ -903,18 +898,17 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                     	APP_DBG_MSG("-- GATT : SENSOR_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
                                     	uuid_format_char = 1;
 #endif
-
+                                    	scannedDevicesPackage.scannedDevicesList[index].supportedDataType.gear = true;
                                         if(uuid_bit_format==1){
-                                        	aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
-                                            aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
+                                        	SERVICES_HANDLE[index].P2PServiceHandle_SHIMANO = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
+                                        	SERVICES_HANDLE[index].P2PServiceEndHandle_SHIMANO = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
                                         }
                                         else if(uuid_bit_format==0){
-                                        	aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
-                                        	aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
+                                        	SERVICES_HANDLE[index].P2PServiceHandle_SHIMANO = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
+                                        	SERVICES_HANDLE[index].P2PServiceEndHandle_SHIMANO = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
                                         }
 
-                                        aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
-                                        aP2PClientContext[index].sensor_evt_type = P2P_NOTIFICATION_SHIMANO_RECEIVED_EVT;
+
 
                                     		break;
                                     	}
@@ -942,6 +936,11 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 										scannedDevicesPackage.scannedDevicesList[index].supportedDataType.power == true)
 								{
 									TYPE_OF_SENSOR = POWER_SENSOR;
+								}
+								else if(scannedDevicesPackage.scannedDevicesList[index].supportedDataType.gear == true){
+
+									TYPE_OF_SENSOR = SHIMANO_SENSOR;
+
 								}
 								else{
 									TYPE_OF_SENSOR = OTHER;
@@ -991,6 +990,15 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 										aP2PClientContext[index].P2PServiceEndHandle = SERVICES_HANDLE[index].P2PServiceEndHandle_CSC;
 #endif
 										aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
+										break;
+									}
+									case SHIMANO_SENSOR:
+									{
+
+											aP2PClientContext[index].P2PServiceHandle = SERVICES_HANDLE[index].P2PServiceHandle_SHIMANO;
+										    aP2PClientContext[index].P2PServiceEndHandle = SERVICES_HANDLE[index].P2PServiceEndHandle_SHIMANO;
+	                                        aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
+	                                        aP2PClientContext[index].sensor_evt_type = P2P_NOTIFICATION_SHIMANO_RECEIVED_EVT;
 										break;
 									}
 								}
