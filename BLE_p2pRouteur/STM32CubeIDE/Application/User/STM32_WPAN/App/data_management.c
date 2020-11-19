@@ -17,7 +17,6 @@
 #include "app_ble.h"
 
 #define bufferMaxValue	10
-#define NBR_RATIO		15
 
 struct BikeDataInformation_t bikeDataInformation = {0};
 
@@ -186,7 +185,9 @@ void algoCases(void){
 //	float pignon = bikeDataInformation.pinion_rd.value;
 	float plateau = 0;
 	float pignon = 5;
-	float tab_ratio[NBR_RATIO];
+	float Timer_puissance = 1000;
+	float Timer_cadence = 1000;
+	float Timer_vitesse = 1000;
 
 	if (init == true){
 		ordonnerTableau_int(cassette,nbr_pignon);
@@ -200,48 +201,35 @@ void algoCases(void){
 		init = false;
 	}
 
-	// Algorithme de changements de vitesses automatisés
-	if (*pointeur_flag_sprint == 0 && *pointeur_flag_repos == 0 && *pointeur_flag_normale == 0 && *pointeur_flag_manuel == 0)
-	{
-		float ratio = Obtenir_ratio(pignon, plateau, cassette, pedalier);
+	gestion_changement_vitesse_manuel (pignon, plateau, pointeur_pignon_precedent, pointeur_plateau_precedent, pointeur_flag_changement_ratio, pointeur_flag);
 
-		if (puissance >= ftp*1.51)
-		{
-			Sprint(puissance, cadence, vitesse, ratio, pointeur_flag_sprint);
-		}
+	    // Algorithme de changements de vitesses automatisés
+	    if (*pointeur_flag == 0 && Timer_puissance < 3000 && Timer_cadence < 3000 && Timer_vitesse < 3000)
+	      {
+	        float ratio = Obtenir_ratio(pignon, plateau, cassette, pedalier);
 
-		if (puissance <= ftp*0.24)
-		{
-			Repos(puissance, cadence, vitesse, ratio, pointeur_flag_repos, Diametre_roues, tab_ratio);
-		}
+	        if (puissance >= ftp*1.51)
+	        {
+	        Sprint(puissance, cadence, vitesse, ratio, pointeur_flag_changement_ratio, pointeur_flag);
+	        }
 
-		if (puissance < ftp*1.51 && puissance > ftp*0.24)
-		{
-			Normale(puissance, cadence, vitesse, ratio, pointeur_flag_normale, Diametre_roues, Cadence_des, tab_ratio);
-		}
-	}
-	else
-	{
-		if (*pointeur_flag_sprint != 0)
-		{
-			*pointeur_flag_sprint = *pointeur_flag_sprint-1;
-		}
+	        if (puissance <= ftp*0.24)
+	        {
+	        Repos(puissance, cadence, vitesse, ratio, pointeur_nbr_ratio, Diametre_roues, tab_ratio, pointeur_flag_changement_ratio);
+	        }
 
-		if (*pointeur_flag_repos != 0)
-		{
-			*pointeur_flag_repos = *pointeur_flag_repos-1;
-		}
-
-		if (*pointeur_flag_normale != 0)
-		{
-			*pointeur_flag_normale = *pointeur_flag_normale-1;
-		}
-
-		if (*pointeur_flag_manuel != 0)
-		{
-			*pointeur_flag_manuel = *pointeur_flag_manuel-1;
-		}
-	}
+	        if (puissance < ftp*1.51 && puissance > ftp*0.24)
+	        {
+	        Normale(puissance, cadence, vitesse, ratio, pointeur_nbr_ratio, Diametre_roues, Cadence_des, tab_ratio, pointeur_flag_changement_ratio);
+	        }
+	      }
+	    else
+	      {
+	        if (*pointeur_flag != 0)
+	        {
+	        *pointeur_flag = *pointeur_flag-1;
+	        }
+	      }
 }
 
 void GetRatio(float *tableau){
