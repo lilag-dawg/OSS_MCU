@@ -92,6 +92,7 @@ typedef struct
 
   uint16_t P2PcurrentCharBeingRead;
 
+  P2P_Client_Opcode_Notification_evt_t sensor_evt_type;
 
 }P2P_ClientContext_t;
 
@@ -127,6 +128,9 @@ typedef struct
    
 
 } P2P_Router_App_Context_t;
+
+bool uuid_bit_format = 0;
+bool uuid_format_char = 0;
 
 /* Private defines ------------------------------------------------------------*/
 #define UNPACK_2_BYTE_PARAMETER(ptr)  \
@@ -475,19 +479,48 @@ void P2P_Router_APP_Init(void)
 void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotification)
 {
 /* USER CODE BEGIN P2P_Client_App_Notification_1 */
-	printf("yeet");
+	int sensorData[11] = {0};
+	int cassette = 0;
+	int plateau = 0;
+	int tab[17] = {0};
+	int shimano_rsp = 0;
 
 /* USER CODE END P2P_Client_App_Notification_1 */
     switch(pNotification->P2P_Client_Evt_Opcode)
     {
     /* USER CODE BEGIN P2P_Client_Evt_Opcode */
+    case P2P_NOTIFICATION_SHIMANO_RECEIVED_EVT:
 
+    	for(int i = 0; i<pNotification->DataTransfered.Length; i++){
+    					tab[i] = pNotification->DataTransfered.pPayload[i];
+    				}
+
+    				shimano_rsp = GetRatio(tab, &cassette, &plateau);
+
+    				if(shimano_rsp == 1){
+    					printf("Cassette : %d	Plateau : %d\n\r",cassette, plateau);
+    				}
+	break;
+
+    case P2P_NOTIFICATION_CSC_RECEIVED_EVT:
+
+    	for(int i = 0; i<pNotification->DataTransfered.Length; i++){
+    			sensorData[i] = pNotification->DataTransfered.pPayload[i];
+    		}
+
+    		switchCase(sensorData);
+	break;
+
+    case P2P_NOTIFICATION_CP_RECEIVED_EVT:
+
+
+    break;
     /* USER CODE END P2P_Client_Evt_Opcode */
         default:
     /* USER CODE BEGIN P2P_Client_Evt_Opcode_default */
 
     /* USER CODE END P2P_Client_Evt_Opcode_default */
-            break;
+        break;
 
     }
 /* USER CODE BEGIN P2P_Client_App_Notification_2 */
@@ -743,9 +776,9 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
     hci_event_pckt *event_pckt;
     evt_blue_aci *blue_evt;
     P2P_Client_App_Notification_evt_t Notification;
-
     return_value = SVCCTL_EvtNotAck;
     event_pckt = (hci_event_pckt *)(((hci_uart_pckt*)Event)->data);
+    int sensorIndex = 0;
 
     switch(event_pckt->evt)
     {
@@ -794,12 +827,25 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         }
                         index++;
                     }
+                    //Debut format 128bit ou 16bit
+                    	switch(pr->Attribute_Data_Length)
+                    	{
+                    	case 20:
+                    		uuid_bit_format = 1;
+                    		break;
+                    	case 6:
+                    		uuid_bit_format = 0;
+                    		break;
+                    	default:
+
+                    	break;
+                    	}
+                    //Fin format 128 bit ou 16 bit
 
                     if(index < BLE_CFG_CLT_MAX_NBR_CB)
                     {
                         aP2PClientContext[index].connHandle= handle;
                         numServ = (pr->Data_Length) / pr->Attribute_Data_Length;
-
                         /* the event data will be
                          * 2bytes start handle
                          * 2bytes end handle
@@ -809,35 +855,36 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                          * we are intersted only if the UUID is 128 bit.
                          * So check if the data length is 20
                          */
-#if (UUID_128BIT_FORMAT==1)
-                        if (pr->Attribute_Data_Length == 20)
-                        {
-                            idx = 16;
-#else
-                            if (pr->Attribute_Data_Length == 6)
-                            {
-                                idx = 4;
-#endif
-                                for (i=0; i<numServ; i++)
-								{
-									uuid = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx]);
 
-									switch(uuid)
-									{
-										case(CYCLING_SPEED_CADENCE_SERVICE_UUID):
+                                if (uuid_bit_format==1){idx = 16;}
+                                else if (uuid_bit_format==0){idx = 4;}
+
+                                if (pr->Attribute_Data_Length == 20 || pr->Attribute_Data_Length == 6)
+                                {
+
+                                for (i=0; i<numServ; i++)
+                                {
+                                    uuid = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx]);
+                                    switch(uuid)
+                                    {
+                                    	case(CYCLING_SPEED_CADENCE_SERVICE_UUID ):
 										{
 											scannedDevicesPackage.scannedDevicesList[index].supportedDataType.cadence = true;
 											scannedDevicesPackage.scannedDevicesList[index].supportedDataType.speed = true;
+											uuid_format_char = 0;
 #if(CFG_DEBUG_APP_TRACE != 0)
 											APP_DBG_MSG("-- GATT : CYCLING_POWER_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
 #endif
-											#if (UUID_128BIT_FORMAT==1)
+											if(uuid_bit_format==1){
 											SERVICES_HANDLE[index].P2PServiceHandle_CSC = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
 											SERVICES_HANDLE[index].P2PServiceEndHandle_CSC = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
-#else
+											}
+											else if(uuid_bit_format==0){
 											SERVICES_HANDLE[index].P2PServiceHandle_CSC = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
 											SERVICES_HANDLE[index].P2PServiceEndHandle_CSC = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
-#endif
+											}
+											aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
+											aP2PClientContext[index].sensor_evt_type = P2P_NOTIFICATION_CSC_RECEIVED_EVT;
 											break;
 										}
 										case(CYCLING_POWER_SERVICE_UUID):
@@ -850,9 +897,34 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 											scannedDevicesPackage.scannedDevicesList[index].supportedDataType.battery = true;
 											break;
 										}
-									}
-									idx += 6;
-								}
+                                    	case(SHIMANO_SERVICE_UUID ):
+                                    											{
+#if(CFG_DEBUG_APP_TRACE != 0)
+                                    	APP_DBG_MSG("-- GATT : SENSOR_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
+                                    	uuid_format_char = 1;
+#endif
+
+                                        if(uuid_bit_format==1){
+                                        	aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
+                                            aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
+                                        }
+                                        else if(uuid_bit_format==0){
+                                        	aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
+                                        	aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
+                                        }
+
+                                        aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
+                                        aP2PClientContext[index].sensor_evt_type = P2P_NOTIFICATION_SHIMANO_RECEIVED_EVT;
+
+                                    		break;
+                                    	}
+
+//                                    	case() a ajouter avec pour avoir le gear
+                                    	default:
+                                    		break;
+                                    }
+                                    idx += 6;
+                                }
 								if (scannedDevicesPackage.scannedDevicesList[index].supportedDataType.cadence == true &&
 										scannedDevicesPackage.scannedDevicesList[index].supportedDataType.speed == true &&
 										scannedDevicesPackage.scannedDevicesList[index].supportedDataType.power == true)
@@ -926,7 +998,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                             }
                         }
                     }
-                    break;
+                    break;//ok
 
                 case EVT_BLUE_ATT_READ_BY_TYPE_RESP:
                 {
@@ -956,24 +1028,22 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                     {
 
                         /* we are interested in only 16 bit UUIDs */
-#if (UUID_128BIT_FORMAT==1)
-                        idx = 17;
-                        if (pr->Handle_Value_Pair_Length == 21)
-#else
-                            idx = 5;
-                        if (pr->Handle_Value_Pair_Length == 7)
-#endif
+                        if (uuid_format_char == 1){idx=17;}
+                        else if (uuid_format_char==0){idx=5;}
+
+                        if(pr->Handle_Value_Pair_Length == 21 || pr->Handle_Value_Pair_Length == 7)
+
                         {
-                            pr->Data_Length -= 1;
+
+                        	pr->Data_Length -= 1;
                             while(pr->Data_Length > 0)
                             {
                                 uuid = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx]);
                                 /* store the characteristic handle not the attribute handle */
-#if (UUID_128BIT_FORMAT==1)
-                                handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-14]);
-#else
-                                handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-2]);
-#endif
+
+                                if(uuid_format_char==1){handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-14]);}
+                                else if(uuid_format_char==0){handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-2]);}
+
                                 if(uuid == CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID)
                                 {
 #if(CFG_DEBUG_APP_TRACE != 0)
@@ -981,6 +1051,14 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 #endif
                                     aP2PClientContext[index].P2PNotificationCharHdle = handle;
                                     aP2PClientContext[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
+                                }
+                                if(uuid == SHIMANO_CHAR_UUID){
+#if(CFG_DEBUG_APP_TRACE != 0)
+                                	  APP_DBG_MSG("-- GATT : SENSOR_NOTIFY_CHAR_UUID FOUND  - connection handle 0x%x\n", aP2PClientContext[index].connHandle);
+#endif
+                                	aP2PClientContext[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
+                                    aP2PClientContext[index].P2PNotificationCharHdle = handle;
+
                                 }
                                 else if (uuid == CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID)
                                 {
@@ -1003,18 +1081,21 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 									aP2PClientContext[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
 								}
 
-#if (UUID_128BIT_FORMAT==1)
-                                pr->Data_Length -= 21;
-                                idx += 21;
-#else
-                                pr->Data_Length -= 7;;
-                                idx += 7;;
-#endif
+                                if(uuid_format_char==1){
+                                    pr->Data_Length -= 21;
+                                    idx += 21;
+                                }
+                                else if (uuid_format_char==0){
+                                    pr->Data_Length -= 7;;
+                                    idx += 7;;
+                                }
+
+
                             }
                         }
                     }
                 }
-                break;
+                break; //ok
 
 
                 case EVT_BLUE_ATT_FIND_INFORMATION_RESP:
@@ -1047,7 +1128,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         numDesc = (pr->Event_Data_Length) / 4;
                         /* we are interested only in 16 bit UUIDs */
                         idx = 0;
-                        if (pr->Format == UUID_TYPE_16)
+                        if (pr->Format == UUID_TYPE_16) //À REGARDER-----------------------------------------------------------
                         {
                             for (i=0; i<numDesc; i++)
                             {
@@ -1072,7 +1153,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         }
                     }
                 }
-                break; /*EVT_BLUE_ATT_FIND_INFORMATION_RESP*/
+                break; /*EVT_BLUE_ATT_FIND_INFORMATION_RESP*/ //ok
 
                 case EVT_BLUE_GATT_NOTIFICATION:
                 {
@@ -1095,7 +1176,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 #if(CFG_DEBUG_APP_TRACE != 0)
 
 #endif
-                            Notification.P2P_Client_Evt_Opcode = P2P_NOTIFICATION_INFO_RECEIVED_EVT;
+                            Notification.P2P_Client_Evt_Opcode = aP2PClientContext[index].sensor_evt_type;
                             Notification.DataTransfered.Length = pr->Attribute_Value_Length;
                             Notification.DataTransfered.pPayload = pr->Attribute_Value;
 
@@ -1108,7 +1189,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         }
                     }
                 }
-                break;/* end EVT_BLUE_GATT_NOTIFICATION */
+                break;/* end EVT_BLUE_GATT_NOTIFICATION */ //ok
 
                 case EVT_BLUE_ATT_READ_RESP:
                 {
@@ -1135,7 +1216,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         scannedDevicesPackage.scannedDevicesList[sensorIndex].supportedDataType.speed = pr->Attribute_Value[0] & 0x1;
                     }
 
-                	break;
+                	break; //ok
                 }
                 case EVT_BLUE_GATT_PROCEDURE_COMPLETE:
                 {
@@ -1158,7 +1239,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         UTIL_SEQ_SetTask(  1<<CFG_TASK_SEARCH_SERVICE_ID, CFG_SCH_PRIO_0 );
                     }
                 }
-                break; /*EVT_BLUE_GATT_PROCEDURE_COMPLETE*/
+                break; /*EVT_BLUE_GATT_PROCEDURE_COMPLETE*/ //ok
                 default:
                     /* USER CODE BEGIN ecode_default */
 

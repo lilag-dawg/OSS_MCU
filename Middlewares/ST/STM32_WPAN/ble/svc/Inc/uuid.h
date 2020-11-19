@@ -162,6 +162,10 @@
 #define CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID                    (0x2A5B)
 #define CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID                        (0x2A5C)
 
+/* UUIDs for Shimano device*/
+#define SHIMANO_SERVICE_UUID                                            (0x18EF)
+#define SHIMANO_CHAR_UUID                                               (0x2AC1)
+
 /* UUIDs for cycling power service */
 #define CYCLING_POWER_SERVICE_UUID                                     (0x1818)
 #define CYCLING_POWER_MEASUREMENT_CHAR_UUID                            (0x2A63)

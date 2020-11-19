@@ -72,7 +72,9 @@ typedef enum
   P2P_START_TIMER_EVT,
   P2P_STOP_TIMER_EVT,
   P2P_NOTIFICATION_INFO_RECEIVED_EVT,
-  P2P_NOTIFICATION_CSC_INFO_RECEIVED_EVT
+  P2P_NOTIFICATION_CSC_RECEIVED_EVT,
+  P2P_NOTIFICATION_SHIMANO_RECEIVED_EVT,
+  P2P_NOTIFICATION_CP_RECEIVED_EVT,
 } P2P_Client_Opcode_Notification_evt_t;
 
 typedef struct
@@ -136,18 +138,17 @@ typedef struct
     uint8_t macAddress[6];
     APP_BLE_ConnStatus_t pairingStatus;
     uint8_t position;
+    bool uuid_format;
     DeviceSupportedDataType supportedDataType;
 } DeviceInformations_t;
 
+extern bool uuid_bit_format;
 typedef struct
 {
 	DeviceInformations_t scannedDevicesList[MAX_DEVICES];
 	uint8_t numberOfScannedDevices;
 	uint8_t iterator;
 } ScannedDevicesPackage_t;
-
-
-
 
 /* USER CODE END ET */
 

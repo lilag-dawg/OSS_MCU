@@ -537,8 +537,8 @@ void APP_BLE_Init( void )
   strcpy(settingsToWrite.sensors[0].name,"	Ridesense");
   memcpy(settingsToWrite.sensors[0].macAddress, macRidesense, sizeof(settingsToWrite.sensors[0].macAddress));
 
-  //strcpy(settingsToWrite.sensors[2].name,"	EWWU-111");
-  //memcpy(settingsToWrite.sensors[2].macAddress, macShimano, sizeof(settingsToWrite.sensors[2].macAddress));
+  strcpy(settingsToWrite.sensors[1].name,"	EWWU111");
+  memcpy(settingsToWrite.sensors[1].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress));
 
 
   saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
@@ -1104,7 +1104,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
           /* search AD TYPE 0x09 (Complete Local Name) */
           /* search AD Type 0x02 (16 bits UUIDS) */
-          if (event_type == ADV_IND || event_type == SCAN_RSP)
+          if (event_type == ADV_IND ||event_type==SCAN_RSP)
           {
 
             /* ISOLATION OF BD ADDRESS AND LOCAL NAME */
@@ -1165,6 +1165,11 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
                 /* USER CODE END get_local_name */
                   break;
+
+                case 0x07: //manufacture name
+
+                break;
+
                 case 0x02: /* now get UID */
                 /* USER CODE BEGIN get_UID */
 

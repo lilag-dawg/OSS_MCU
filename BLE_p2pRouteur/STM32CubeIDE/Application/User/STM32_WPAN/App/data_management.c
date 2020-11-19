@@ -243,3 +243,18 @@ void algoCases(void){
 		}
 	}
 }
+
+int GetRatio(int *tableau, int *pCassette, int *pPlateaux){
+
+if(tableau[3]<1 || tableau[3]>2){
+	if(tableau[5]<1 || tableau[5]>11){
+		return -1;
+	}
+}
+else{
+	*pPlateaux = tableau[3];
+	*pCassette = tableau[5];
+	return 1;
+}
+}
+
