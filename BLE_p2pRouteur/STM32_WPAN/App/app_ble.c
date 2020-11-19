@@ -45,10 +45,6 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
-
-struct DeviceInformations_t devicesList[MAX_DEVICES] = {0};
-
-int device_list_index = 0;
 /* USER CODE END PTD */
 
 /**
@@ -308,7 +304,12 @@ typedef struct
 /* USER CODE BEGIN PD */
 #define MAX_NMBR_DEVICES      127
 
-struct DeviceInformations_t *DeviceFound[MAX_NMBR_DEVICES];
+//struct DeviceInformations_t *DeviceFound[MAX_NMBR_DEVICES];
+ ScannedDevicesPackage_t scannedDevicesPackage;
+
+ uint8_t macRidesense[6] = {21,42,96,10,26,236};
+ uint8_t macShimano[6] = {159,110,155,254,115,235};
+ uint8_t macTackx[6] = {48,94,167,136,151,216};
 
 /* USER CODE END PD */
 
@@ -518,8 +519,60 @@ void APP_BLE_Init( void )
   UTIL_SEQ_SetTask(1 << CFG_TASK_START_ADV_ID, CFG_SCH_PRIO_0);
 /* USER CODE BEGIN APP_BLE_Init_2 */
 
+  UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_1);
+
+  //reset list of scanned devices
+
+  memset(&scannedDevicesPackage, 0 , sizeof(scannedDevicesPackage));
+
+
+  //reset flash
+  struct settings settingsToWrite;
+  memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
+
+  //initilase sensor hardcode
+  //strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
+  //memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
+
+  strcpy(settingsToWrite.sensors[0].name,"	Ridesense");
+  memcpy(settingsToWrite.sensors[0].macAddress, macRidesense, sizeof(settingsToWrite.sensors[0].macAddress));
+
+  //strcpy(settingsToWrite.sensors[2].name,"	EWWU-111");
+  //memcpy(settingsToWrite.sensors[2].macAddress, macShimano, sizeof(settingsToWrite.sensors[2].macAddress));
+
+
+  saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
+
+
 /* USER CODE END APP_BLE_Init_2 */
   return;
+}
+
+void Trigger_Scan_Request( void ){
+	UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_1);
+}
+
+void Trigger_Connection_Request( int index ){
+	switch(index){
+		case 0:
+			BleApplicationContext.EndDevice1Found = 0x01;
+			UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
+			break;
+		case 1:
+			BleApplicationContext.EndDevice2Found = 0x01;
+			UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_2_ID, CFG_SCH_PRIO_0);
+			break;
+		case 2:
+			BleApplicationContext.EndDevice3Found = 0x01;
+			UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_3_ID, CFG_SCH_PRIO_0);
+			break;
+		case 3:
+			BleApplicationContext.EndDevice4Found = 0x01;
+			UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_4_ID, CFG_SCH_PRIO_0);
+			break;
+		default:
+			break;
+	}
 }
 
 SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
@@ -537,6 +590,10 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
   uint8_t adtype, adlength;
   hci_disconnection_complete_event_rp0 *cc = (void *) event_pckt->data;
 
+	struct settings readSettings;
+	readFlash((uint8_t*)&readSettings);
+
+	//printf("event_pckt: %x\n\r",event_pckt->evt);
   switch (event_pckt->evt)
   {
     /* USER CODE BEGIN evt */
@@ -547,8 +604,9 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
       handleNotification.P2P_Evt_Opcode = P2P_SERVER1_DISCON_HANDLE_EVT;
       blue_evt = (evt_blue_aci*) event_pckt->data;
       /* USER CODE BEGIN EVT_VENDOR */
-
+      //printf("ecode: %x\n\r",blue_evt->ecode);
       /* USER CODE END EVT_VENDOR */
+
       switch (blue_evt->ecode)
       {
       /* USER CODE BEGIN ecode */
@@ -566,6 +624,34 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
           {
             /* USER CODE BEGIN GAP_GENERAL_DISCOVERY_PROC */
             BSP_LED_Off(LED_BLUE);
+
+            //struct settings readSettings;
+            //readFlash((uint8_t*)&readSettings);
+
+            for(int i = 0; i < sizeof(readSettings.sensors); i++){
+            	for(int k = 0; k < scannedDevicesPackage.numberOfScannedDevices; k++){
+            		if(strcmp(scannedDevicesPackage.scannedDevicesList[k].deviceName, readSettings.sensors[i].name) == 0 && readSettings.sensors[i].name[0] != 0){
+            			switch(i){
+							case 0:
+								BleApplicationContext.EndDevice1Found = 0x01;
+								break;
+							case 1:
+								BleApplicationContext.EndDevice2Found = 0x01;
+								break;
+							case 2:
+								BleApplicationContext.EndDevice3Found = 0x01;
+								break;
+							case 3:
+								BleApplicationContext.EndDevice4Found = 0x01;
+								break;
+							default:
+								break;
+            			}
+            		}
+            	}
+            }
+
+
             /* USER CODE END GAP_GENERAL_DISCOVERY_PROC */
 
             APP_DBG_MSG("-- GAP GENERAL DISCOVERY PROCEDURE_COMPLETED\n");
@@ -657,11 +743,18 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
       /* USER CODE BEGIN EVT_DISCONN_COMPLETE */
 
+
       /* USER CODE END EVT_DISCONN_COMPLETE */
       if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice1)
       {
+      	//struct settings readSettings;
+      	//readFlash((uint8_t*)&readSettings);
+
+    	int index =  getCorrespondingIndex(readSettings.sensors[0].name);
+
         APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 1 \n");
         BleApplicationContext.EndDevice_Connection_Status[0] = APP_BLE_IDLE;
+        scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[0];
         BleApplicationContext.connectionHandleEndDevice1 = 0xFFFF;
         handleNotification.P2P_Evt_Opcode = P2P_SERVER1_DISCON_HANDLE_EVT;
         handleNotification.ConnectionHandle = connection_handle;
@@ -681,8 +774,12 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
       /* USER CODE BEGIN EVT_DISCONN_COMPLETE_Multi */
       if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice2)
       {
+    	int index =  getCorrespondingIndex(readSettings.sensors[1].name);
+
+
         APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 2 \n");
         BleApplicationContext.EndDevice_Connection_Status[1] = APP_BLE_IDLE;
+        scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[1];
         BleApplicationContext.connectionHandleEndDevice2 = 0xFFFF;
         handleNotification.P2P_Evt_Opcode = P2P_SERVER2_DISCON_HANDLE_EVT;
         handleNotification.ConnectionHandle = connection_handle;
@@ -746,6 +843,8 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
         case EVT_LE_CONN_COMPLETE:
           /* USER CODE BEGIN EVT_LE_CONN_COMPLETE */
 
+
+
           /* USER CODE END EVT_LE_CONN_COMPLETE */
           /**
            * The connection is done, there is no need anymore to schedule the LP ADV
@@ -764,23 +863,18 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
           /* USER CODE END EVT_LE_CONN_COMPLETE_Multi */
 #endif
                 ;
-            int sensorIndex1 = 0;
-            int sensorIndex2 = 0;
-            int sensorIndex3 = 0;
-            int sensorIndex4 = 0;
-            sensorIndex1 = getSensorIndex(sensorUsedNames[0]);
-            sensorIndex2 = getSensorIndex(sensorUsedNames[1]);
-            sensorIndex3 = getSensorIndex(sensorUsedNames[2]);
-            sensorIndex4 = getSensorIndex(sensorUsedNames[3]);
+
+            //struct settings readSettings;
+            //readFlash((uint8_t*)&readSettings);
 
             for (int i = 0; i < 6; i++)
             {
-              dev1 &= (devicesList[sensorIndex1].deviceAddress[i] == connection_complete_event->Peer_Address[i]);
+              dev1 &= (readSettings.sensors[0].macAddress[i] == connection_complete_event->Peer_Address[i]);
 #if (CFG_P2P_DEMO_MULTI != 0)
           /* USER CODE BEGIN EVT_LE_CONN_COMPLETE_Multi_2 */
-              dev2 &= (devicesList[sensorIndex2].deviceAddress[i] == connection_complete_event->Peer_Address[i]);
-              dev3 &= (devicesList[sensorIndex3].deviceAddress[i] == connection_complete_event->Peer_Address[i]);
-              dev4 &= (devicesList[sensorIndex4].deviceAddress[i] == connection_complete_event->Peer_Address[i]);
+              dev2 &= (readSettings.sensors[1].macAddress[i] == connection_complete_event->Peer_Address[i]);
+              dev3 &= (readSettings.sensors[2].macAddress[i] == connection_complete_event->Peer_Address[i]);
+              dev4 &= (readSettings.sensors[3].macAddress[i] == connection_complete_event->Peer_Address[i]);
               dev5 &= (P2P_SERVER5_BDADDR[i] == connection_complete_event->Peer_Address[i]);
               dev6 &= (P2P_SERVER6_BDADDR[i] == connection_complete_event->Peer_Address[i]);
           /* USER CODE END EVT_LE_CONN_COMPLETE_Multi_2 */
@@ -790,8 +884,11 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
             if (dev1 == 1)
             {
               /* Inform Application it is End Device 1 */
+              int index =  getCorrespondingIndex(readSettings.sensors[0].name);
+
               APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 1\n");
               BleApplicationContext.EndDevice_Connection_Status[0] = APP_BLE_CONNECTED_CLIENT;
+              scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[0];
               BleApplicationContext.connectionHandleEndDevice1 = connection_handle;
               BleApplicationContext.BleApplicationContext_legacy.connectionHandle[0] = connection_handle;
               handleNotification.P2P_Evt_Opcode = P2P_SERVER1_CONN_HANDLE_EVT;
@@ -824,9 +921,12 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
           if (dev2 == 1)
             {
               /* Inform Application it is End Device 2 */
+              int index =  getCorrespondingIndex(readSettings.sensors[1].name);
+
               APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 2\n");
 
               BleApplicationContext.EndDevice_Connection_Status[1] = APP_BLE_CONNECTED_CLIENT;
+              scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[1];
               BleApplicationContext.connectionHandleEndDevice2 = connection_handle;
               BleApplicationContext.BleApplicationContext_legacy.connectionHandle[1] = connection_handle;
               handleNotification.P2P_Evt_Opcode = P2P_SERVER2_CONN_HANDLE_EVT;
@@ -842,19 +942,22 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 APP_DBG_MSG("BLE_CTRL_App_Notification(), All services discovery Failed \r\n\r");
               }
               /* Now try to connect to device 1 */
-              if ((BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED_CLIENT)
+              /*if ((BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED_CLIENT)
                   && (BleApplicationContext.EndDevice1Found == 0x01))
               {
 
                 UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
-              }
+              }*/
             }
             if (dev3 == 1)
             {
               /* Inform Application it is End Device 3 */
+              int index =  getCorrespondingIndex(readSettings.sensors[2].name);
+
               APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 3\n");
 
               BleApplicationContext.EndDevice_Connection_Status[2] = APP_BLE_CONNECTED_CLIENT;
+              scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[2];
               BleApplicationContext.connectionHandleEndDevice3 = connection_handle;
               BleApplicationContext.BleApplicationContext_legacy.connectionHandle[2] = connection_handle;
               handleNotification.P2P_Evt_Opcode = P2P_SERVER3_CONN_HANDLE_EVT;
@@ -880,9 +983,12 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
             if (dev4 == 1)
             {
               /* Inform Application it is End Device 4 */
+              int index =  getCorrespondingIndex(readSettings.sensors[3].name);
+
               APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 4\n");
 
               BleApplicationContext.EndDevice_Connection_Status[3] = APP_BLE_CONNECTED_CLIENT;
+              scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[3];
               BleApplicationContext.connectionHandleEndDevice4 = connection_handle;
               BleApplicationContext.BleApplicationContext_legacy.connectionHandle[3] = connection_handle;
               handleNotification.P2P_Evt_Opcode = P2P_SERVER4_CONN_HANDLE_EVT;
@@ -1007,7 +1113,8 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
             {
               adlength = adv_report_data[k];
               adtype = adv_report_data[k + 1];
-              char current_device_name[MAX_DEVICE_NAME_LENGHT] = {0};
+              char current_device_name[MAX_DEVICE_NAME_LENGHT];
+              memset(current_device_name, 0, MAX_DEVICE_NAME_LENGHT);
               bool isStringFound = false;
 
               switch (adtype)
@@ -1020,52 +1127,38 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 case 0x09: /* now get local name */
                 /* USER CODE BEGIN get_local_name */
 
-                	strcpy(sensorUsedNames[0], "	Ridesense");
-                	strcpy(sensorUsedNames[1], "	CAD-BLE0967095");
-                	strcpy(sensorUsedNames[2], "	EWWU111");
+
 
                 	for (int i=0; i<adlength;i++){
                 		current_device_name[i] = adv_report_data[k+i+1];
 					}
 
-                	for(int j=0;j<device_list_index;j++){
-                		if (strcmp(current_device_name, devicesList[j].deviceName) == 0){
+                	for(int j=0;j<scannedDevicesPackage.numberOfScannedDevices;j++){
+                		if (strcmp(current_device_name, scannedDevicesPackage.scannedDevicesList[j].deviceName) == 0){
                 			isStringFound = true;
                 			break;
                 		}
                 	}
 					if (isStringFound == false){
-						strcpy(devicesList[device_list_index].deviceName, current_device_name);
-						devicesList[device_list_index].pairingStatus = 0;
-						devicesList[device_list_index].position = device_list_index;
-						devicesList[device_list_index].deviceAddress[0] = le_advertising_event->Advertising_Report[0].Address[0];
-						devicesList[device_list_index].deviceAddress[1] = le_advertising_event->Advertising_Report[0].Address[1];
-						devicesList[device_list_index].deviceAddress[2] = le_advertising_event->Advertising_Report[0].Address[2];
-						devicesList[device_list_index].deviceAddress[3] = le_advertising_event->Advertising_Report[0].Address[3];
-						devicesList[device_list_index].deviceAddress[4] = le_advertising_event->Advertising_Report[0].Address[4];
-						devicesList[device_list_index].deviceAddress[5] = le_advertising_event->Advertising_Report[0].Address[5];
+						scannedDevicesPackage.iterator = scannedDevicesPackage.numberOfScannedDevices;
+						strcpy(scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.iterator].deviceName, current_device_name);
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.iterator].pairingStatus = DISCONNECT;
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.iterator].position = scannedDevicesPackage.iterator;
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.iterator].macAddress[0] = le_advertising_event->Advertising_Report[0].Address[0];
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.iterator].macAddress[1] = le_advertising_event->Advertising_Report[0].Address[1];
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.iterator].macAddress[2] = le_advertising_event->Advertising_Report[0].Address[2];
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.iterator].macAddress[3] = le_advertising_event->Advertising_Report[0].Address[3];
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.iterator].macAddress[4] = le_advertising_event->Advertising_Report[0].Address[4];
+						scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.iterator].macAddress[5] = le_advertising_event->Advertising_Report[0].Address[5];
 
-						if(strcmp(current_device_name, sensorUsedNames[0]) == 0){
-							APP_DBG_MSG("-- P2P SERVER 1 DETECTED -- VIA MAN ID\n");
-							BleApplicationContext.EndDevice1Found = 0x01;
-						}
+						printf("%s", scannedDevicesPackage.scannedDevicesList[scannedDevicesPackage.iterator].deviceName);
+						printf(" //////// %d /////////// new\n", scannedDevicesPackage.iterator);
+						scannedDevicesPackage.iterator ++;
+						scannedDevicesPackage.numberOfScannedDevices ++;
 
-						else if(strcmp(current_device_name, sensorUsedNames[1]) == 0){
-							APP_DBG_MSG("-- P2P SERVER 2 DETECTED -- VIA MAN ID\n");
-							BleApplicationContext.EndDevice2Found = 0x01;
-						}
-						else if(strcmp(current_device_name, sensorUsedNames[2]) == 0){
-							APP_DBG_MSG("-- P2P SERVER 3 DETECTED -- VIA MAN ID\n");
-							BleApplicationContext.EndDevice3Found = 0x01;
-						}
-						else if(strcmp(current_device_name, sensorUsedNames[3]) == 0){
-							APP_DBG_MSG("-- P2P SERVER 4 DETECTED -- VIA MAN ID\n");
-							BleApplicationContext.EndDevice4Found = 0x01;
-						}
+				        EDS_STM_Update_Char(0x0001,
+				                (uint8_t *)&scannedDevicesPackage.numberOfScannedDevices);
 
-						printf("%s", devicesList[device_list_index].deviceName);
-						printf(" //////// %d /////////// \n", device_list_index);
-						device_list_index ++;
 					}
 
 
@@ -1089,83 +1182,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                   break;
                 case 0xFF: /* Manufacturer Specific */
                 /* USER CODE BEGIN Manufactureur_Specific */
-
-                /* USER CODE END Manufactureur_Specific */
-                  if (adlength >= 7 && adv_report_data[k + 2] == 0x01)
-                  { /* ST VERSION ID 01 */
-                    //APP_DBG_MSG("--- ST MANUFACTURER ID --- \n");
-                    switch (adv_report_data[k + 3])
-                    {
-                      case CFG_DEV_ID_P2P_SERVER1:
-                        APP_DBG_MSG("-- P2P SERVER 1 DETECTED -- VIA MAN ID\n");
-                        BleApplicationContext.EndDevice1Found = 0x01;
-                        P2P_SERVER1_BDADDR[0] = le_advertising_event->Advertising_Report[0].Address[0];
-                        P2P_SERVER1_BDADDR[1] = le_advertising_event->Advertising_Report[0].Address[1];
-                        P2P_SERVER1_BDADDR[2] = le_advertising_event->Advertising_Report[0].Address[2];
-                        P2P_SERVER1_BDADDR[3] = le_advertising_event->Advertising_Report[0].Address[3];
-                        P2P_SERVER1_BDADDR[4] = le_advertising_event->Advertising_Report[0].Address[4];
-                        P2P_SERVER1_BDADDR[5] = le_advertising_event->Advertising_Report[0].Address[5];
-                        break;
-#if (CFG_P2P_DEMO_MULTI != 0)
-                    /* USER CODE BEGIN CFG_DEV_ID_P2P_SERVER_Multi */
-                      case CFG_DEV_ID_P2P_SERVER2:
-                        BleApplicationContext.EndDevice2Found = 0x01;
-                        APP_DBG_MSG("-- P2P SERVER 2 DETECTED -- VIA MAN ID\n");
-                        P2P_SERVER2_BDADDR[0] = le_advertising_event->Advertising_Report[0].Address[0];
-                        P2P_SERVER2_BDADDR[1] = le_advertising_event->Advertising_Report[0].Address[1];
-                        P2P_SERVER2_BDADDR[2] = le_advertising_event->Advertising_Report[0].Address[2];
-                        P2P_SERVER2_BDADDR[3] = le_advertising_event->Advertising_Report[0].Address[3];
-                        P2P_SERVER2_BDADDR[4] = le_advertising_event->Advertising_Report[0].Address[4];
-                        P2P_SERVER2_BDADDR[5] = le_advertising_event->Advertising_Report[0].Address[5];
-                        break;
-                      case CFG_DEV_ID_P2P_SERVER3:
-                        APP_DBG_MSG("-- P2P SERVER 3 DETECTED -- VIA MAN ID\n");
-                        BleApplicationContext.EndDevice3Found = 0x01;
-                        P2P_SERVER3_BDADDR[0] = le_advertising_event->Advertising_Report[0].Address[0];
-                        P2P_SERVER3_BDADDR[1] = le_advertising_event->Advertising_Report[0].Address[1];
-                        P2P_SERVER3_BDADDR[2] = le_advertising_event->Advertising_Report[0].Address[2];
-                        P2P_SERVER3_BDADDR[3] = le_advertising_event->Advertising_Report[0].Address[3];
-                        P2P_SERVER3_BDADDR[4] = le_advertising_event->Advertising_Report[0].Address[4];
-                        P2P_SERVER3_BDADDR[5] = le_advertising_event->Advertising_Report[0].Address[5];
-                        break;
-                      case CFG_DEV_ID_P2P_SERVER4:
-                        BleApplicationContext.EndDevice4Found = 0x01;
-                        APP_DBG_MSG("-- P2P SERVER 4 DETECTED -- VIA MAN ID\n");
-                        P2P_SERVER4_BDADDR[0] = le_advertising_event->Advertising_Report[0].Address[0];
-                        P2P_SERVER4_BDADDR[1] = le_advertising_event->Advertising_Report[0].Address[1];
-                        P2P_SERVER4_BDADDR[2] = le_advertising_event->Advertising_Report[0].Address[2];
-                        P2P_SERVER4_BDADDR[3] = le_advertising_event->Advertising_Report[0].Address[3];
-                        P2P_SERVER4_BDADDR[4] = le_advertising_event->Advertising_Report[0].Address[4];
-                        P2P_SERVER4_BDADDR[5] = le_advertising_event->Advertising_Report[0].Address[5];
-                        break;
-                      case CFG_DEV_ID_P2P_SERVER5:
-                        APP_DBG_MSG("-- P2P SERVER 5 DETECTED -- VIA MAN ID\n");
-                        BleApplicationContext.EndDevice5Found = 0x01;
-                        P2P_SERVER5_BDADDR[0] = le_advertising_event->Advertising_Report[0].Address[0];
-                        P2P_SERVER5_BDADDR[1] = le_advertising_event->Advertising_Report[0].Address[1];
-                        P2P_SERVER5_BDADDR[2] = le_advertising_event->Advertising_Report[0].Address[2];
-                        P2P_SERVER5_BDADDR[3] = le_advertising_event->Advertising_Report[0].Address[3];
-                        P2P_SERVER5_BDADDR[4] = le_advertising_event->Advertising_Report[0].Address[4];
-                        P2P_SERVER5_BDADDR[5] = le_advertising_event->Advertising_Report[0].Address[5];
-                        break;
-                      case CFG_DEV_ID_P2P_SERVER6:
-                        BleApplicationContext.EndDevice6Found = 0x01;
-                        APP_DBG_MSG("-- P2P SERVER 6 DETECTED -- VIA MAN ID\n");
-                        P2P_SERVER6_BDADDR[0] = le_advertising_event->Advertising_Report[0].Address[0];
-                        P2P_SERVER6_BDADDR[1] = le_advertising_event->Advertising_Report[0].Address[1];
-                        P2P_SERVER6_BDADDR[2] = le_advertising_event->Advertising_Report[0].Address[2];
-                        P2P_SERVER6_BDADDR[3] = le_advertising_event->Advertising_Report[0].Address[3];
-                        P2P_SERVER6_BDADDR[4] = le_advertising_event->Advertising_Report[0].Address[4];
-                        P2P_SERVER6_BDADDR[5] = le_advertising_event->Advertising_Report[0].Address[5];
-                        break;
-                    /* USER CODE END CFG_DEV_ID_P2P_SERVER_Multi */
-#endif
-                      default:
-                    break;
-                    }
-
-                  }
-                  break;
+                	break;
                 case 0x16:
                   /* USER CODE BEGIN AD_TYPE_SERVICE_DATA */
 
@@ -1453,7 +1470,7 @@ static void Scan_Request( void )
     if (result == BLE_STATUS_SUCCESS)
     {
     /* USER CODE BEGIN BLE_SCAN_SUCCESS */
-    device_list_index = 0;
+    //device_list_index = 0;
 
     /* USER CODE END BLE_SCAN_SUCCESS */
       APP_DBG_MSG(" \r\n\r** START GENERAL DISCOVERY (SCAN) **  \r\n\r");
@@ -1508,6 +1525,8 @@ static void Adv_Request( void )
     /* USER CODE END BLE_CONNECT_SUCCESS */
       APP_DBG_MSG("  \r\n\r");
       APP_DBG_MSG("** START ADVERTISING **  \r\n\r");
+
+      scannedDevicesPackage.iterator = 0;
     }
     else
     {
@@ -1535,14 +1554,18 @@ static void ConnReq1( void )
   if (BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED_CLIENT)
   {
     /* USER CODE BEGIN APP_BLE_CONNECTED_SUCCESS_END_DEVICE_1 */
-	  int index = 0;
-	  index = getSensorIndex(sensorUsedNames[0]);
+	  struct settings readSettings;
+	  readFlash((uint8_t*)&readSettings);
+
+
+	  //readSettings.sensors[0].macAddress
+
     /* USER CODE END APP_BLE_CONNECTED_SUCCESS_END_DEVICE_1 */
         result = aci_gap_create_connection(
         SCAN_P,
         SCAN_L,
-		RANDOM_ADDR,
-        devicesList[index].deviceAddress,
+		STATIC_RANDOM_ADDR,
+		readSettings.sensors[0].macAddress,
         PUBLIC_ADDR,
         CONN_P1,
         CONN_P2,
@@ -1554,9 +1577,11 @@ static void ConnReq1( void )
     if (result == BLE_STATUS_SUCCESS)
     {
     /* USER CODE BEGIN BLE_STATUS_END_DEVICE_1_SUCCESS */
+    int index =  getCorrespondingIndex(readSettings.sensors[0].name);
 
     /* USER CODE END BLE_STATUS_END_DEVICE_1_SUCCESS */
     BleApplicationContext.EndDevice_Connection_Status[0] = APP_BLE_LP_CONNECTING;
+	scannedDevicesPackage.scannedDevicesList[index].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[0];
     }
     else
     {
@@ -1584,14 +1609,17 @@ static void ConnReq2( void )
 
   if (BleApplicationContext.EndDevice_Connection_Status[1] != APP_BLE_CONNECTED_CLIENT)
   {
-	  int index = 0;
-	  index = getSensorIndex(sensorUsedNames[1]);
+	  struct settings readSettings;
+	  readFlash((uint8_t*)&readSettings);
+
+	//readSettings.sensors[1].macAddress
+
 
     result = aci_gap_create_connection(
         SCAN_P,
         SCAN_L,
-		RANDOM_ADDR,
-		devicesList[index].deviceAddress,
+		STATIC_RANDOM_ADDR,
+		readSettings.sensors[1].macAddress,
         PUBLIC_ADDR,
         CONN_P1,
         CONN_P2,
@@ -1602,7 +1630,10 @@ static void ConnReq2( void )
 
     if (result == BLE_STATUS_SUCCESS)
     {
+
+      int index =  getCorrespondingIndex(readSettings.sensors[1].name);
       BleApplicationContext.EndDevice_Connection_Status[1] = APP_BLE_LP_CONNECTING;
+      scannedDevicesPackage.scannedDevicesList[index].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[1];
 
     }
     else
@@ -1627,14 +1658,14 @@ static void ConnReq3( void )
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 3 **  \r\n\r");
   if (BleApplicationContext.EndDevice_Connection_Status[2] != APP_BLE_CONNECTED_CLIENT)
   {
-	  int index = 0;
-	  index = getSensorIndex(sensorUsedNames[2]);
+	  struct settings readSettings;
+	  readFlash((uint8_t*)&readSettings);
 
     result = aci_gap_create_connection(
         SCAN_P,
         SCAN_L,
 		RANDOM_ADDR,
-		devicesList[index].deviceAddress,
+		readSettings.sensors[2].macAddress,
         PUBLIC_ADDR,
         CONN_P1,
         CONN_P2,
@@ -1645,7 +1676,10 @@ static void ConnReq3( void )
 
     if (result == BLE_STATUS_SUCCESS)
     {
+      int index =  getCorrespondingIndex(readSettings.sensors[2].name);
+
       BleApplicationContext.EndDevice_Connection_Status[2] = APP_BLE_LP_CONNECTING;
+      scannedDevicesPackage.scannedDevicesList[index].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[2];
 
     }
     else
@@ -1670,14 +1704,14 @@ static void ConnReq4( void )
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 4 **  \r\n\r");
   if (BleApplicationContext.EndDevice_Connection_Status[3] != APP_BLE_CONNECTED_CLIENT)
   {
-	  int index = 0;
-	  index = getSensorIndex(sensorUsedNames[3]);
+	  struct settings readSettings;
+	  readFlash((uint8_t*)&readSettings);
 
     result = aci_gap_create_connection(
         SCAN_P,
         SCAN_L,
 		RANDOM_ADDR,
-		devicesList[index].deviceAddress,
+		readSettings.sensors[3].macAddress,
         PUBLIC_ADDR,
         CONN_P1,
         CONN_P2,
@@ -1688,7 +1722,10 @@ static void ConnReq4( void )
 
     if (result == BLE_STATUS_SUCCESS)
     {
+      int index =  getCorrespondingIndex(readSettings.sensors[3].name);
+
       BleApplicationContext.EndDevice_Connection_Status[3] = APP_BLE_LP_CONNECTING;
+      scannedDevicesPackage.scannedDevicesList[index].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[3];
 
     }
     else
@@ -1802,8 +1839,8 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
 
     /* USER CODE END P2P_Evt_Opcode */
     case SMART_PHONE1_CONN_HANDLE_EVT:
-        EDS_STM_Update_Char(0x0001,
-                (uint8_t *)&device_list_index);
+        /*EDS_STM_Update_Char(0x0001,
+                (uint8_t *)&scannedDevicesPackage.numberOfScannedDevices);*/
       break;
 
     case P2P_SERVER1_CONN_HANDLE_EVT:
@@ -1824,6 +1861,7 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
     /* USER CODE BEGIN P2P_SERVER_CONN_HANDLE_EVT_Multi_Notification */
     case P2P_SERVER2_CONN_HANDLE_EVT:
       device_status.Device2_Status = 0x81; /* Connected */
+      UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_2_ID, CFG_SCH_PRIO_0);
       break;
 
     case P2P_SERVER3_CONN_HANDLE_EVT:

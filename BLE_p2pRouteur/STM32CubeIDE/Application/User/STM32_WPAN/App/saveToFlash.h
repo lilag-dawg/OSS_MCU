@@ -85,14 +85,14 @@ struct sprockets {
 
 struct sensor {
 	char name[19];
-	uint8_t macAddress[5];
+	uint8_t macAddress[6];
 };
 
 struct settings {
 	struct preferences preferences;
 	struct cranksets cranksets;
 	struct sprockets sprockets;
-	struct sensor sensors[50];
+	struct sensor sensors[4]; //4 sensors max in flash
 };
 
 
