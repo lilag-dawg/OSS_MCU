@@ -176,6 +176,12 @@ void crankRevFunction(int* CrankValue){
 
 }
 
+void powerFunction(int* powerData){
+	float powerValue = powerData[1] + (powerData[0]*256);
+	bikeDataInformation.power.value = powerValue;
+	bikeDataInformation.power.time = 0;    // a changer avec le timer
+	printf("Power value: %f \n\r", bikeDataInformation.power.value);
+}
 
 void algoCases(void){
 //	float puissance = bikeDataInformation.power.value;
