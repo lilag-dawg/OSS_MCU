@@ -204,16 +204,6 @@ typedef struct
    * When not in connection, the handle is set to 0xFFFF
    */
   uint16_t connectionHandleEndDevice4;
-  /**
-   * connection handle with the Server 5 connection (End Device 5)
-   * When not in connection, the handle is set to 0xFFFF
-   */
-  uint16_t connectionHandleEndDevice5;
-  /**
-   * connection handle with the Server 6 connection (End Device 6)
-   * When not in connection, the handle is set to 0xFFFF
-   */
-  uint16_t connectionHandleEndDevice6;
 /* USER CODE END connectionHandleEndDevice_Multi */
 #endif
 
@@ -236,14 +226,6 @@ typedef struct
    * used when doing advertising to find end device 4
    */
   uint8_t EndDevice4Found;
-  /**
-   * used when doing advertising to find end device 5
-   */
-  uint8_t EndDevice5Found;
-  /**
-   * used when doing advertising to find end device 6
-   */
-  uint8_t EndDevice6Found;
 /* USER CODE END EndDeviceFound_Multi */
 #endif
 
@@ -405,8 +387,6 @@ static void Adv_Request( void );
 static void ConnReq2( void );
 static void ConnReq3( void );
 static void ConnReq4( void );
-static void ConnReq5( void );
-static void ConnReq6( void );
 #endif
 /* USER CODE END PFP */
 
@@ -480,8 +460,7 @@ void APP_BLE_Init( void )
   UTIL_SEQ_RegTask( 1<<CFG_TASK_CONN_DEV_2_ID, UTIL_SEQ_RFU, ConnReq2);
   UTIL_SEQ_RegTask( 1<<CFG_TASK_CONN_DEV_3_ID, UTIL_SEQ_RFU, ConnReq3);
   UTIL_SEQ_RegTask( 1<<CFG_TASK_CONN_DEV_4_ID, UTIL_SEQ_RFU, ConnReq4);
-  UTIL_SEQ_RegTask( 1<<CFG_TASK_CONN_DEV_5_ID, UTIL_SEQ_RFU, ConnReq5);
-  UTIL_SEQ_RegTask( 1<<CFG_TASK_CONN_DEV_6_ID, UTIL_SEQ_RFU, ConnReq6);
+
 /* USER CODE END SCH_RegTask_Multi */
 #endif
 
@@ -497,15 +476,11 @@ void APP_BLE_Init( void )
   BleApplicationContext.EndDevice_Connection_Status[1] = APP_BLE_IDLE;
   BleApplicationContext.EndDevice_Connection_Status[2] = APP_BLE_IDLE;
   BleApplicationContext.EndDevice_Connection_Status[3] = APP_BLE_IDLE;
-  BleApplicationContext.EndDevice_Connection_Status[4] = APP_BLE_IDLE;
-  BleApplicationContext.EndDevice_Connection_Status[5] = APP_BLE_IDLE;
 /* USER CODE END Connection_Status_Multi */
 /* USER CODE BEGIN EndDeviceFound_Multi_Init */
   BleApplicationContext.EndDevice2Found = 0x00;
   BleApplicationContext.EndDevice3Found = 0x00;
   BleApplicationContext.EndDevice4Found = 0x00;
-  BleApplicationContext.EndDevice5Found = 0x00;
-  BleApplicationContext.EndDevice6Found = 0x00;
 /* USER CODE END EndDeviceFound_Multi_Init */
 #endif
 /**
@@ -534,8 +509,8 @@ void APP_BLE_Init( void )
   //strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
   //memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
 
-  strcpy(settingsToWrite.sensors[0].name,"	Ridesense");
-  memcpy(settingsToWrite.sensors[0].macAddress, macRidesense, sizeof(settingsToWrite.sensors[0].macAddress));
+  //strcpy(settingsToWrite.sensors[0].name,"	Ridesense");
+  //memcpy(settingsToWrite.sensors[0].macAddress, macRidesense, sizeof(settingsToWrite.sensors[0].macAddress));
 
   //strcpy(settingsToWrite.sensors[2].name,"	EWWU-111");
   //memcpy(settingsToWrite.sensors[2].macAddress, macShimano, sizeof(settingsToWrite.sensors[2].macAddress));
@@ -552,23 +527,55 @@ void Trigger_Scan_Request( void ){
 	UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_1);
 }
 
-void Trigger_Connection_Request( int index ){
-	switch(index){
+void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pairing_request_status status){
+	switch(indexInFlash){
 		case 0:
-			BleApplicationContext.EndDevice1Found = 0x01;
-			UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
+			if(status == CONNECTING){
+				BleApplicationContext.EndDevice1Found = 0x01;
+				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
+			}
+			else{
+				BleApplicationContext.EndDevice_Connection_Status[0] = APP_BLE_IDLE;
+				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[0];
+				BleApplicationContext.EndDevice1Found = 0x00;
+			}
+
 			break;
 		case 1:
-			BleApplicationContext.EndDevice2Found = 0x01;
-			UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_2_ID, CFG_SCH_PRIO_0);
+			if(status == CONNECTING){
+				BleApplicationContext.EndDevice2Found = 0x01;
+				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_2_ID, CFG_SCH_PRIO_0);
+			}
+			else{
+				BleApplicationContext.EndDevice_Connection_Status[1] = APP_BLE_IDLE;
+				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[1];
+				BleApplicationContext.EndDevice2Found = 0x00;
+			}
+
 			break;
 		case 2:
-			BleApplicationContext.EndDevice3Found = 0x01;
-			UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_3_ID, CFG_SCH_PRIO_0);
+			if(status == CONNECTING){
+				BleApplicationContext.EndDevice3Found = 0x01;
+				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_3_ID, CFG_SCH_PRIO_0);
+			}
+			else{
+				BleApplicationContext.EndDevice_Connection_Status[2] = APP_BLE_IDLE;
+				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[2];
+				BleApplicationContext.EndDevice3Found = 0x00;
+			}
+
 			break;
 		case 3:
-			BleApplicationContext.EndDevice4Found = 0x01;
-			UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_4_ID, CFG_SCH_PRIO_0);
+			if(status == CONNECTING){
+				BleApplicationContext.EndDevice4Found = 0x01;
+				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_4_ID, CFG_SCH_PRIO_0);
+			}
+			else{
+				BleApplicationContext.EndDevice_Connection_Status[3] = APP_BLE_IDLE;
+				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[3];
+				BleApplicationContext.EndDevice4Found = 0x00;
+			}
+
 			break;
 		default:
 			break;
@@ -678,16 +685,6 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
             {
               UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_4_ID, CFG_SCH_PRIO_0);
             }
-            else if (BleApplicationContext.EndDevice5Found == 0x01
-                && BleApplicationContext.EndDevice_Connection_Status[4] != APP_BLE_CONNECTED_CLIENT)
-            {
-              UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_5_ID, CFG_SCH_PRIO_0);
-            }
-            else if (BleApplicationContext.EndDevice6Found == 0x01
-                && BleApplicationContext.EndDevice_Connection_Status[5] != APP_BLE_CONNECTED_CLIENT)
-            {
-              UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_6_ID, CFG_SCH_PRIO_0);
-            }
           /* USER CODE END EVT_BLUE_GAP_PROCEDURE_COMPLETE_Multi */
 #endif
 
@@ -787,8 +784,12 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
       }
       if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice3)
       {
+    	int index =  getCorrespondingIndex(readSettings.sensors[2].name);
+
+
         APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 3 \n");
         BleApplicationContext.EndDevice_Connection_Status[2] = APP_BLE_IDLE;
+        scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[2];
         BleApplicationContext.connectionHandleEndDevice3 = 0xFFFF;
         handleNotification.P2P_Evt_Opcode = P2P_SERVER3_DISCON_HANDLE_EVT;
         handleNotification.ConnectionHandle = connection_handle;
@@ -796,28 +797,13 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
       }
       if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice4)
       {
+    	int index =  getCorrespondingIndex(readSettings.sensors[2].name);
+
         APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 4 \n");
         BleApplicationContext.EndDevice_Connection_Status[3] = APP_BLE_IDLE;
+        scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[3];
         BleApplicationContext.connectionHandleEndDevice4 = 0xFFFF;
         handleNotification.P2P_Evt_Opcode = P2P_SERVER4_DISCON_HANDLE_EVT;
-        handleNotification.ConnectionHandle = connection_handle;
-        Evt_Notification(&handleNotification);
-      }
-      if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice5)
-      {
-        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 5 \n");
-        BleApplicationContext.EndDevice_Connection_Status[4] = APP_BLE_IDLE;
-        BleApplicationContext.connectionHandleEndDevice5 = 0xFFFF;
-        handleNotification.P2P_Evt_Opcode = P2P_SERVER5_DISCON_HANDLE_EVT;
-        handleNotification.ConnectionHandle = connection_handle;
-        Evt_Notification(&handleNotification);
-      }
-      if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice6)
-      {
-        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 6 \n");
-        BleApplicationContext.EndDevice_Connection_Status[5] = APP_BLE_IDLE;
-        BleApplicationContext.connectionHandleEndDevice6 = 0xFFFF;
-        handleNotification.P2P_Evt_Opcode = P2P_SERVER6_DISCON_HANDLE_EVT;
         handleNotification.ConnectionHandle = connection_handle;
         Evt_Notification(&handleNotification);
       }
@@ -942,12 +928,12 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 APP_DBG_MSG("BLE_CTRL_App_Notification(), All services discovery Failed \r\n\r");
               }
               /* Now try to connect to device 1 */
-              /*if ((BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED_CLIENT)
+              if ((BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED_CLIENT)
                   && (BleApplicationContext.EndDevice1Found == 0x01))
               {
 
                 UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
-              }*/
+              }
             }
             if (dev3 == 1)
             {
@@ -1009,62 +995,6 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
               {
 
                 UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_3_ID, CFG_SCH_PRIO_0);
-              }
-            }
-            if (dev5 == 1)
-            {
-              /* Inform Application it is End Device 5 */
-              APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 5\n");
-
-              BleApplicationContext.EndDevice_Connection_Status[4] = APP_BLE_CONNECTED_CLIENT;
-              BleApplicationContext.connectionHandleEndDevice5 = connection_handle;
-              BleApplicationContext.BleApplicationContext_legacy.connectionHandle[4] = connection_handle;
-              handleNotification.P2P_Evt_Opcode = P2P_SERVER5_CONN_HANDLE_EVT;
-              handleNotification.ConnectionHandle = connection_handle;
-              Evt_Notification(&handleNotification);
-              result = aci_gatt_disc_all_primary_services(BleApplicationContext.connectionHandleEndDevice5);
-              if (result == BLE_STATUS_SUCCESS)
-              {
-                APP_DBG_MSG("* GATT : Start Searching Primary Services \r\n\r");
-              }
-              else
-              {
-                APP_DBG_MSG("BLE_CTRL_App_Notification(), All services discovery Failed \r\n\r");
-              }
-              /* Now try to connect to device 6 */
-              if ((BleApplicationContext.EndDevice_Connection_Status[5] != APP_BLE_CONNECTED_CLIENT)
-                  && (BleApplicationContext.EndDevice6Found == 0x01))
-              {
-
-                UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_6_ID, CFG_SCH_PRIO_0);
-              }
-            }
-            if (dev6 == 1)
-            {
-              /* Inform Application it is End Device 6 */
-              APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 6\n");
-
-              BleApplicationContext.EndDevice_Connection_Status[5] = APP_BLE_CONNECTED_CLIENT;
-              BleApplicationContext.connectionHandleEndDevice6 = connection_handle;
-              BleApplicationContext.BleApplicationContext_legacy.connectionHandle[5] = connection_handle;
-              handleNotification.P2P_Evt_Opcode = P2P_SERVER6_CONN_HANDLE_EVT;
-              handleNotification.ConnectionHandle = connection_handle;
-              Evt_Notification(&handleNotification);
-              result = aci_gatt_disc_all_primary_services(BleApplicationContext.connectionHandleEndDevice6);
-              if (result == BLE_STATUS_SUCCESS)
-              {
-                APP_DBG_MSG("* GATT : Start Searching Primary Services \r\n\r");
-              }
-              else
-              {
-                APP_DBG_MSG("BLE_CTRL_App_Notification(), All services discovery Failed \r\n\r");
-              }
-              /* Now try to connect to device 5 */
-              if ((BleApplicationContext.EndDevice_Connection_Status[4] != APP_BLE_CONNECTED_CLIENT)
-                  && (BleApplicationContext.EndDevice5Found == 0x01))
-              {
-
-                UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_5_ID, CFG_SCH_PRIO_0);
               }
             }
 
@@ -1233,14 +1163,6 @@ APP_BLE_ConnStatus_t APP_BLE_Get_Client_Connection_Status( uint16_t Connection_H
   else if (BleApplicationContext.connectionHandleEndDevice4 == Connection_Handle)
   {
     return_value = BleApplicationContext.EndDevice_Connection_Status[3];
-  }
-  else if (BleApplicationContext.connectionHandleEndDevice5 == Connection_Handle)
-  {
-    return_value = BleApplicationContext.EndDevice_Connection_Status[4];
-  }
-  else if (BleApplicationContext.connectionHandleEndDevice6 == Connection_Handle)
-  {
-    return_value = BleApplicationContext.EndDevice_Connection_Status[5];
   }
 /* USER CODE END APP_BLE_Get_Client_Connection_Status_Multi */
 #endif
@@ -1733,85 +1655,6 @@ static void ConnReq4( void )
   return;
 }
 
-/**
- * @brief  Connection Establishement on SERVER 5
- * @param  None
- * @retval None
- */
-static void ConnReq5( void )
-{
-  tBleStatus result;
-  APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 5 **  \r\n\r");
-  if (BleApplicationContext.EndDevice_Connection_Status[4] != APP_BLE_CONNECTED_CLIENT)
-  {
-    result = aci_gap_create_connection(
-        SCAN_P,
-        SCAN_L,
-        PUBLIC_ADDR,
-        P2P_SERVER5_BDADDR,
-        PUBLIC_ADDR,
-        CONN_P1,
-        CONN_P2,
-        0,
-        SUPERV_TIMEOUT,
-        CONN_L1,
-        CONN_L2);
-
-    if (result == BLE_STATUS_SUCCESS)
-    {
-      BleApplicationContext.EndDevice_Connection_Status[4] = APP_BLE_LP_CONNECTING;
-
-    }
-    else
-    {
-      BSP_LED_On(LED_RED);
-      BleApplicationContext.EndDevice_Connection_Status[4] = APP_BLE_IDLE;
-
-    }
-  }
-
-  return;
-}
-/**
- * @brief  Connection Establishement on SERVER 3
- * @param  None
- * @retval None
- */
-static void ConnReq6( void )
-{
-  tBleStatus result;
-  APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 6 **  \r\n\r");
-  if (BleApplicationContext.EndDevice_Connection_Status[5] != APP_BLE_CONNECTED_CLIENT)
-  {
-    result = aci_gap_create_connection(
-        SCAN_P,
-        SCAN_L,
-        PUBLIC_ADDR,
-        P2P_SERVER6_BDADDR,
-        PUBLIC_ADDR,
-        CONN_P1,
-        CONN_P2,
-        0,
-        SUPERV_TIMEOUT,
-        CONN_L1,
-        CONN_L2);
-
-    if (result == BLE_STATUS_SUCCESS)
-    {
-      BleApplicationContext.EndDevice_Connection_Status[5] = APP_BLE_LP_CONNECTING;
-
-    }
-    else
-    {
-      BSP_LED_On(LED_RED);
-      BleApplicationContext.EndDevice_Connection_Status[5] = APP_BLE_IDLE;
-
-    }
-  }
-
-  return;
-}
-
     /* USER CODE END ConnReq1_Multi */
 #endif
 
@@ -1839,6 +1682,7 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
 
     case P2P_SERVER1_CONN_HANDLE_EVT:
       device_status.Device1_Status = 0x81; /* Connected */
+      UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
       break;
 
     case P2P_SERVER1_DISCON_HANDLE_EVT:
@@ -1860,19 +1704,14 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
 
     case P2P_SERVER3_CONN_HANDLE_EVT:
       device_status.Device3_Status = 0x81; /* connected */
+      UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_3_ID, CFG_SCH_PRIO_0);
       break;
 
     case P2P_SERVER4_CONN_HANDLE_EVT:
       device_status.Device4_Status = 0x81; /* Connected */
+      UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_4_ID, CFG_SCH_PRIO_0);
       break;
 
-    case P2P_SERVER5_CONN_HANDLE_EVT:
-      device_status.Device5_Status = 0x81; /* Connected */
-      break;
-
-    case P2P_SERVER6_CONN_HANDLE_EVT:
-      device_status.Device6_Status = 0x81; /* Connected */
-      break;
     /* USER CODE END P2P_SERVER_CONN_HANDLE_EVT_Multi_Notification */
     /* USER CODE BEGIN P2P_SERVER_DISCON_HANDLE_EVT_Multi_Notification */
     case P2P_SERVER2_DISCON_HANDLE_EVT:
@@ -1890,16 +1729,6 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
       UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_4_ID, CFG_SCH_PRIO_0);
       break;
 
-    case P2P_SERVER5_DISCON_HANDLE_EVT:
-      device_status.Device5_Status = 0x80; /* Not connected */
-      /* Restart Create Connection */
-      UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_5_ID, CFG_SCH_PRIO_0);
-      break;
-
-    case P2P_SERVER6_DISCON_HANDLE_EVT:
-      device_status.Device6_Status = 0x80; /* Not connected */
-      UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_6_ID, CFG_SCH_PRIO_0);
-      break;
     /* USER CODE END P2P_SERVER_DISCON_HANDLE_EVT_Multi_Notification */
 #endif
 
