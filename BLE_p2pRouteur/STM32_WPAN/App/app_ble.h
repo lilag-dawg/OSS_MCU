@@ -138,7 +138,6 @@ typedef struct
     uint8_t macAddress[6];
     APP_BLE_ConnStatus_t pairingStatus;
     uint8_t position;
-    bool uuid_format;
     DeviceSupportedDataType supportedDataType;
 } DeviceInformations_t;
 
