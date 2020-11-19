@@ -480,10 +480,7 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
 {
 /* USER CODE BEGIN P2P_Client_App_Notification_1 */
 	int sensorData[11] = {0};
-	int cassette = 0;
-	int plateau = 0;
-	int tab[17] = {0};
-	int shimano_rsp = 0;
+	float tab[17] = {0};
 
 /* USER CODE END P2P_Client_App_Notification_1 */
     switch(pNotification->P2P_Client_Evt_Opcode)
@@ -494,12 +491,7 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
     	for(int i = 0; i<pNotification->DataTransfered.Length; i++){
     					tab[i] = pNotification->DataTransfered.pPayload[i];
     				}
-
-    				shimano_rsp = GetRatio(tab, &cassette, &plateau);
-
-    				if(shimano_rsp == 1){
-    					printf("Cassette : %d	Plateau : %d\n\r",cassette, plateau);
-    				}
+    				GetRatio(tab);
 	break;
 
     case P2P_NOTIFICATION_CSC_RECEIVED_EVT:
@@ -889,11 +881,14 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 										}
 										case(CYCLING_POWER_SERVICE_UUID):
 										{
+											uuid_format_char = 0;
+											aP2PClientContext[index].sensor_evt_type = P2P_NOTIFICATION_CP_RECEIVED_EVT;
 											scannedDevicesPackage.scannedDevicesList[index].supportedDataType.power = true;
 											break;
 										}
 										case(BATTERY_SERVICE_UUID):
 										{
+											uuid_format_char = 0;
 											scannedDevicesPackage.scannedDevicesList[index].supportedDataType.battery = true;
 											break;
 										}
