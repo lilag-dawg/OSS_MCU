@@ -537,8 +537,8 @@ void APP_BLE_Init( void )
   strcpy(settingsToWrite.sensors[0].name,"	Ridesense");
   memcpy(settingsToWrite.sensors[0].macAddress, macRidesense, sizeof(settingsToWrite.sensors[0].macAddress));
 
-  //strcpy(settingsToWrite.sensors[2].name,"	EWWU-111");
-  //memcpy(settingsToWrite.sensors[2].macAddress, macShimano, sizeof(settingsToWrite.sensors[2].macAddress));
+  strcpy(settingsToWrite.sensors[1].name,"	EWWU111");
+  memcpy(settingsToWrite.sensors[1].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress));
 
 
   saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
