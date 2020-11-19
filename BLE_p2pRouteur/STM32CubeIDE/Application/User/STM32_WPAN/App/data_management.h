@@ -11,6 +11,7 @@
 void switchCase(int* value);
 void wheelRevFunction(int* wheelValue);
 void crankRevFunction(int* CrankValue);
+void powerFunction(int* powerData);
 void GetRatio(float *tableau);
 void algoCases(void);
 
