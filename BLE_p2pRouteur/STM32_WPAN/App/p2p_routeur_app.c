@@ -898,18 +898,17 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                     	APP_DBG_MSG("-- GATT : SENSOR_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
                                     	uuid_format_char = 1;
 #endif
-
+                                    	scannedDevicesPackage.scannedDevicesList[index].supportedDataType.gear = true;
                                         if(uuid_bit_format==1){
-                                        	aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
-                                            aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
+                                        	SERVICES_HANDLE[index].P2PServiceHandle_SHIMANO = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
+                                        	SERVICES_HANDLE[index].P2PServiceEndHandle_SHIMANO = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
                                         }
                                         else if(uuid_bit_format==0){
-                                        	aP2PClientContext[index].P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
-                                        	aP2PClientContext[index].P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
+                                        	SERVICES_HANDLE[index].P2PServiceHandle_SHIMANO = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
+                                        	SERVICES_HANDLE[index].P2PServiceEndHandle_SHIMANO = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
                                         }
 
-                                        aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
-                                        aP2PClientContext[index].sensor_evt_type = P2P_NOTIFICATION_SHIMANO_RECEIVED_EVT;
+
 
                                     		break;
                                     	}
@@ -937,6 +936,11 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 										scannedDevicesPackage.scannedDevicesList[index].supportedDataType.power == true)
 								{
 									TYPE_OF_SENSOR = POWER_SENSOR;
+								}
+								else if(scannedDevicesPackage.scannedDevicesList[index].supportedDataType.gear == true){
+
+									TYPE_OF_SENSOR = SHIMANO_SENSOR;
+
 								}
 								else{
 									TYPE_OF_SENSOR = OTHER;
@@ -986,6 +990,15 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 										aP2PClientContext[index].P2PServiceEndHandle = SERVICES_HANDLE[index].P2PServiceEndHandle_CSC;
 #endif
 										aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
+										break;
+									}
+									case SHIMANO_SENSOR:
+									{
+
+											aP2PClientContext[index].P2PServiceHandle = SERVICES_HANDLE[index].P2PServiceHandle_SHIMANO;
+										    aP2PClientContext[index].P2PServiceEndHandle = SERVICES_HANDLE[index].P2PServiceEndHandle_SHIMANO;
+	                                        aP2PClientContext[index].state = APP_BLE_DISCOVER_CHARACS ;
+	                                        aP2PClientContext[index].sensor_evt_type = P2P_NOTIFICATION_SHIMANO_RECEIVED_EVT;
 										break;
 									}
 								}

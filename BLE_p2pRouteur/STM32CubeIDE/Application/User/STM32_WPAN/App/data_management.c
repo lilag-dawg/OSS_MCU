@@ -255,8 +255,7 @@ void GetRatio(float *tableau){
 		bikeDataInformation.pinion_fd.value = tableau[3];
 		bikeDataInformation.pinion_rd.value = tableau[5];
 		bikeDataInformation.cadence.time = 0;    // a changer avec le timer
-		//printf("plateau : %d	cassette : %d\n\r",tableau[3], tableau[5]);
-		printf("plateau : %d	cassette : %d\n\r",bikeDataInformation.pinion_fd.value, bikeDataInformation.pinion_rd.value);
+		printf("plateau : %f	cassette : %f\n\r",bikeDataInformation.pinion_fd.value, bikeDataInformation.pinion_rd.value);
 	}
 }
 
