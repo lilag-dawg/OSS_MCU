@@ -4,10 +4,24 @@
  *  Created on: 11 nov. 2020
  *      Author: Guillaume
  */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+#include "app_entry.h"
+#include "app_common.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include "stm32_lpm.h"
+#include "stm32_seq.h"
+#include "dbg_trace.h"
+#include "hw_conf.h"
+#include "otp.h"
+#include "saveToFlash.h"
+/* USER CODE END Includes */
 
 // Fonction de l'algorithme
 // Déclaration de la fonction qui change de vitesse pour un plus grand ratio
@@ -15,9 +29,9 @@ void Augmenter_ratio(int *pointeur_flag_changement_ratio)
 {
     printf ("Augmenter ratio\n");
     *pointeur_flag_changement_ratio = 1;
-    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_SET);
-	//HAL_Delay(50);
-	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
+	HAL_Delay(50);
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
 }
 
 // Déclaration de la fonction qui change de vitesse pour un plus petit ratio
@@ -25,9 +39,9 @@ void Diminuer_ratio(int *pointeur_flag_changement_ratio)
 {
     printf ("Diminuer ratio\n");
     *pointeur_flag_changement_ratio = 1;
-    //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
-	//HAL_Delay(50);
-	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_SET);
+	HAL_Delay(50);
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
 }
 
 // Déclaration de la fonction qui nous donne le ratio en fonction des plateaux et des pignons
