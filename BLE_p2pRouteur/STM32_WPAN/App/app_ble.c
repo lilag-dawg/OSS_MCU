@@ -506,14 +506,14 @@ void APP_BLE_Init( void )
   memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
 
   //initilase sensor hardcode
-  strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
-  memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
+ // strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
+ // memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
 
-//  strcpy(settingsToWrite.sensors[0].name,"	Ridesense");
-//  memcpy(settingsToWrite.sensors[0].macAddress, macRidesense, sizeof(settingsToWrite.sensors[0].macAddress));
+  //strcpy(settingsToWrite.sensors[0].name,"	Ridesense");
+  //memcpy(settingsToWrite.sensors[0].macAddress, macRidesense, sizeof(settingsToWrite.sensors[0].macAddress));
 //
-//  strcpy(settingsToWrite.sensors[1].name,"	EWWU111");
-//  memcpy(settingsToWrite.sensors[1].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress));
+  //strcpy(settingsToWrite.sensors[0].name,"	EWWU111");
+  //memcpy(settingsToWrite.sensors[0].macAddress, macShimano, sizeof(settingsToWrite.sensors[0].macAddress));
 
 
   saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
@@ -932,7 +932,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                   && (BleApplicationContext.EndDevice1Found == 0x01))
               {
 
-                UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
+                UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_3_ID, CFG_SCH_PRIO_0);
               }
             }
             if (dev3 == 1)
@@ -1486,15 +1486,15 @@ static void ConnReq1( void )
         result = aci_gap_create_connection(
         SCAN_P,
         SCAN_L,
-		STATIC_RANDOM_ADDR,
+		RANDOM_ADDR,
 		readSettings.sensors[0].macAddress,
         PUBLIC_ADDR,
-        CONN_P1,
-        CONN_P2,
+        CONN_P(50),
+        CONN_P(100),
         0,
-        SUPERV_TIMEOUT,
-        CONN_L1,
-        CONN_L2);
+        500,
+        CONN_L(10),
+        CONN_L(10));
 
     if (result == BLE_STATUS_SUCCESS)
     {
@@ -1543,12 +1543,12 @@ static void ConnReq2( void )
 		STATIC_RANDOM_ADDR,
 		readSettings.sensors[1].macAddress,
         PUBLIC_ADDR,
-        CONN_P1,
-        CONN_P2,
+        CONN_P(50),
+        CONN_P(100),
         0,
-        SUPERV_TIMEOUT,
-        CONN_L1,
-        CONN_L2);
+        500,
+        CONN_L(10),
+        CONN_L(10));
 
     if (result == BLE_STATUS_SUCCESS)
     {
@@ -1589,12 +1589,12 @@ static void ConnReq3( void )
 		RANDOM_ADDR,
 		readSettings.sensors[2].macAddress,
         PUBLIC_ADDR,
-        CONN_P1,
-        CONN_P2,
+        CONN_P(50),
+        CONN_P(100),
         0,
-        SUPERV_TIMEOUT,
-        CONN_L1,
-        CONN_L2);
+        500,
+        CONN_L(10),
+        CONN_L(10));
 
     if (result == BLE_STATUS_SUCCESS)
     {
@@ -1635,12 +1635,12 @@ static void ConnReq4( void )
 		RANDOM_ADDR,
 		readSettings.sensors[3].macAddress,
         PUBLIC_ADDR,
-        CONN_P1,
-        CONN_P2,
+        CONN_P(50),
+        CONN_P(100),
         0,
-        SUPERV_TIMEOUT,
-        CONN_L1,
-        CONN_L2);
+        500,
+        CONN_L(10),
+        CONN_L(10));
 
     if (result == BLE_STATUS_SUCCESS)
     {

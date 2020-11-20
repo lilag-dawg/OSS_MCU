@@ -1172,7 +1172,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 
                             P2P_Client_App_Notification(&Notification);
 
-                            algoCases();
+                            //algoCases();
 
                             /* INFORM APPLICATION BUTTON IS PUSHED BY END DEVICE */
 
