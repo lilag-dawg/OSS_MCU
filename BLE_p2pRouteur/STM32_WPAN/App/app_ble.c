@@ -506,14 +506,14 @@ void APP_BLE_Init( void )
   memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
 
   //initilase sensor hardcode
-  //strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
-  //memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
+  strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
+  memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
 
-  //strcpy(settingsToWrite.sensors[0].name,"	Ridesense");
-  //memcpy(settingsToWrite.sensors[0].macAddress, macRidesense, sizeof(settingsToWrite.sensors[0].macAddress));
-
-  //strcpy(settingsToWrite.sensors[2].name,"	EWWU-111");
-  //memcpy(settingsToWrite.sensors[2].macAddress, macShimano, sizeof(settingsToWrite.sensors[2].macAddress));
+//  strcpy(settingsToWrite.sensors[0].name,"	Ridesense");
+//  memcpy(settingsToWrite.sensors[0].macAddress, macRidesense, sizeof(settingsToWrite.sensors[0].macAddress));
+//
+//  strcpy(settingsToWrite.sensors[1].name,"	EWWU111");
+//  memcpy(settingsToWrite.sensors[1].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress));
 
 
   saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
@@ -1034,7 +1034,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
           /* search AD TYPE 0x09 (Complete Local Name) */
           /* search AD Type 0x02 (16 bits UUIDS) */
-          if (event_type == ADV_IND || event_type == SCAN_RSP)
+          if (event_type == ADV_IND ||event_type==SCAN_RSP)
           {
 
             /* ISOLATION OF BD ADDRESS AND LOCAL NAME */
@@ -1095,6 +1095,11 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
                 /* USER CODE END get_local_name */
                   break;
+
+                case 0x07: //manufacture name
+
+                break;
+
                 case 0x02: /* now get UID */
                 /* USER CODE BEGIN get_UID */
 
@@ -1473,6 +1478,7 @@ static void ConnReq1( void )
     /* USER CODE BEGIN APP_BLE_CONNECTED_SUCCESS_END_DEVICE_1 */
 	  struct settings readSettings;
 	  readFlash((uint8_t*)&readSettings);
+
 
 	  //readSettings.sensors[0].macAddress
 

@@ -11,18 +11,20 @@
 
 // Fonction de l'algorithme
 // Déclaration de la fonction qui change de vitesse pour un plus grand ratio
-void Augmenter_ratio()
+void Augmenter_ratio(int *pointeur_flag_changement_ratio)
 {
     printf ("Augmenter ratio\n");
+    *pointeur_flag_changement_ratio = 1;
     //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_SET);
 	//HAL_Delay(50);
 	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
 }
 
 // Déclaration de la fonction qui change de vitesse pour un plus petit ratio
-void Diminuer_ratio()
+void Diminuer_ratio(int *pointeur_flag_changement_ratio)
 {
     printf ("Diminuer ratio\n");
+    *pointeur_flag_changement_ratio = 1;
     //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
 	//HAL_Delay(50);
 	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
@@ -41,7 +43,7 @@ int Obtenir_indice_ratio(float ratio, float *tab_ratio)
 {
     int i = 0;
     float ratio_tmp = 0;
-    while (ratio_tmp <= ratio)
+    while (ratio_tmp < ratio)
         {
         //printf ("indice %d\n", i);
         //printf ("ratio %f et tab_ratio %f\n", ratio, tab_ratio[i]);
@@ -52,6 +54,8 @@ int Obtenir_indice_ratio(float ratio, float *tab_ratio)
         {
         i = i-1;
         }
+        //printf ("indice %d\n", i);
+        //printf ("ratio %f et tab_ratio %f\n", ratio, tab_ratio[i]);
     return i;
 }
 
@@ -71,19 +75,19 @@ int Obtenir_indice_ratio_min_repos(float *tab_ratio)
 }
 
 // Déclaration de la fonction qui gère les situations de sprints
-void Sprint(float puissance, float cadence, float vitesse, float ratio,int *pointeur_flag_sprint)
+void Sprint(float puissance, float cadence, float vitesse, float ratio, int *pointeur_flag_changement_ratio, int *pointeur_flag)
 {
     printf ("Sprint à %f Watt\n", puissance);
 
     if (cadence > 130)
     {
-    Augmenter_ratio();
-    *pointeur_flag_sprint = 3;
+    Augmenter_ratio(pointeur_flag_changement_ratio);
+    *pointeur_flag = 3;
     }
 }
 
 // Déclaration de la fonction qui gère les situations de repos
-void Repos(float puissance, float cadence, float vitesse, float ratio, int *pointeur_flag_repos, int Diametre_roues, float *tab_ratio)
+void Repos(float puissance, float cadence, float vitesse, float ratio, int *pointeur_nbr_ratio, int Diametre_roues, float *tab_ratio, int *pointeur_flag_changement_ratio)
 {
     printf ("Repos à %f Watt\n", puissance);
 
@@ -99,45 +103,48 @@ void Repos(float puissance, float cadence, float vitesse, float ratio, int *poin
         {
         float Cadence_theorique = (vitesse/3.6)/((float)Diametre_roues/1000*3.14159)*60/tab_ratio[j];
         printf ("cadence théorique %f\n", Cadence_theorique);
-        if(Cadence_theorique < 80)
+        if(Cadence_theorique < 80 && j != 0)
             {
-            Diminuer_ratio();
+            Diminuer_ratio(pointeur_flag_changement_ratio);
             }
 
-        if(Cadence_theorique > 100)
+        if(Cadence_theorique > 100 && j != (*pointeur_nbr_ratio-1))
             {
-            Augmenter_ratio();
+            Augmenter_ratio(pointeur_flag_changement_ratio);
             }
         }
 
 }
 
 // Déclaration de la fonction qui gère le système en utilisation normale
-void Normale(float puissance, float cadence, float vitesse, float ratio, int *pointeur_flag_normale, int Diametre_roues, int Cadence_des, float *tab_ratio)
+void Normale(float puissance, float cadence, float vitesse, float ratio, int *pointeur_nbr_ratio, int Diametre_roues, int Cadence_des, float *tab_ratio, int *pointeur_flag_changement_ratio)
 {
+    float facteur_lim_sup = 1.04; // Le facteur doit être supérieur ou égal à 1
+    float facteur_lim_inf = 0.96; // Le facteur doit être inférieur ou égal à 1
+
     printf ("Normale à %f Watt\n", puissance);
 
     int i = Obtenir_indice_ratio(ratio, tab_ratio);
     //printf ("indice %d\n", i);
     //printf ("ratio %f et tab_ratio %f\n", ratio, tab_ratio[i]);
 
-    if(cadence < Cadence_des)
+    if(cadence < (Cadence_des * facteur_lim_inf) && i != 0)
         {
         float Cadence_sup = (vitesse/3.6)/((float)Diametre_roues/1000*3.14159)*60/tab_ratio[i-1];
         printf ("cadence_sup %f\n", Cadence_sup);
-        if(Cadence_sup < Cadence_des*1.04)
+        if(Cadence_sup < (Cadence_des * facteur_lim_sup))
             {
-            Diminuer_ratio();
+            Diminuer_ratio(pointeur_flag_changement_ratio);
             }
         }
 
-    if(cadence > Cadence_des)
+    if(cadence > (Cadence_des * facteur_lim_sup) && i != (*pointeur_nbr_ratio-1))
         {
         float Cadence_inf = (vitesse/3.6)/((float)Diametre_roues/1000*3.14159)*60/tab_ratio[i+1];
         printf ("cadence_inf à %f\n", Cadence_inf);
-        if(Cadence_inf > Cadence_des*0.96)
+        if(Cadence_inf > Cadence_des * facteur_lim_inf)
             {
-            Augmenter_ratio();
+            Augmenter_ratio(pointeur_flag_changement_ratio);
             }
         }
 }
@@ -232,4 +239,28 @@ void init_tab_ratio(int nbr_pignon, int nbr_plateau, int *cassette, int *pedalie
     //{
     //printf("%f ",tab_ratio[j]);
     //}
+}
+
+// Déclaration de la fonction de gestion des changements de vitesse manuel
+void gestion_changement_vitesse_manuel (int pignon, int plateau, int *pointeur_pignon_precedent, int*pointeur_plateau_precedent, int *pointeur_flag_changement_ratio, int *pointeur_flag)
+{
+    if (pignon != *pointeur_pignon_precedent && *pointeur_flag_changement_ratio != 1)
+        {
+            printf("Changement de vitesse manuel\n");
+            //printf("pignon %d et pignon precedent %d\n", pignon, *pointeur_pignon_precedent);
+            *pointeur_flag = 6;
+            *pointeur_flag_changement_ratio = 0;
+        }
+
+    if (plateau != *pointeur_plateau_precedent && *pointeur_flag_changement_ratio != 1)
+        {
+            printf("Changement de vitesse manuel\n");
+            //printf("plateau %d et plateau precedent %d\n", plateau, *pointeur_plateau_precedent);
+            *pointeur_flag = 6;
+            *pointeur_flag_changement_ratio = 0;
+        }
+
+    *pointeur_pignon_precedent = pignon;
+    *pointeur_plateau_precedent = plateau;
+    *pointeur_flag_changement_ratio = 0;
 }

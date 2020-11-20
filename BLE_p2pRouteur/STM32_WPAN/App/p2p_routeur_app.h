@@ -47,7 +47,33 @@ typedef struct
 /* USER CODE END P2PR_APP_Device_Status_t_Multidevice */
  }P2PR_APP_Device_Status_t;
  /* USER CODE BEGIN ET */
- 
+typedef enum
+{
+	CSC_SENSOR,
+	POWER_SENSOR,
+	TRAINER,
+	SHIMANO_SENSOR,
+	OTHER
+} SENSOR_TYPE_t;
+
+typedef struct
+{
+	// CSC
+	uint8_t P2PServiceHandle_CSC;
+	uint8_t P2PServiceEndHandle_CSC;
+
+	// POWER
+	uint8_t P2PServiceHandle_POWER;
+	uint8_t P2PServiceEndHandle_POWER;
+
+	//Shimano
+	uint8_t P2PServiceHandle_SHIMANO;
+	uint8_t P2PServiceEndHandle_SHIMANO;
+} SERVICES_HANDLE_t;
+
+SERVICES_HANDLE_t SERVICES_HANDLE[6];
+SENSOR_TYPE_t TYPE_OF_SENSOR;
+
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
