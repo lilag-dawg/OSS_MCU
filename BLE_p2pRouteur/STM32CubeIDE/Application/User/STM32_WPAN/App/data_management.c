@@ -136,7 +136,7 @@ void crankRevFunction(int* CrankValue){
 		}
 	}
 
-	if(indexCrankRevValue > bufferMaxValue){
+	if(indexCrankRevValue > bufferMaxValue-1){
 		indexCrankRevValue = 0;
 	}
 	else{
