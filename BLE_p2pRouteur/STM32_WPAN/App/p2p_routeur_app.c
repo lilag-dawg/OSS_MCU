@@ -462,7 +462,7 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
 {
 /* USER CODE BEGIN P2P_Client_App_Notification_1 */
 	int sensorData[11] = {0};
-	float tab[17] = {0};
+	int tab[17] = {0};
 
 /* USER CODE END P2P_Client_App_Notification_1 */
     switch(pNotification->P2P_Client_Evt_Opcode)
