@@ -218,17 +218,18 @@ static void Update_Paired_Devices_In_Flash(void){
     		}
     	}
     }
-    else{ // pairing is Disconnected
+    else{ // request to disconnect
         for(int i = 0; i < sizeof(readSettings.sensors); i++){
         	if(strcmp(P2P_Router_App_Context.PairingRequestStruct.SensorName, settingsToWrite.sensors[i].name) == 0){
         		memset(settingsToWrite.sensors[i].name, 0, sizeof(settingsToWrite.sensors[i].name));
         		memset(settingsToWrite.sensors[i].macAddress, 0, sizeof(settingsToWrite.sensors[i].macAddress));
+
         	}
         }
     }
     saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
 
-    Trigger_Connection_Request(index);
+    Trigger_Connection_Request(index,indexOfDeviceList,P2P_Router_App_Context.PairingRequestStruct.status);
 }
 
 
@@ -297,40 +298,21 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
         	switch(pNotification->DataTransfered.pPayload[0]){
 				case CONNECT:
 					P2P_Router_App_Context.PairingRequestStruct.status = CONNECTING;
-					memset(P2P_Router_App_Context.PairingRequestStruct.SensorName, 0, sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));
-
-					for(int i=1; i<pNotification->DataTransfered.Length;i++){
-		            	P2P_Router_App_Context.PairingRequestStruct.SensorName[i-1] = pNotification->DataTransfered.pPayload[i];
-		            	//printf("%c", P2P_Router_App_Context.PairingRequestStruct.SensorName[i]);
-		            }
-
-					UTIL_SEQ_SetTask(  1<<CFG_TASK_UPDATE_FLASH, CFG_SCH_PRIO_0 );
-
-					//Trigger_Scan_Request();
-
 					break;
 				case DISCONNECT:
 					//todo, handle disconnection
-
+					P2P_Router_App_Context.PairingRequestStruct.status = DISCONNECTING;
 					break;
 				default:
 					break;
         	}
+			memset(P2P_Router_App_Context.PairingRequestStruct.SensorName, 0, sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));
 
-        	//envoyer la demande de connexion ou de deconnexion ici
-
-
-            /*for(int i=1; i<pNotification->DataTransfered.Length;i++){
+			for(int i=1; i<pNotification->DataTransfered.Length;i++){
             	P2P_Router_App_Context.PairingRequestStruct.SensorName[i-1] = pNotification->DataTransfered.pPayload[i];
-            	printf("%c", P2P_Router_App_Context.PairingRequestStruct.SensorName[i]);
-            }*/
+            }
 
-
-
-            //UTIL_SEQ_SetTask(  1<<CFG_TASK_UPDATE_FLASH, CFG_SCH_PRIO_2 );
-
-            //Trigger_Scan_Request();
-
+			UTIL_SEQ_SetTask(  1<<CFG_TASK_UPDATE_FLASH, CFG_SCH_PRIO_0 );
 
 
             /* USER CODE END EDS_CONNEX_HAND_CARA_3_WRITE_EVT */
