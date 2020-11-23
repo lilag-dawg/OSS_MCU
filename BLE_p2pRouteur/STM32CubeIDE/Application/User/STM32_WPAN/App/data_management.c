@@ -42,8 +42,8 @@ bool init = true;
 
 void switchCase(int* value){
 
-    int CrankValueSent[4];
-    int WheelValueSent[6];
+    int CrankValueSent[4] = {0};
+    int WheelValueSent[6] = {0};
 
     switch (value[0]){
         case 1:
@@ -94,20 +94,32 @@ void switchCase(int* value){
 }
 
 void wheelRevFunction(int* wheelValue){
-    prevWheelData = currentWheelData;
-    currentWheelData = wheelCircumference*((wheelValue[0]*(16777216)) + (wheelValue[1]*(65536)) + (wheelValue[2]*(256)) + (wheelValue[3]*(1)));
+	printf("wheel value: [");
+	for(int i = 0; i < 6; i++){
+		printf("%d,",wheelValue[i]);
+	}
+	printf("]\n\r");
+     prevWheelData = currentWheelData;
+    currentWheelData = wheelCircumference*((wheelValue[0]<<24) + (wheelValue[1]<<16) + (wheelValue[2]<<8) + (wheelValue[3]));
 
     prevWheelEvent = currentWheelEvent;
-    currentWheelEvent = ((wheelValue[4]*(256)) + (wheelValue[5]*(1)))/1024; // On obtient le current event en secondes
+    currentWheelEvent = ((wheelValue[4]<<8) + (wheelValue[5])); // On obtient le current event en secondes
 
     if(currentWheelEvent < prevWheelEvent){
-        currentWheelEvent = currentWheelEvent + 64; // Ce if est pour gerer le cas ou nous avons un overflow
+        currentWheelEvent = currentWheelEvent + (64*1024); // Ce if est pour gerer le cas ou nous avons un overflow
     }
 
-    float kmhValue = 3.6*((currentWheelData - prevWheelData)/(currentWheelEvent - prevWheelEvent)); // le 64 est pour passer de RPS a RPM
-    bikeDataInformation.speed.value = kmhValue;
-    bikeDataInformation.speed.time = 0;    // a changer avec le timer
-    printf("Votre vitesse est: %f km/h\n\r", kmhValue);
+    if ((currentWheelData - prevWheelData) > 0){
+    	float diffWheelData = currentWheelData - prevWheelData;
+    	float diffWheelEvent = currentWheelEvent - prevWheelEvent;
+		float kmhValue = (3.6*1024)*(diffWheelData/diffWheelEvent);
+
+		bikeDataInformation.speed.value = kmhValue;
+		bikeDataInformation.speed.time = 0;    // a changer avec le timer
+		printf("data: %f\n\r", diffWheelData);
+		printf("event: %f\n\r", diffWheelEvent);
+		printf("Votre vitesse est: %f km/h\n\r", kmhValue);
+    }
 }
 
 void crankRevFunction(int* CrankValue){
@@ -169,7 +181,6 @@ void crankRevFunction(int* CrankValue){
 			rpmValue = ((currentCrankData-prevCrankData)/(currentCrankEvent-prevCrankEvent))*60;
 			bikeDataInformation.cadence.value = rpmValue;
 			bikeDataInformation.cadence.time = 0;    // a changer avec le timer
-			printf("Votre RMP est: %f RPM\n\r", rpmValue);
 		}
 	}
 
@@ -179,7 +190,6 @@ void powerFunction(int* powerData){
 	float powerValue = powerData[1] + (powerData[0]*256);
 	bikeDataInformation.power.value = powerValue;
 	bikeDataInformation.power.time = 0;    // a changer avec le timer
-	printf("Power value: %f \n\r", bikeDataInformation.power.value);
 }
 
 void algoCases(void){
@@ -317,7 +327,7 @@ void GetRatio(int *tableau){
 					}
 				}
 		bikeDataInformation.cadence.time = 0;    // a changer avec le timer
-		printf("plateau : %f	cassette : %f\n\r",bikeDataInformation.pinion_fd.value, bikeDataInformation.pinion_rd.value);
+		//printf("plateau : %f	cassette : %f\n\r",bikeDataInformation.pinion_fd.value, bikeDataInformation.pinion_rd.value);
 	}
 }
 
