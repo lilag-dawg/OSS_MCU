@@ -94,11 +94,7 @@ void switchCase(int* value){
 }
 
 void wheelRevFunction(int* wheelValue){
-	printf("wheel value: [");
-	for(int i = 0; i < 6; i++){
-		printf("%d,",wheelValue[i]);
-	}
-	printf("]\n\r");
+
      prevWheelData = currentWheelData;
     currentWheelData = wheelCircumference*((wheelValue[0]<<24) + (wheelValue[1]<<16) + (wheelValue[2]<<8) + (wheelValue[3]));
 
@@ -115,9 +111,7 @@ void wheelRevFunction(int* wheelValue){
 		float kmhValue = (3.6*1024)*(diffWheelData/diffWheelEvent);
 
 		bikeDataInformation.speed.value = kmhValue;
-		bikeDataInformation.speed.time = 0;    // a changer avec le timer
-		printf("data: %f\n\r", diffWheelData);
-		printf("event: %f\n\r", diffWheelEvent);
+		bikeDataInformation.speed.time = getSensorsTime();    // a changer avec le timer
 		printf("Votre vitesse est: %f km/h\n\r", kmhValue);
     }
 }
@@ -180,7 +174,7 @@ void crankRevFunction(int* CrankValue){
 
 			rpmValue = ((currentCrankData-prevCrankData)/(currentCrankEvent-prevCrankEvent))*60;
 			bikeDataInformation.cadence.value = rpmValue;
-			bikeDataInformation.cadence.time = 0;    // a changer avec le timer
+			bikeDataInformation.cadence.time = getSensorsTime();    // a changer avec le timer
 		}
 	}
 
@@ -189,21 +183,21 @@ void crankRevFunction(int* CrankValue){
 void powerFunction(int* powerData){
 	float powerValue = powerData[1] + (powerData[0]*256);
 	bikeDataInformation.power.value = powerValue;
-	bikeDataInformation.power.time = 0;    // a changer avec le timer
+	bikeDataInformation.power.time = getSensorsTime();    // a changer avec le timer
 }
 
 void algoCases(void){
-//	float puissance = bikeDataInformation.power.value;
-	float puissance = 240;
+    float puissance = bikeDataInformation.power.value;
+//  float puissance = 240;
 	float cadence = bikeDataInformation.cadence.value;
 	float vitesse = bikeDataInformation.speed.value;
 	float plateau = bikeDataInformation.pinion_fd.value;
 	float pignon = bikeDataInformation.pinion_rd.value;
 //	float plateau = 0;
 //	float pignon = 5;
-	float Timer_puissance = 1000;
-	float Timer_cadence = 1000;
-	float Timer_vitesse = 1000;
+	float Timer_puissance = bikeDataInformation.power.time;
+	float Timer_cadence = bikeDataInformation.cadence.time;
+	float Timer_vitesse = bikeDataInformation.speed.time;
 
 	if (init == true){
 		ordonnerTableau_int(cassette,nbr_pignon);
@@ -260,11 +254,13 @@ void GetRatio(int *tableau){
 			case (1):
 			{
 				bikeDataInformation.pinion_fd.value = 0.0;
+				bikeDataInformation.pinion_fd.time = getSensorsTime();
 				break;
 			}
 			case (2):
 			{
 				bikeDataInformation.pinion_fd.value = 1.0;
+				bikeDataInformation.pinion_fd.time = getSensorsTime();
 				break;
 			}
 		}
@@ -273,61 +269,72 @@ void GetRatio(int *tableau){
 					case (1):
 					{
 						bikeDataInformation.pinion_rd.value = 10.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (2):
 					{
 						bikeDataInformation.pinion_rd.value = 9.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (3):
 					{
 						bikeDataInformation.pinion_rd.value = 8.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (4):
 					{
 						bikeDataInformation.pinion_rd.value = 7.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (5):
 					{
 						bikeDataInformation.pinion_rd.value = 6.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (6):
 					{
 						bikeDataInformation.pinion_rd.value = 5.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (7):
 					{
 						bikeDataInformation.pinion_rd.value = 4.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (8):
 					{
 						bikeDataInformation.pinion_rd.value = 3.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (9):
 					{
 						bikeDataInformation.pinion_rd.value = 2.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (10):
 					{
 						bikeDataInformation.pinion_rd.value = 1.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (11):
 					{
 						bikeDataInformation.pinion_rd.value = 0.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 				}
 		bikeDataInformation.cadence.time = 0;    // a changer avec le timer
-		//printf("plateau : %f	cassette : %f\n\r",bikeDataInformation.pinion_fd.value, bikeDataInformation.pinion_rd.value);
+		printf("plateau : %f	cassette : %f\n\r",bikeDataInformation.pinion_fd.value, bikeDataInformation.pinion_rd.value);
 	}
 }
 
