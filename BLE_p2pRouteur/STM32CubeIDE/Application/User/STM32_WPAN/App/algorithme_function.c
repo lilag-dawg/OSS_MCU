@@ -116,7 +116,7 @@ void Repos(float puissance, float cadence, float vitesse, float ratio, int *poin
     if(cadence > 1 && j > i)
         {
         float Cadence_theorique = (vitesse/3.6)/((float)Diametre_roues/1000*3.14159)*60/tab_ratio[j];
-        printf ("cadence théorique %f\n", Cadence_theorique);
+        //printf ("cadence théorique %f\n", Cadence_theorique);
         if(Cadence_theorique < 80 && j != 0)
             {
             Diminuer_ratio(pointeur_flag_changement_ratio);
@@ -145,7 +145,7 @@ void Normale(float puissance, float cadence, float vitesse, float ratio, int *po
     if(cadence < (Cadence_des * facteur_lim_inf) && i != 0)
         {
         float Cadence_sup = (vitesse/3.6)/((float)Diametre_roues/1000*3.14159)*60/tab_ratio[i-1];
-        printf ("cadence_sup %f\n", Cadence_sup);
+        //printf ("cadence_sup %f\n", Cadence_sup);
         if(Cadence_sup < (Cadence_des * facteur_lim_sup))
             {
             Diminuer_ratio(pointeur_flag_changement_ratio);
@@ -155,7 +155,7 @@ void Normale(float puissance, float cadence, float vitesse, float ratio, int *po
     if(cadence > (Cadence_des * facteur_lim_sup) && i != (*pointeur_nbr_ratio-1))
         {
         float Cadence_inf = (vitesse/3.6)/((float)Diametre_roues/1000*3.14159)*60/tab_ratio[i+1];
-        printf ("cadence_inf à %f\n", Cadence_inf);
+        //printf ("cadence_inf à %f\n", Cadence_inf);
         if(Cadence_inf > Cadence_des * facteur_lim_inf)
             {
             Augmenter_ratio(pointeur_flag_changement_ratio);
@@ -260,7 +260,7 @@ void gestion_changement_vitesse_manuel (int pignon, int plateau, int *pointeur_p
 {
     if (pignon != *pointeur_pignon_precedent && *pointeur_flag_changement_ratio != 1)
         {
-            printf("Changement de vitesse manuel\n");
+            //printf("Changement de vitesse manuel\n");
             //printf("pignon %d et pignon precedent %d\n", pignon, *pointeur_pignon_precedent);
             *pointeur_flag = 6;
             *pointeur_flag_changement_ratio = 0;
@@ -268,7 +268,7 @@ void gestion_changement_vitesse_manuel (int pignon, int plateau, int *pointeur_p
 
     if (plateau != *pointeur_plateau_precedent && *pointeur_flag_changement_ratio != 1)
         {
-            printf("Changement de vitesse manuel\n");
+            //printf("Changement de vitesse manuel\n");
             //printf("plateau %d et plateau precedent %d\n", plateau, *pointeur_plateau_precedent);
             *pointeur_flag = 6;
             *pointeur_flag_changement_ratio = 0;
