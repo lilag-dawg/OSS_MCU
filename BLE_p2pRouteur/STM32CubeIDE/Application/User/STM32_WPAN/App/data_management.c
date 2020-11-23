@@ -42,8 +42,8 @@ bool init = true;
 
 void switchCase(int* value){
 
-    int CrankValueSent[4];
-    int WheelValueSent[6];
+    int CrankValueSent[4] = {0};
+    int WheelValueSent[6] = {0};
 
     switch (value[0]){
         case 1:
@@ -94,20 +94,26 @@ void switchCase(int* value){
 }
 
 void wheelRevFunction(int* wheelValue){
-    prevWheelData = currentWheelData;
-    currentWheelData = wheelCircumference*((wheelValue[0]*(16777216)) + (wheelValue[1]*(65536)) + (wheelValue[2]*(256)) + (wheelValue[3]*(1)));
+
+     prevWheelData = currentWheelData;
+    currentWheelData = wheelCircumference*((wheelValue[0]<<24) + (wheelValue[1]<<16) + (wheelValue[2]<<8) + (wheelValue[3]));
 
     prevWheelEvent = currentWheelEvent;
-    currentWheelEvent = ((wheelValue[4]*(256)) + (wheelValue[5]*(1)))/1024; // On obtient le current event en secondes
+    currentWheelEvent = ((wheelValue[4]<<8) + (wheelValue[5])); // On obtient le current event en secondes
 
     if(currentWheelEvent < prevWheelEvent){
-        currentWheelEvent = currentWheelEvent + 64; // Ce if est pour gerer le cas ou nous avons un overflow
+        currentWheelEvent = currentWheelEvent + (64*1024); // Ce if est pour gerer le cas ou nous avons un overflow
     }
 
-    float kmhValue = 3.6*((currentWheelData - prevWheelData)/(currentWheelEvent - prevWheelEvent)); // le 64 est pour passer de RPS a RPM
-    bikeDataInformation.speed.value = kmhValue;
-    bikeDataInformation.speed.time = getSensorsTime();
-    printf("Votre vitesse est: %f km/h\n\r", kmhValue);
+    if ((currentWheelData - prevWheelData) > 0){
+    	float diffWheelData = currentWheelData - prevWheelData;
+    	float diffWheelEvent = currentWheelEvent - prevWheelEvent;
+		float kmhValue = (3.6*1024)*(diffWheelData/diffWheelEvent);
+
+		bikeDataInformation.speed.value = kmhValue;
+		bikeDataInformation.speed.time = getSensorsTime();    // a changer avec le timer
+		printf("Votre vitesse est: %f km/h\n\r", kmhValue);
+    }
 }
 
 void crankRevFunction(int* CrankValue){
@@ -156,20 +162,19 @@ void crankRevFunction(int* CrankValue){
 		double CurrentEvent1 = CrankValue[2]<<8;
 		double CurrentEvent2 = CrankValue[3];
 		prevCrankEvent = currentCrankEvent;
-		currentCrankEvent = (CurrentEvent1 + CurrentEvent2)/1024;
+		currentCrankEvent = (CurrentEvent1 + CurrentEvent2)/1024; // On obtient le current event en secondes
 
 		if (currentCrankData <= prevCrankData){
 			rpmValue = rpmValue;
 		}
 		else{
 			if(currentCrankEvent < prevCrankEvent){
-				currentCrankEvent = currentCrankEvent + 64;
+				currentCrankEvent = currentCrankEvent + 64; // Ce if est pour gerer le cas ou nous avons un overflow
 			}
 
 			rpmValue = ((currentCrankData-prevCrankData)/(currentCrankEvent-prevCrankEvent))*60;
 			bikeDataInformation.cadence.value = rpmValue;
-			bikeDataInformation.cadence.time = getSensorsTime();
-			printf("Votre RMP est: %f RPM\n\r", rpmValue);
+			bikeDataInformation.cadence.time = getSensorsTime();    // a changer avec le timer
 		}
 	}
 
@@ -178,22 +183,21 @@ void crankRevFunction(int* CrankValue){
 void powerFunction(int* powerData){
 	float powerValue = powerData[1] + (powerData[0]*256);
 	bikeDataInformation.power.value = powerValue;
-	bikeDataInformation.power.time = getSensorsTime();
-	printf("Power value: %f \n\r", bikeDataInformation.power.value);
+	bikeDataInformation.power.time = getSensorsTime();    // a changer avec le timer
 }
 
 void algoCases(void){
-//	float puissance = bikeDataInformation.power.value;
-	float puissance = 240;
+    float puissance = bikeDataInformation.power.value;
+//  float puissance = 240;
 	float cadence = bikeDataInformation.cadence.value;
 	float vitesse = bikeDataInformation.speed.value;
 	float plateau = bikeDataInformation.pinion_fd.value;
 	float pignon = bikeDataInformation.pinion_rd.value;
 //	float plateau = 0;
 //	float pignon = 5;
-	float Timer_puissance = 1000;
-	float Timer_cadence = 1000;
-	float Timer_vitesse = 1000;
+	float Timer_puissance = bikeDataInformation.power.time;
+	float Timer_cadence = bikeDataInformation.cadence.time;
+	float Timer_vitesse = bikeDataInformation.speed.time;
 
 	if (init == true){
 		ordonnerTableau_int(cassette,nbr_pignon);
