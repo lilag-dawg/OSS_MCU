@@ -106,7 +106,7 @@ void wheelRevFunction(int* wheelValue){
 
     float kmhValue = 3.6*((currentWheelData - prevWheelData)/(currentWheelEvent - prevWheelEvent)); // le 64 est pour passer de RPS a RPM
     bikeDataInformation.speed.value = kmhValue;
-    bikeDataInformation.speed.time = 0;    // a changer avec le timer
+    bikeDataInformation.speed.time = getSensorsTime();
     printf("Votre vitesse est: %f km/h\n\r", kmhValue);
 }
 
@@ -156,19 +156,19 @@ void crankRevFunction(int* CrankValue){
 		double CurrentEvent1 = CrankValue[2]<<8;
 		double CurrentEvent2 = CrankValue[3];
 		prevCrankEvent = currentCrankEvent;
-		currentCrankEvent = (CurrentEvent1 + CurrentEvent2)/1024; // On obtient le current event en secondes
+		currentCrankEvent = (CurrentEvent1 + CurrentEvent2)/1024;
 
 		if (currentCrankData <= prevCrankData){
 			rpmValue = rpmValue;
 		}
 		else{
 			if(currentCrankEvent < prevCrankEvent){
-				currentCrankEvent = currentCrankEvent + 64; // Ce if est pour gerer le cas ou nous avons un overflow
+				currentCrankEvent = currentCrankEvent + 64;
 			}
 
 			rpmValue = ((currentCrankData-prevCrankData)/(currentCrankEvent-prevCrankEvent))*60;
 			bikeDataInformation.cadence.value = rpmValue;
-			bikeDataInformation.cadence.time = 0;    // a changer avec le timer
+			bikeDataInformation.cadence.time = getSensorsTime();
 			printf("Votre RMP est: %f RPM\n\r", rpmValue);
 		}
 	}
@@ -178,7 +178,7 @@ void crankRevFunction(int* CrankValue){
 void powerFunction(int* powerData){
 	float powerValue = powerData[1] + (powerData[0]*256);
 	bikeDataInformation.power.value = powerValue;
-	bikeDataInformation.power.time = 0;    // a changer avec le timer
+	bikeDataInformation.power.time = getSensorsTime();
 	printf("Power value: %f \n\r", bikeDataInformation.power.value);
 }
 
@@ -250,11 +250,13 @@ void GetRatio(int *tableau){
 			case (1):
 			{
 				bikeDataInformation.pinion_fd.value = 0.0;
+				bikeDataInformation.pinion_fd.time = getSensorsTime();
 				break;
 			}
 			case (2):
 			{
 				bikeDataInformation.pinion_fd.value = 1.0;
+				bikeDataInformation.pinion_fd.time = getSensorsTime();
 				break;
 			}
 		}
@@ -263,56 +265,67 @@ void GetRatio(int *tableau){
 					case (1):
 					{
 						bikeDataInformation.pinion_rd.value = 10.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (2):
 					{
 						bikeDataInformation.pinion_rd.value = 9.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (3):
 					{
 						bikeDataInformation.pinion_rd.value = 8.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (4):
 					{
 						bikeDataInformation.pinion_rd.value = 7.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (5):
 					{
 						bikeDataInformation.pinion_rd.value = 6.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (6):
 					{
 						bikeDataInformation.pinion_rd.value = 5.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (7):
 					{
 						bikeDataInformation.pinion_rd.value = 4.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (8):
 					{
 						bikeDataInformation.pinion_rd.value = 3.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (9):
 					{
 						bikeDataInformation.pinion_rd.value = 2.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (10):
 					{
 						bikeDataInformation.pinion_rd.value = 1.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 					case (11):
 					{
 						bikeDataInformation.pinion_rd.value = 0.0;
+						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
 				}
