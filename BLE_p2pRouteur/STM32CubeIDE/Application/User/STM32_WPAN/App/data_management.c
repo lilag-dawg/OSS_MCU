@@ -262,57 +262,57 @@ void GetRatio(int *tableau){
 		switch(tableau[5]){
 					case (1):
 					{
-						bikeDataInformation.pinion_fd.value = 10.0;
+						bikeDataInformation.pinion_rd.value = 10.0;
 						break;
 					}
 					case (2):
 					{
-						bikeDataInformation.pinion_fd.value = 9.0;
+						bikeDataInformation.pinion_rd.value = 9.0;
 						break;
 					}
 					case (3):
 					{
-						bikeDataInformation.pinion_fd.value = 8.0;
+						bikeDataInformation.pinion_rd.value = 8.0;
 						break;
 					}
 					case (4):
 					{
-						bikeDataInformation.pinion_fd.value = 7.0;
+						bikeDataInformation.pinion_rd.value = 7.0;
 						break;
 					}
 					case (5):
 					{
-						bikeDataInformation.pinion_fd.value = 6.0;
+						bikeDataInformation.pinion_rd.value = 6.0;
 						break;
 					}
 					case (6):
 					{
-						bikeDataInformation.pinion_fd.value = 5.0;
+						bikeDataInformation.pinion_rd.value = 5.0;
 						break;
 					}
 					case (7):
 					{
-						bikeDataInformation.pinion_fd.value = 4.0;
+						bikeDataInformation.pinion_rd.value = 4.0;
 						break;
 					}
 					case (8):
 					{
-						bikeDataInformation.pinion_fd.value = 3.0;
+						bikeDataInformation.pinion_rd.value = 3.0;
 						break;
 					}
 					case (9):
 					{
-						bikeDataInformation.pinion_fd.value = 2.0;
+						bikeDataInformation.pinion_rd.value = 2.0;
 						break;
 					}
 					case (10):
 					{
-						bikeDataInformation.pinion_fd.value = 1.0;
+						bikeDataInformation.pinion_rd.value = 1.0;
 						break;
 					}
 					case (11):
 					{
-						bikeDataInformation.pinion_fd.value = 0.0;
+						bikeDataInformation.pinion_rd.value = 0.0;
 						break;
 					}
 				}

@@ -506,17 +506,17 @@ void APP_BLE_Init( void )
   memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
 
   //initilase sensor hardcode
- // strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
- // memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
+ strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
+ memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
 
-  //strcpy(settingsToWrite.sensors[0].name,"	Ridesense");
-  //memcpy(settingsToWrite.sensors[0].macAddress, macRidesense, sizeof(settingsToWrite.sensors[0].macAddress));
+ strcpy(settingsToWrite.sensors[1].name,"	Ridesense");
+ memcpy(settingsToWrite.sensors[1].macAddress, macRidesense, sizeof(settingsToWrite.sensors[1].macAddress));
 //
-  //strcpy(settingsToWrite.sensors[0].name,"	EWWU111");
-  //memcpy(settingsToWrite.sensors[0].macAddress, macShimano, sizeof(settingsToWrite.sensors[0].macAddress));
+ strcpy(settingsToWrite.sensors[2].name,"	EWWU111");
+ memcpy(settingsToWrite.sensors[2].macAddress, macShimano, sizeof(settingsToWrite.sensors[2].macAddress));
 
-	strcpy(settingsToWrite.sensors[1].name,"	EWWU111");
-	memcpy(settingsToWrite.sensors[1].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress));
+	//strcpy(settingsToWrite.sensors[1].name,"	EWWU111");
+	//memcpy(settingsToWrite.sensors[1].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress));
 
 
   saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
@@ -710,15 +710,20 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
           APP_BLE_p2p_Conn_Update_req.Slave_Latency = pr->Slave_Latency;
           APP_BLE_p2p_Conn_Update_req.Timeout_Multiplier = pr->Timeout_Multiplier;
 
+          /*printf("\n interval min :%d",pr->Interval_Min);
+          printf("\n interval max :%d",pr->Interval_Max);
+          printf("\n slave latency :%d",pr->Slave_Latency);
+          printf("\n timeout_multi :%d",pr->Timeout_Multiplier);*/
+
           result = aci_l2cap_connection_parameter_update_resp(APP_BLE_p2p_Conn_Update_req.Connection_Handle,
                                                               APP_BLE_p2p_Conn_Update_req.Interval_Min,
                                                               APP_BLE_p2p_Conn_Update_req.Interval_Max,
                                                               APP_BLE_p2p_Conn_Update_req.Slave_Latency,
                                                               APP_BLE_p2p_Conn_Update_req.Timeout_Multiplier,
-                                                              CONN_L1,
-                                                              CONN_L2,
+                                                              CONN_L(10),
+                                                              CONN_L(10),
                                                               APP_BLE_p2p_Conn_Update_req.Identifier,
-                                                              0x00);
+                                                              0x01);
           APP_DBG_MSG("\r\n\r** NO UPDATE \n");
           if(result != BLE_STATUS_SUCCESS) {
               /* USER CODE BEGIN BLE_STATUS_SUCCESS */
@@ -931,8 +936,8 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 APP_DBG_MSG("BLE_CTRL_App_Notification(), All services discovery Failed \r\n\r");
               }
               /* Now try to connect to device 1 */
-              if ((BleApplicationContext.EndDevice_Connection_Status[0] != APP_BLE_CONNECTED_CLIENT)
-                  && (BleApplicationContext.EndDevice1Found == 0x01))
+              if ((BleApplicationContext.EndDevice_Connection_Status[2] != APP_BLE_CONNECTED_CLIENT)
+                  && (BleApplicationContext.EndDevice3Found == 0x01))
               {
 
                 UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_3_ID, CFG_SCH_PRIO_0);
@@ -1691,7 +1696,7 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
 
     case P2P_SERVER1_CONN_HANDLE_EVT:
       device_status.Device1_Status = 0x81; /* Connected */
-      UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
+      //UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
       break;
 
     case P2P_SERVER1_DISCON_HANDLE_EVT:
