@@ -144,12 +144,6 @@ int main(void)
   APPE_Init();
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint32_t timerValue[10];
-  for(int i = 0; i < 10; i++) {
-	  timerValue[i] = getSensorsTime();
-	  HAL_Delay(500);
-  }
-  HAL_Delay(500);
 	while(1)
 	{
 		UTIL_SEQ_Run( UTIL_SEQ_DEFAULT );

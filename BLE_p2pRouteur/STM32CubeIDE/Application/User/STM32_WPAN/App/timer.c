@@ -70,4 +70,5 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   BSP_LED_Toggle(LED2);
   //Call de l'algo ici
+  algoCases();
 }

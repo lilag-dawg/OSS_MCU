@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 #include "main.h"
+#include "data_management.h"
 
 #define TIM2_FREQUENCY 1000 //Hz
 #define TIM2_PRESCALER_VALUE (uint32_t)(((SystemCoreClock) / (TIM2_FREQUENCY)) - 1)
