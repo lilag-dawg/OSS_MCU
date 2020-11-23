@@ -14,12 +14,21 @@ extern "C" {
 
 #include "main.h"
 
-#define TIMER_FREQUENCY 1000 //Hz
-#define PRESCALER_VALUE (uint32_t)(((SystemCoreClock) / (TIMER_FREQUENCY)) - 1)
+#define TIM2_FREQUENCY 1000 //Hz
+#define TIM2_PRESCALER_VALUE (uint32_t)(((SystemCoreClock) / (TIM2_FREQUENCY)) - 1)
+#define TIM2_PERIOD 0xFFFFFFFF
+
+#define TIM16_FREQUENCY 1000 //Hz
+#define TIM16_PRESCALER_VALUE (uint32_t)(((SystemCoreClock) / (TIM16_FREQUENCY)) - 1)
+#define TIM16_PERIOD 500 //Algo Timer in ms
+
+
 
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim16;
 
 void startSensorsTimer();
+void startAlgoTimer();
 uint32_t getSensorsTime();
 
 #endif /* APPLICATION_USER_STM32_WPAN_APP_TIMER_H_ */
