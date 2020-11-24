@@ -71,6 +71,13 @@ typedef struct
 	uint8_t P2PServiceEndHandle_SHIMANO;
 } SERVICES_HANDLE_t;
 
+typedef struct
+{
+	bool isPowerReceived;
+	bool isCSCReceived;
+	bool isShimanoReceived;
+} Data_per_service_t;
+
 SERVICES_HANDLE_t SERVICES_HANDLE[6];
 SENSOR_TYPE_t TYPE_OF_SENSOR;
 

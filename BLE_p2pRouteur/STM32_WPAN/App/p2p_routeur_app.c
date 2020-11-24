@@ -29,6 +29,7 @@
 #include "p2p_routeur_app.h"
 #include "stm32_seq.h"
 #include "data_management.h"
+#include "timer.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -144,9 +145,12 @@ bool uuid_format_char = 0;
 #define NAME_CHANGES_PERIODE			(0.1*1000*1000/CFG_TS_TICK_VAL) //100ms//
 
 int sensorIndexForServices = 0;
+bool isFirstTimerInit = true;
 /* USER CODE BEGIN PD */
 
 extern ScannedDevicesPackage_t scannedDevicesPackage;
+Data_per_service_t Data_per_service;
+
 
 /* USER CODE END PD */
 
@@ -423,6 +427,9 @@ void P2P_Router_APP_Init(void)
     UTIL_SEQ_RegTask(1<<CFG_TASK_SEND_DATA_TYPE_ID, UTIL_SEQ_RFU, Server_Update_Service );
     HW_TS_Create(CFG_TIM_PROC_ID_ISR, &(P2P_Router_App_Context.Update_timer_Id_CONN_HAND_CARA_4), hw_ts_Repeated, P2P_SensorDataType_Timer_Callback);
 
+    Data_per_service.isPowerReceived = false;
+    Data_per_service.isCSCReceived = false;
+    Data_per_service.isShimanoReceived = false;
     /* USER CODE BEGIN P2P_Router_APP_Init_2 */
     /**
      * Initialize LedButton Service
@@ -465,15 +472,17 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
 	int tab[17] = {0};
 
 /* USER CODE END P2P_Client_App_Notification_1 */
+
     switch(pNotification->P2P_Client_Evt_Opcode)
     {
     /* USER CODE BEGIN P2P_Client_Evt_Opcode */
     case P2P_NOTIFICATION_SHIMANO_RECEIVED_EVT:
 
     	for(int i = 0; i<pNotification->DataTransfered.Length; i++){
-    					tab[i] = pNotification->DataTransfered.pPayload[i];
-    				}
-    				GetRatio(tab);
+			tab[i] = pNotification->DataTransfered.pPayload[i];
+		}
+		GetRatio(tab);
+		Data_per_service.isShimanoReceived = true;
 	break;
 
     case P2P_NOTIFICATION_CSC_RECEIVED_EVT:
@@ -483,6 +492,7 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
 		}
 
 		switchCase(sensorData);
+		Data_per_service.isCSCReceived = true;
 	break;
 
     case P2P_NOTIFICATION_CP_RECEIVED_EVT:
@@ -491,6 +501,7 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
 		}
 
     	powerFunction(sensorData);
+    	Data_per_service.isPowerReceived = true;
 
     break;
     /* USER CODE END P2P_Client_Evt_Opcode */
@@ -502,6 +513,10 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
 
     }
 /* USER CODE BEGIN P2P_Client_App_Notification_2 */
+    if(Data_per_service.isShimanoReceived && Data_per_service.isCSCReceived && Data_per_service.isPowerReceived && isFirstTimerInit){
+        //startAlgoTimer();
+        isFirstTimerInit = false;
+    }
 
 /* USER CODE END P2P_Client_App_Notification_2 */
     return;
@@ -1166,6 +1181,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 #if(CFG_DEBUG_APP_TRACE != 0)
 
 #endif
+
                             Notification.P2P_Client_Evt_Opcode = aP2PClientContext[index].sensor_evt_type;
                             Notification.DataTransfered.Length = pr->Attribute_Value_Length;
                             Notification.DataTransfered.pPayload = pr->Attribute_Value;
