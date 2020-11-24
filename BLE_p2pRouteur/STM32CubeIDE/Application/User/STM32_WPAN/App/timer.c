@@ -55,6 +55,8 @@ void startAlgoTimer() {
 		Error_Handler();
 	}
 
+	HAL_NVIC_SetPriority(TIM1_UP_TIM16_IRQn,0xF,0xF);
+
 	if (HAL_TIM_Base_Start_IT(&htim16) != HAL_OK)
 	{
 		Error_Handler();
