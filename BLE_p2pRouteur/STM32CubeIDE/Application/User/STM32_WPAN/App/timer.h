@@ -30,6 +30,6 @@ TIM_HandleTypeDef htim16;
 
 void startSensorsTimer();
 void startAlgoTimer();
-uint32_t getSensorsTime();
+float getSensorsTime();
 
 #endif /* APPLICATION_USER_STM32_WPAN_APP_TIMER_H_ */

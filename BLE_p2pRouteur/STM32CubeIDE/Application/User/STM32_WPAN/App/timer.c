@@ -61,9 +61,9 @@ void startAlgoTimer() {
 	}
 }
 
-uint32_t getSensorsTime()
+float getSensorsTime()
 {
-	return __HAL_TIM_GET_COUNTER(&htim2);
+	return (float) __HAL_TIM_GET_COUNTER(&htim2);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
