@@ -136,7 +136,7 @@ int main(void)
   MX_RF_Init();
   MX_RTC_Init();
   startSensorsTimer();
-  startAlgoTimer();
+  //startAlgoTimer();
   /* USER CODE BEGIN 2 */
   /* USER CODE END 2 */
 

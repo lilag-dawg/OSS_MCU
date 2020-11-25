@@ -111,7 +111,7 @@ void wheelRevFunction(int* wheelValue){
 		float kmhValue = (3.6*1024)*(diffWheelData/diffWheelEvent);
 
 		bikeDataInformation.speed.value = kmhValue;
-		bikeDataInformation.speed.time = getSensorsTime();    // a changer avec le timer
+		//bikeDataInformation.speed.time = getSensorsTime();    // a changer avec le timer
 		printf("Votre vitesse est: %f km/h\n\r", kmhValue);
     }
 }
@@ -183,7 +183,8 @@ void crankRevFunction(int* CrankValue){
 void powerFunction(int* powerData){
 	float powerValue = powerData[1] + (powerData[0]*256);
 	bikeDataInformation.power.value = powerValue;
-	bikeDataInformation.power.time = getSensorsTime();    // a changer avec le timer
+	//bikeDataInformation.power.time = getSensorsTime();    // a changer avec le timer
+	printf("power : %f\n\r",bikeDataInformation.power.value);
 }
 
 void algoCases(void){
@@ -195,9 +196,15 @@ void algoCases(void){
 	float pignon = bikeDataInformation.pinion_rd.value;
 //	float plateau = 0;
 //	float pignon = 5;
-	float Timer_puissance = bikeDataInformation.power.time;
-	float Timer_cadence = bikeDataInformation.cadence.time;
-	float Timer_vitesse = bikeDataInformation.speed.time;
+	//float Timer_puissance = bikeDataInformation.power.time;
+	//float Timer_cadence = bikeDataInformation.cadence.time;
+	//float Timer_vitesse = bikeDataInformation.speed.time;
+
+	float Timer_puissance = 1000;
+	float Timer_cadence = 1000;
+	float Timer_vitesse = 1000;
+
+
 
 	if (init == true){
 		ordonnerTableau_int(cassette,nbr_pignon);

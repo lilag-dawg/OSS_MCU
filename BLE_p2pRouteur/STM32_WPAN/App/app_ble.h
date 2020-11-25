@@ -121,7 +121,7 @@ typedef struct
 typedef struct
 {
   float time;
-  float value
+  float value;
 } Algorithme_type_data;
 
 struct BikeDataInformation_t{
@@ -140,6 +140,52 @@ typedef struct
     uint8_t position;
     DeviceSupportedDataType supportedDataType;
 } DeviceInformations_t;
+
+typedef struct
+{
+	uint8_t P2PServiceHandle;
+	uint8_t P2PServiceEndHandle;
+
+}ServiceHandle_t;
+
+typedef struct
+{
+	// CSC
+	ServiceHandle_t CSCServicehandle;
+
+	// POWER
+	ServiceHandle_t PowerServicehandle;
+
+	//Shimano
+	ServiceHandle_t ShimanoServicehandle;
+
+	// notification
+	uint16_t P2PNotificationCharHdle;
+	uint16_t P2PNotificationDescHandle;
+} ServicesHandleList_t;
+
+typedef enum
+{
+	OTHER,
+	CSC_SENSOR,
+	POWER_SENSOR,
+	TRAINER,
+	SHIMANO_SENSOR,
+} SensorType_t;
+
+typedef struct
+{
+    char name[MAX_DEVICE_NAME_LENGHT];
+    uint8_t macAddress[6];
+    APP_BLE_ConnStatus_t state;
+    uint16_t connHandle;
+    bool isNotEmpty;
+    ServicesHandleList_t servicesHandle;
+    DeviceSupportedDataType supportedDataType;
+    SensorType_t sensorType;
+    P2P_Client_Opcode_Notification_evt_t sensor_evt_type; // un capteur peut notif une seule carac, A MODIFIER
+} UsedDeviceInformations_t;
+
 
 extern bool uuid_bit_format;
 typedef struct
@@ -170,6 +216,8 @@ typedef struct
   void APP_BLE_Init( void );
 
   APP_BLE_ConnStatus_t APP_BLE_Get_Client_Connection_Status( uint16_t Connection_Handle );
+
+  int APP_BLE_Get_Client_Connection_Index( uint16_t Connection_Handle );
 
   void Trigger_Scan_Request( void );
   void Trigger_Connection_Request( int index, int indexInScannedDevices, Pairing_request_status status );
