@@ -143,22 +143,26 @@ typedef struct
 
 typedef struct
 {
+	uint8_t P2PServiceHandle;
+	uint8_t P2PServiceEndHandle;
+
+}ServiceHandle_t;
+
+typedef struct
+{
 	// CSC
-	uint8_t P2PServiceHandle_CSC;
-	uint8_t P2PServiceEndHandle_CSC;
+	ServiceHandle_t CSCServicehandle;
 
 	// POWER
-	uint8_t P2PServiceHandle_POWER;
-	uint8_t P2PServiceEndHandle_POWER;
+	ServiceHandle_t PowerServicehandle;
 
 	//Shimano
-	uint8_t P2PServiceHandle_SHIMANO;
-	uint8_t P2PServiceEndHandle_SHIMANO;
+	ServiceHandle_t ShimanoServicehandle;
 
 	// notification
 	uint16_t P2PNotificationCharHdle;
 	uint16_t P2PNotificationDescHandle;
-} ServicesHandle_t;
+} ServicesHandleList_t;
 
 typedef enum
 {
@@ -176,7 +180,7 @@ typedef struct
     APP_BLE_ConnStatus_t state;
     uint16_t connHandle;
     bool isNotEmpty;
-    ServicesHandle_t servicesHandle;
+    ServicesHandleList_t servicesHandle;
     DeviceSupportedDataType supportedDataType;
     SensorType_t sensorType;
     P2P_Client_Opcode_Notification_evt_t sensor_evt_type; // un capteur peut notif une seule carac, A MODIFIER

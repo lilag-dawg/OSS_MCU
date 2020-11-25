@@ -130,8 +130,7 @@ typedef struct
 
 } P2P_Router_App_Context_t;
 
-bool uuid_bit_format = 0;
-bool uuid_format_char = 0;
+
 
 /* Private defines ------------------------------------------------------------*/
 #define UNPACK_2_BYTE_PARAMETER(ptr)  \
@@ -709,26 +708,26 @@ static void Client_Update_Service( void )
 	    	  case CSC_SENSOR:
 	    		  APP_DBG_MSG("* GATT : Discover P2P Characteristics CSC sensor\n");
 				  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
-						  	  	  	  	  	  	  usedDeviceInformations[index].servicesHandle.P2PServiceHandle_CSC,
-												  usedDeviceInformations[index].servicesHandle.P2PServiceEndHandle_CSC);
+						  	  	  	  	  	  	  usedDeviceInformations[index].servicesHandle.CSCServicehandle.P2PServiceHandle,
+												  usedDeviceInformations[index].servicesHandle.CSCServicehandle.P2PServiceEndHandle);
 				  break;
 	    	  case POWER_SENSOR:
 	    		  APP_DBG_MSG("* GATT : Discover P2P Characteristics power sensor\n");
 				  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
-												  usedDeviceInformations[index].servicesHandle.P2PServiceHandle_POWER,
-												  usedDeviceInformations[index].servicesHandle.P2PServiceEndHandle_POWER);
+												  usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceHandle,
+												  usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceEndHandle);
 				  break;
 	    	  case TRAINER:
 				  APP_DBG_MSG("* GATT : Discover P2P Characteristics trainer\n");
 				  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
-												  usedDeviceInformations[index].servicesHandle.P2PServiceHandle_POWER,
-												  usedDeviceInformations[index].servicesHandle.P2PServiceEndHandle_POWER);
+						  	  	  	  	  	  	  usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceHandle,
+												  usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceEndHandle);
 				  break;
 	    	  case SHIMANO_SENSOR:
 				  APP_DBG_MSG("* GATT : Discover P2P Characteristics Shimano\n");
 				  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
-												  usedDeviceInformations[index].servicesHandle.P2PServiceHandle_SHIMANO,
-												  usedDeviceInformations[index].servicesHandle.P2PServiceEndHandle_SHIMANO);
+												  usedDeviceInformations[index].servicesHandle.ShimanoServicehandle.P2PServiceHandle,
+												  usedDeviceInformations[index].servicesHandle.ShimanoServicehandle.P2PServiceEndHandle);
 				  break;
 	    	  default:
 	    		  APP_DBG_MSG("* TYPE DE CAPTEUR NON RECONNU\n");
@@ -793,6 +792,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
     return_value = SVCCTL_EvtNotAck;
     event_pckt = (hci_event_pckt *)(((hci_uart_pckt*)Event)->data);
 
+
     switch(event_pckt->evt)
     {
         case EVT_VENDOR:
@@ -809,7 +809,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                 case EVT_BLUE_ATT_READ_BY_GROUP_TYPE_RESP:
                 {
                     /* USER CODE BEGIN EVT_BLUE_ATT_READ_BY_GROUP_TYPE_RESP */
-
+                    bool uuid_bit_format = 0;
                 	struct settings readSettings;
                 	readFlash((uint8_t*)&readSettings);
 
@@ -871,42 +871,29 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 										{
                                     		usedDeviceInformations[index].supportedDataType.cadence = true;
                                     		usedDeviceInformations[index].supportedDataType.speed = true;
-											uuid_format_char = 0;
 #if(CFG_DEBUG_APP_TRACE != 0)
-											APP_DBG_MSG("-- GATT : CYCLING_POWER_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
+											APP_DBG_MSG("-- GATT : CSC_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
 #endif
-											if(uuid_bit_format==1){
-												usedDeviceInformations[index].servicesHandle.P2PServiceHandle_CSC = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
-												usedDeviceInformations[index].servicesHandle.P2PServiceEndHandle_CSC = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
-											}
-											else if(uuid_bit_format==0){
-												usedDeviceInformations[index].servicesHandle.P2PServiceHandle_CSC = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
-												usedDeviceInformations[index].servicesHandle.P2PServiceEndHandle_CSC = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
-											}
+
+												usedDeviceInformations[index].servicesHandle.CSCServicehandle.P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
+												usedDeviceInformations[index].servicesHandle.CSCServicehandle.P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
+
 											break;
 										}
 										case(CYCLING_POWER_SERVICE_UUID):
 										{
-											uuid_format_char = 0;
 											usedDeviceInformations[index].supportedDataType.power = true;
 
 #if(CFG_DEBUG_APP_TRACE != 0)
 											APP_DBG_MSG("-- GATT : CYCLING_POWER_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
 #endif
-											if(uuid_bit_format==1){
-												usedDeviceInformations[index].servicesHandle.P2PServiceHandle_POWER = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
-												usedDeviceInformations[index].servicesHandle.P2PServiceEndHandle_POWER = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
 
-											}
-											else if(uuid_bit_format==0){
-												usedDeviceInformations[index].servicesHandle.P2PServiceHandle_POWER = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
-												usedDeviceInformations[index].servicesHandle.P2PServiceEndHandle_POWER = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
-											}
+												usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
+												usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
 											break;
 										}
 										case(BATTERY_SERVICE_UUID):
 										{
-											uuid_format_char = 0;
 											usedDeviceInformations[index].supportedDataType.battery = true;
 											break;
 										}
@@ -914,17 +901,11 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                     	{
 #if(CFG_DEBUG_APP_TRACE != 0)
 											APP_DBG_MSG("-- GATT : SENSOR_SERVICE_UUID FOUND - connection handle 0x%x \n", aP2PClientContext[index].connHandle);
-											uuid_format_char = 1;
 #endif
 											usedDeviceInformations[index].supportedDataType.gear = true;
-											if(uuid_bit_format==1){
-												usedDeviceInformations[index].servicesHandle.P2PServiceHandle_SHIMANO = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
-												usedDeviceInformations[index].servicesHandle.P2PServiceEndHandle_SHIMANO = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
-											}
-											else if(uuid_bit_format==0){
-												usedDeviceInformations[index].servicesHandle.P2PServiceHandle_SHIMANO = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
-												usedDeviceInformations[index].servicesHandle.P2PServiceEndHandle_SHIMANO = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
-											}
+
+												usedDeviceInformations[index].servicesHandle.ShimanoServicehandle.P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
+												usedDeviceInformations[index].servicesHandle.ShimanoServicehandle.P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
                                     		break;
                                     	}
                                     	default:
@@ -973,7 +954,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                 case EVT_BLUE_ATT_READ_BY_TYPE_RESP:
                 {
                     /* USER CODE BEGIN EVT_BLUE_ATT_READ_BY_TYPE_RESP */
-
+                	bool uuid_format_char = 0;
                     /* USER CODE END EVT_BLUE_ATT_READ_BY_TYPE_RESP */
                     aci_att_read_by_type_resp_event_rp0 *pr = (void*)blue_evt->data;
 
@@ -988,7 +969,6 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                      */
 
                     uint8_t index;
-                    int indexOfInScannedDeviceList;
 
                     index = 0;
 
@@ -1002,9 +982,29 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                     if(index < BLE_CFG_CLT_MAX_NBR_CB)
                     {
 
-                        /* we are interested in only 16 bit UUIDs */
-                        if (uuid_format_char == 1){idx=17;}
-                        else if (uuid_format_char==0){idx=5;}
+
+
+
+
+                        //Debut format 128bit ou 16bit
+                        	switch(pr->Handle_Value_Pair_Length)
+                        	{
+                        	case 21:
+                        		uuid_format_char = 1;
+                        		break;
+                        	case 7:
+                        		uuid_format_char = 0;
+                        		break;
+                        	default:
+
+                        	break;
+                        	}
+                        //Fin format 128 bit ou 16 bit
+
+                          /* we are not just interested in only 16 bit UUIDs */
+                          if (uuid_format_char == 1){idx=17;}
+                          else if (uuid_format_char==0){idx=5;}
+
 
                         if(pr->Handle_Value_Pair_Length == 21 || pr->Handle_Value_Pair_Length == 7)
 
