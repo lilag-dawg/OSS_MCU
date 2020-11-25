@@ -30,7 +30,7 @@ void Augmenter_ratio(int *pointeur_flag_changement_ratio)
     printf ("\n\r\n\r Augmenter ratio\n\r\n\r ");
     *pointeur_flag_changement_ratio = 1;
       HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
-	//HAL_Delay(50);
+      //HAL_Delay(50);
 	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
 }
 
