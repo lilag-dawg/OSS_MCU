@@ -339,6 +339,8 @@ void GetRatio(int *tableau){
 						bikeDataInformation.pinion_rd.time = getSensorsTime();
 						break;
 					}
+					default:
+						break;
 				}
 		bikeDataInformation.cadence.time = 0;    // a changer avec le timer
 		printf("plateau : %f	cassette : %f\n\r",bikeDataInformation.pinion_fd.value, bikeDataInformation.pinion_rd.value);

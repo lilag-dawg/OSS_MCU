@@ -114,19 +114,19 @@ void Repos(float puissance, float cadence, float vitesse, float ratio, int *poin
     //printf ("ratio %f et tab_ratio %f\n", ratio, tab_ratio[j]);
 
     if(cadence > 1 && j > i)
-        {
+    {
         float Cadence_theorique = (vitesse/3.6)/((float)Diametre_roues/1000*3.14159)*60/tab_ratio[j];
         //printf ("cadence théorique %f\n", Cadence_theorique);
         if(Cadence_theorique < 80 && j != 0)
-            {
-            Diminuer_ratio(pointeur_flag_changement_ratio);
-            }
+		{
+			Diminuer_ratio(pointeur_flag_changement_ratio);
+		}
 
-        if(Cadence_theorique > 100 && j != (*pointeur_nbr_ratio-1))
-            {
-            Augmenter_ratio(pointeur_flag_changement_ratio);
-            }
-        }
+        else if(Cadence_theorique > 100 && j != (*pointeur_nbr_ratio-1))
+		{
+			Augmenter_ratio(pointeur_flag_changement_ratio);
+		}
+    }
 
 }
 
