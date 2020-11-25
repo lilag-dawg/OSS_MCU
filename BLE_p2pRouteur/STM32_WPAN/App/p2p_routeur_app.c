@@ -514,7 +514,7 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
     }
 /* USER CODE BEGIN P2P_Client_App_Notification_2 */
     if(Data_per_service.isShimanoReceived && Data_per_service.isCSCReceived && Data_per_service.isPowerReceived && isFirstTimerInit){
-        //startAlgoTimer();
+        startAlgoTimer();
         isFirstTimerInit = false;
     }
 

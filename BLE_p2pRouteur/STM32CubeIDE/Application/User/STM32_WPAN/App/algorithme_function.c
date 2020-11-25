@@ -27,20 +27,20 @@
 // Déclaration de la fonction qui change de vitesse pour un plus grand ratio
 void Augmenter_ratio(int *pointeur_flag_changement_ratio)
 {
-    printf ("Augmenter ratio\n");
+    printf ("\n\r\n\r Augmenter ratio\n\r\n\r ");
     *pointeur_flag_changement_ratio = 1;
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
-	HAL_Delay(50);
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
+	//HAL_Delay(50);
+	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
 }
 
 // Déclaration de la fonction qui change de vitesse pour un plus petit ratio
 void Diminuer_ratio(int *pointeur_flag_changement_ratio)
 {
-    printf ("Diminuer ratio\n");
+    printf ("\n\r\n\r Diminuer ratio \n\r\n\r");
     *pointeur_flag_changement_ratio = 1;
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_SET);
-	HAL_Delay(50);
+	//HAL_Delay(50);
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
 }
 

@@ -18,7 +18,7 @@
 
 // Constante
 // Constante
-float ftp = 246; // reçu de l'app
+float ftp = 200; // reçu de l'app
 int Diametre_roues = 700; // reçu de l'app
 int Cadence_des = 90; // reçu de l'app
 

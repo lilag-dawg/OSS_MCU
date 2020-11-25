@@ -112,7 +112,7 @@ void wheelRevFunction(int* wheelValue){
 
 		bikeDataInformation.speed.value = kmhValue;
 		//bikeDataInformation.speed.time = getSensorsTime();    // a changer avec le timer
-		printf("Votre vitesse est: %f km/h\n\r", kmhValue);
+		//printf("Votre vitesse est: %f km/h\n\r", kmhValue);
     }
 }
 
@@ -174,6 +174,7 @@ void crankRevFunction(int* CrankValue){
 
 			rpmValue = ((currentCrankData-prevCrankData)/(currentCrankEvent-prevCrankEvent))*60;
 			bikeDataInformation.cadence.value = rpmValue;
+			//printf("Votre cadence est: %f rpm\n\r", rpmValue);
 			bikeDataInformation.cadence.time = getSensorsTime();    // a changer avec le timer
 		}
 	}
@@ -184,7 +185,7 @@ void powerFunction(int* powerData){
 	float powerValue = powerData[1] + (powerData[0]*256);
 	bikeDataInformation.power.value = powerValue;
 	//bikeDataInformation.power.time = getSensorsTime();    // a changer avec le timer
-	printf("power : %f\n\r",bikeDataInformation.power.value);
+	//printf("power : %f\n\r",bikeDataInformation.power.value);
 }
 
 void algoCases(void){
@@ -218,7 +219,7 @@ void algoCases(void){
 		init = false;
 	}
 
-	gestion_changement_vitesse_manuel (pignon, plateau, pointeur_pignon_precedent, pointeur_plateau_precedent, pointeur_flag_changement_ratio, pointeur_flag);
+	//gestion_changement_vitesse_manuel (pignon, plateau, pointeur_pignon_precedent, pointeur_plateau_precedent, pointeur_flag_changement_ratio, pointeur_flag);
 
 	    // Algorithme de changements de vitesses automatisés
 	    if (*pointeur_flag == 0 && Timer_puissance < 3000 && Timer_cadence < 3000 && Timer_vitesse < 3000)
@@ -230,12 +231,12 @@ void algoCases(void){
 	        Sprint(puissance, cadence, vitesse, ratio, pointeur_flag_changement_ratio, pointeur_flag);
 	        }
 
-	        if (puissance <= ftp*0.24)
+	        else if (puissance <= ftp*0.24)
 	        {
 	        Repos(puissance, cadence, vitesse, ratio, pointeur_nbr_ratio, Diametre_roues, tab_ratio, pointeur_flag_changement_ratio);
 	        }
 
-	        if (puissance < ftp*1.51 && puissance > ftp*0.24)
+	        else if (puissance < ftp*1.51 && puissance > ftp*0.24)
 	        {
 	        Normale(puissance, cadence, vitesse, ratio, pointeur_nbr_ratio, Diametre_roues, Cadence_des, tab_ratio, pointeur_flag_changement_ratio);
 	        }
@@ -341,7 +342,7 @@ void GetRatio(int *tableau){
 					}
 				}
 		bikeDataInformation.cadence.time = 0;    // a changer avec le timer
-		printf("plateau : %f	cassette : %f\n\r",bikeDataInformation.pinion_fd.value, bikeDataInformation.pinion_rd.value);
+		//printf("plateau : %f	cassette : %f\n\r",bikeDataInformation.pinion_fd.value, bikeDataInformation.pinion_rd.value);
 	}
 }
 
