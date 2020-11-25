@@ -21,6 +21,7 @@
 #include "hw_conf.h"
 #include "otp.h"
 #include "saveToFlash.h"
+#include "timer.h"
 /* USER CODE END Includes */
 
 // Fonction de l'algorithme
@@ -30,8 +31,9 @@ void Augmenter_ratio(int *pointeur_flag_changement_ratio)
     printf ("\n\r\n\r Augmenter ratio\n\r\n\r ");
     *pointeur_flag_changement_ratio = 1;
       HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
+      startRelayTimer(GPIO_PIN_3);
       //HAL_Delay(50);
-	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
+	  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
 }
 
 // Déclaration de la fonction qui change de vitesse pour un plus petit ratio
@@ -40,8 +42,9 @@ void Diminuer_ratio(int *pointeur_flag_changement_ratio)
     printf ("\n\r\n\r Diminuer ratio \n\r\n\r");
     *pointeur_flag_changement_ratio = 1;
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_SET);
+    startRelayTimer(GPIO_PIN_2);
 	//HAL_Delay(50);
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
+	//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
 }
 
 // Déclaration de la fonction qui nous donne le ratio en fonction des plateaux et des pignons
