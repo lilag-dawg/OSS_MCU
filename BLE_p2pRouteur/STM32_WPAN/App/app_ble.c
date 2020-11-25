@@ -509,14 +509,14 @@ void APP_BLE_Init( void )
   memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
 
   //initilase sensor hardcode
- strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
- memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
+ //strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
+ //memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
 //
- strcpy(settingsToWrite.sensors[1].name,"	Ridesense");
- memcpy(settingsToWrite.sensors[1].macAddress, macRidesense, sizeof(settingsToWrite.sensors[1].macAddress));
+ //strcpy(settingsToWrite.sensors[1].name,"	Ridesense");
+ //memcpy(settingsToWrite.sensors[1].macAddress, macRidesense, sizeof(settingsToWrite.sensors[1].macAddress));
 //
- strcpy(settingsToWrite.sensors[2].name,"	EWWU111");
- memcpy(settingsToWrite.sensors[2].macAddress, macShimano, sizeof(settingsToWrite.sensors[2].macAddress));
+ //strcpy(settingsToWrite.sensors[2].name,"	EWWU111");
+ //memcpy(settingsToWrite.sensors[2].macAddress, macShimano, sizeof(settingsToWrite.sensors[2].macAddress));
 
 	//strcpy(settingsToWrite.sensors[1].name,"	EWWU111");
 	//memcpy(settingsToWrite.sensors[1].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress));
@@ -588,6 +588,24 @@ void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pair
 	}
 }
 
+void Update_UsedDeviceInformations_structure( void )
+{
+    struct settings readSettings;
+    readFlash((uint8_t*)&readSettings);
+
+    for(int i = 0; i < sizeof(readSettings.sensors); i++){
+    	for(int k = 0; k < scannedDevicesPackage.numberOfScannedDevices; k++){
+    		if(strcmp(scannedDevicesPackage.scannedDevicesList[k].deviceName, readSettings.sensors[i].name) == 0 && readSettings.sensors[i].name[0] != 0){
+    			strcpy(usedDeviceInformations[i].name, readSettings.sensors[i].name);
+    			memcpy(usedDeviceInformations[i].macAddress, readSettings.sensors[i].macAddress, sizeof(usedDeviceInformations[i].macAddress));
+    			usedDeviceInformations[i].isNotEmpty = true;
+    			usedDeviceInformations[i].connHandle = 0xFFFF;  // a changer
+    		}
+    	}
+    }
+
+}
+
 SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 {
   hci_event_pckt *event_pckt;
@@ -602,9 +620,6 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
   uint8_t *adv_report_data;
   uint8_t adtype, adlength;
   hci_disconnection_complete_event_rp0 *cc = (void *) event_pckt->data;
-
-	struct settings readSettings;
-	readFlash((uint8_t*)&readSettings);
 
 	//printf("event_pckt: %x\n\r",event_pckt->evt);
   switch (event_pckt->evt)
@@ -637,21 +652,6 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
           {
             /* USER CODE BEGIN GAP_GENERAL_DISCOVERY_PROC */
             BSP_LED_Off(LED_BLUE);
-
-            //struct settings readSettings;
-            //readFlash((uint8_t*)&readSettings);
-
-            for(int i = 0; i < sizeof(readSettings.sensors); i++){
-            	for(int k = 0; k < scannedDevicesPackage.numberOfScannedDevices; k++){
-            		if(strcmp(scannedDevicesPackage.scannedDevicesList[k].deviceName, readSettings.sensors[i].name) == 0 && readSettings.sensors[i].name[0] != 0){
-            			strcpy(usedDeviceInformations[i].name, readSettings.sensors[i].name);
-            			memcpy(usedDeviceInformations[i].macAddress, readSettings.sensors[i].macAddress, sizeof(usedDeviceInformations[i].macAddress));
-            			usedDeviceInformations[i].isNotEmpty = true;
-            			usedDeviceInformations[i].connHandle = 0xFFFF;  // a changer
-            		}
-            	}
-            }
-
 
             /* USER CODE END GAP_GENERAL_DISCOVERY_PROC */
 
@@ -840,8 +840,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 #endif
                 ;
 
-            //struct settings readSettings;
-            //readFlash((uint8_t*)&readSettings);
+            Update_UsedDeviceInformations_structure();
 
             for (int i = 0; i < 6; i++)
             {
