@@ -159,6 +159,11 @@ typedef struct
 	//Shimano
 	ServiceHandle_t ShimanoServicehandle;
 
+	//reading
+
+	uint16_t P2PReadCharHdle;
+	uint16_t P2PcurrentCharBeingRead;
+
 	// notification
 	uint16_t P2PNotificationCharHdle;
 	uint16_t P2PNotificationDescHandle;
