@@ -537,37 +537,31 @@ void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pair
 	switch(indexInFlash){
 		case 0:
 			if(status == CONNECTING){
-				BleApplicationContext.EndDevice1Found = 0x01;
 				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
 			}
 			else{
-				BleApplicationContext.EndDevice_Connection_Status[0] = APP_BLE_IDLE;
-				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[0];
-				BleApplicationContext.EndDevice1Found = 0x00;
+				usedDeviceInformations[0].state = APP_BLE_IDLE;
+				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = usedDeviceInformations[0].state;
 			}
 
 			break;
 		case 1:
 			if(status == CONNECTING){
-				BleApplicationContext.EndDevice2Found = 0x01;
 				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_2_ID, CFG_SCH_PRIO_0);
 			}
 			else{
-				BleApplicationContext.EndDevice_Connection_Status[1] = APP_BLE_IDLE;
-				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[1];
-				BleApplicationContext.EndDevice2Found = 0x00;
+				usedDeviceInformations[1].state = APP_BLE_IDLE;
+				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = usedDeviceInformations[1].state;
 			}
 
 			break;
 		case 2:
 			if(status == CONNECTING){
-				BleApplicationContext.EndDevice3Found = 0x01;
 				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_3_ID, CFG_SCH_PRIO_0);
 			}
 			else{
-				BleApplicationContext.EndDevice_Connection_Status[2] = APP_BLE_IDLE;
-				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[2];
-				BleApplicationContext.EndDevice3Found = 0x00;
+				usedDeviceInformations[2].state = APP_BLE_IDLE;
+				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = usedDeviceInformations[2].state;
 			}
 
 			break;
@@ -593,13 +587,33 @@ void Update_UsedDeviceInformations_structure( void )
     struct settings readSettings;
     readFlash((uint8_t*)&readSettings);
 
+    int isFlashEmpty = 0;
+    int isUsedDeviceEmpty = 0;
+
     for(int i = 0; i < sizeof(readSettings.sensors); i++){
     	for(int k = 0; k < scannedDevicesPackage.numberOfScannedDevices; k++){
-    		if(strcmp(scannedDevicesPackage.scannedDevicesList[k].deviceName, readSettings.sensors[i].name) == 0 && readSettings.sensors[i].name[0] != 0){
-    			strcpy(usedDeviceInformations[i].name, readSettings.sensors[i].name);
-    			memcpy(usedDeviceInformations[i].macAddress, readSettings.sensors[i].macAddress, sizeof(usedDeviceInformations[i].macAddress));
-    			usedDeviceInformations[i].isNotEmpty = true;
-    			usedDeviceInformations[i].connHandle = 0xFFFF;  // a changer
+    		if(strcmp(scannedDevicesPackage.scannedDevicesList[k].deviceName, readSettings.sensors[i].name) == 0 ||
+    				memcmp(scannedDevicesPackage.scannedDevicesList[k].macAddress, readSettings.sensors[i].macAddress, sizeof(readSettings.sensors[i].macAddress)) == 0){
+
+    			isFlashEmpty = 0; //reset between iterations
+
+        		for(int idx = 0; idx < sizeof(readSettings.sensors[i].name);idx++){
+        			isFlashEmpty |= readSettings.sensors[i].name[idx];
+        		}
+        		if(isFlashEmpty != 0){ //flash is not empty
+
+        			isUsedDeviceEmpty = 0; //reset between iterations
+
+            		for(int idx = 0; idx < sizeof(usedDeviceInformations[i].name);idx++){
+            			isUsedDeviceEmpty |= usedDeviceInformations[i].name[idx];
+            		}
+            		if(isUsedDeviceEmpty == 0){ //used device is empty
+            			strcpy(usedDeviceInformations[i].name, readSettings.sensors[i].name);
+            			memcpy(usedDeviceInformations[i].macAddress, readSettings.sensors[i].macAddress, sizeof(usedDeviceInformations[i].macAddress));
+            			usedDeviceInformations[i].isNotEmpty = true;
+            			usedDeviceInformations[i].connHandle = 0xFFFF;  // a changer
+            		}
+        		}
     		}
     	}
     }
@@ -654,6 +668,10 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
             BSP_LED_Off(LED_BLUE);
 
             /* USER CODE END GAP_GENERAL_DISCOVERY_PROC */
+
+
+
+            Update_UsedDeviceInformations_structure();
 
             APP_DBG_MSG("-- GAP GENERAL DISCOVERY PROCEDURE_COMPLETED\n");
             /*if a device found, connect to it, device 1 being chosen first if both found*/
@@ -840,7 +858,6 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 #endif
                 ;
 
-            Update_UsedDeviceInformations_structure();
 
             for (int i = 0; i < 6; i++)
             {

@@ -224,6 +224,10 @@ typedef struct
 
 /* USER CODE BEGIN EF */
   int getCorrespondingIndex(char* sensorName);
+
+  void Update_UsedDeviceInformations_structure( void );
+
+
 /* USER CODE END EF */
 
 #ifdef __cplusplus
