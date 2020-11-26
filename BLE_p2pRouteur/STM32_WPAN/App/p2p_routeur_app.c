@@ -233,6 +233,8 @@ static void Update_Paired_Devices_In_Flash(void){
     }
     saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
 
+    Update_UsedDeviceInformations_structure();
+
     Trigger_Connection_Request(index,indexOfDeviceList,P2P_Router_App_Context.PairingRequestStruct.status);
 }
 
