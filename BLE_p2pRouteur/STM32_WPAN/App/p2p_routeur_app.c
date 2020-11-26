@@ -111,10 +111,7 @@ typedef struct{
 	char SensorName[19];
 }Gestion_Conn_PairingRequest_t;
 
-typedef struct{
-	char SensorName[19];
-	uint8_t dataType;
-}Gestion_Conn_Datatype_t;
+
 
 typedef struct
 {
@@ -122,7 +119,7 @@ typedef struct
 
 	Gestion_Conn_NbrSensor_t 		NumberOfSensorNearbyStruct;
 	Gestion_Conn_PairingRequest_t	PairingRequestStruct;
-	Gestion_Conn_Datatype_t			SensorDataTypeStruct;
+	uint8_t positionInUsedDevices;
 
     uint8_t Update_timer_Id_CONN_HAND_CARA_2;
     uint8_t Update_timer_Id_CONN_HAND_CARA_4;
@@ -455,6 +452,7 @@ void P2P_Router_APP_Init(void)
 
     P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
     P2P_Router_App_Context.PairingRequestStruct.status = DISCONNECT;
+    P2P_Router_App_Context.positionInUsedDevices = 0;
     memset(&P2P_Router_App_Context.PairingRequestStruct.SensorName, 0, sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));
 
 #if (CFG_P2P_DEMO_MULTI != 0 )   
@@ -655,34 +653,27 @@ static void Server_Update_Service( void )
 		case EDS_CONNEX_HAND_CARA_4:
 		{
 			uint8_t value[20];
-			uint8_t index =  P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition;
+			uint8_t index =  P2P_Router_App_Context.positionInUsedDevices;
 
-			uint8_t isCadenceSupported = (uint8_t)((scannedDevicesPackage.scannedDevicesList[index].supportedDataType.cadence) << 4);
-			uint8_t isSpeedSupported = (uint8_t)((scannedDevicesPackage.scannedDevicesList[index].supportedDataType.speed) << 3);
-			uint8_t isPowerSupported = (uint8_t)((scannedDevicesPackage.scannedDevicesList[index].supportedDataType.power) << 2);
-			uint8_t isBatteryupported = (uint8_t)((scannedDevicesPackage.scannedDevicesList[index].supportedDataType.battery) << 1);
-			uint8_t isGearSupported = (uint8_t)((scannedDevicesPackage.scannedDevicesList[index].supportedDataType.gear));
+			uint8_t isCadenceSupported = (uint8_t)((usedDeviceInformations[index].supportedDataType.cadence) << 4);
+			uint8_t isSpeedSupported = (uint8_t)((usedDeviceInformations[index].supportedDataType.speed) << 3);
+			uint8_t isPowerSupported = (uint8_t)((usedDeviceInformations[index].supportedDataType.power) << 2);
+			uint8_t isBatteryupported = (uint8_t)((usedDeviceInformations[index].supportedDataType.battery) << 1);
+			uint8_t isGearSupported = (uint8_t)((usedDeviceInformations[index].supportedDataType.gear));
 
 
 			value[0] = (uint8_t)(isCadenceSupported + isSpeedSupported + isPowerSupported + isBatteryupported + isGearSupported);
 
 			for(int i = 1; i<(sizeof(value));i++){
-				value[i] = (uint8_t)(scannedDevicesPackage.scannedDevicesList[index].deviceName[i-1]);
+				value[i] = (uint8_t)(usedDeviceInformations[index].name[i-1]);
 			}
 
-			P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition ++;
+			P2P_Router_App_Context.positionInUsedDevices ++;
 
-			if (P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition >= scannedDevicesPackage.numberOfScannedDevices){
-				P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
+			if (P2P_Router_App_Context.positionInUsedDevices >= sizeof(usedDeviceInformations)/ sizeof(usedDeviceInformations[0])){
+				P2P_Router_App_Context.positionInUsedDevices = 0;
 			}
 
-			printf("[");
-
-			for(int i = 0; i<(sizeof(value));i++){
-				printf("%d,",value[i]);
-			}
-
-			printf("]\n\r");
 
 			EDS_STM_Update_Char(0x0003,(uint8_t *)&value);
 
