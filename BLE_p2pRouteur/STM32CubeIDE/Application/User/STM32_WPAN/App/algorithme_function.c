@@ -30,7 +30,7 @@ void Augmenter_ratio(int *pointeur_flag_changement_ratio)
 {
     printf ("\n\r\n\r Augmenter ratio\n\r\n\r ");
     *pointeur_flag_changement_ratio = 1;
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
       startRelayTimer(GPIO_PIN_3);
       //HAL_Delay(50);
 	  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
@@ -41,7 +41,7 @@ void Diminuer_ratio(int *pointeur_flag_changement_ratio)
 {
     printf ("\n\r\n\r Diminuer ratio \n\r\n\r");
     *pointeur_flag_changement_ratio = 1;
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
     startRelayTimer(GPIO_PIN_2);
 	//HAL_Delay(50);
 	//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
@@ -106,7 +106,7 @@ void Sprint(float puissance, float cadence, float vitesse, float ratio, int *poi
 // Déclaration de la fonction qui gère les situations de repos
 void Repos(float puissance, float cadence, float vitesse, float ratio, int *pointeur_nbr_ratio, int Diametre_roues, float *tab_ratio, int *pointeur_flag_changement_ratio)
 {
-    printf ("Repos à %f Watt\n", puissance);
+    printf ("Repos a %f Watt\n\r", puissance);
 
     int i = Obtenir_indice_ratio_min_repos(tab_ratio);
     //printf ("indice %d\n", i);

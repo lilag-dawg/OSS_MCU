@@ -105,6 +105,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			Error_Handler();
 		}
 		__HAL_TIM_SET_COUNTER(&htim17, 0);
-		HAL_GPIO_WritePin(GPIOC, RELAY_PIN, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOC, RELAY_PIN, GPIO_PIN_SET);
 	}
 }

@@ -21,7 +21,7 @@ extern "C" {
 
 #define TIM16_FREQUENCY 1000 //Hz
 #define TIM16_PRESCALER_VALUE (uint32_t)(((SystemCoreClock) / (TIM16_FREQUENCY)) - 1)
-#define TIM16_PERIOD 1500 //Algo Timer in ms
+#define TIM16_PERIOD 1000 //Algo Timer in ms
 
 #define TIM17_FREQUENCY 1000 //Hz
 #define TIM17_PRESCALER_VALUE (uint32_t)(((SystemCoreClock) / (TIM17_FREQUENCY)) - 1)

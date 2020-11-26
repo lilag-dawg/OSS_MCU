@@ -112,7 +112,7 @@ void wheelRevFunction(int* wheelValue){
 
 		bikeDataInformation.speed.value = kmhValue;
 		//bikeDataInformation.speed.time = getSensorsTime();    // a changer avec le timer
-		printf("Votre vitesse est: %f km/h\n\r", kmhValue);
+		//printf("Votre vitesse est: %f km/h\n\r", kmhValue);
     }
 }
 
@@ -174,7 +174,7 @@ void crankRevFunction(int* CrankValue){
 
 			rpmValue = ((currentCrankData-prevCrankData)/(currentCrankEvent-prevCrankEvent))*60;
 			bikeDataInformation.cadence.value = rpmValue;
-			printf("Votre cadence est: %f rpm\n\r", rpmValue);
+			//printf("Votre cadence est: %f rpm\n\r", rpmValue);
 			bikeDataInformation.cadence.time = getSensorsTime();    // a changer avec le timer
 		}
 	}
@@ -185,7 +185,7 @@ void powerFunction(int* powerData){
 	float powerValue = (powerData[1]*256) + powerData[0];
 	bikeDataInformation.power.value = powerValue;
 	//bikeDataInformation.power.time = getSensorsTime();    // a changer avec le timer
-	printf("power : %f\n\r",bikeDataInformation.power.value);
+	//printf("power : %f\n\r",bikeDataInformation.power.value);
 }
 
 void algoCases(void){
@@ -342,7 +342,7 @@ void GetRatio(int *tableau){
 					}
 				}
 		bikeDataInformation.cadence.time = 0;    // a changer avec le timer
-		printf("plateau : %f	cassette : %f\n\r",bikeDataInformation.pinion_fd.value, bikeDataInformation.pinion_rd.value);
+		//printf("plateau : %f	cassette : %f\n\r",bikeDataInformation.pinion_fd.value, bikeDataInformation.pinion_rd.value);
 	}
 }
 
