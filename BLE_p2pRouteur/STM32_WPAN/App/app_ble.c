@@ -533,13 +533,14 @@ void Trigger_Scan_Request( void ){
 	UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_1);
 }
 
-void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pairing_request_status status){ //alexis a modifier
+void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pairing_request_status status, uint16_t connhandle){ //alexis a modifier
 	switch(indexInFlash){
 		case 0:
 			if(status == CONNECTING){
 				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
 			}
 			else{
+				aci_gap_terminate(connhandle, 0x05);
 				usedDeviceInformations[0].state = APP_BLE_IDLE;
 				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = usedDeviceInformations[0].state;
 			}
@@ -550,6 +551,7 @@ void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pair
 				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_2_ID, CFG_SCH_PRIO_0);
 			}
 			else{
+				aci_gap_terminate(connhandle, 0x05);
 				usedDeviceInformations[1].state = APP_BLE_IDLE;
 				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = usedDeviceInformations[1].state;
 			}
@@ -560,6 +562,7 @@ void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pair
 				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_3_ID, CFG_SCH_PRIO_0);
 			}
 			else{
+				aci_gap_terminate(connhandle, 0x05);
 				usedDeviceInformations[2].state = APP_BLE_IDLE;
 				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = usedDeviceInformations[2].state;
 			}
@@ -567,13 +570,12 @@ void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pair
 			break;
 		case 3:
 			if(status == CONNECTING){
-				BleApplicationContext.EndDevice4Found = 0x01;
 				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_4_ID, CFG_SCH_PRIO_0);
 			}
 			else{
-				BleApplicationContext.EndDevice_Connection_Status[3] = APP_BLE_IDLE;
-				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[3];
-				BleApplicationContext.EndDevice4Found = 0x00;
+				aci_gap_terminate(connhandle, 0x05);
+				usedDeviceInformations[3].state = APP_BLE_IDLE;
+				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = usedDeviceInformations[3].state;
 			}
 
 			break;
@@ -582,15 +584,18 @@ void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pair
 	}
 }
 
-void Update_UsedDeviceInformations_structure( void )
+uint16_t Update_UsedDeviceInformations_structure( void )
 {
     struct settings readSettings;
     readFlash((uint8_t*)&readSettings);
 
     int isFlashEmpty = 0;
     int isUsedDeviceEmpty = 0;
+    uint16_t connhandle = 0;
 
-    for(int i = 0; i < sizeof(readSettings.sensors); i++){
+    //used to add devices in usedDeviceStructure
+
+    for(int i = 0; i < sizeof(readSettings.sensors) / sizeof(readSettings.sensors[0]); i++){
     	for(int k = 0; k < scannedDevicesPackage.numberOfScannedDevices; k++){
     		if(strcmp(scannedDevicesPackage.scannedDevicesList[k].deviceName, readSettings.sensors[i].name) == 0 ||
     				memcmp(scannedDevicesPackage.scannedDevicesList[k].macAddress, readSettings.sensors[i].macAddress, sizeof(readSettings.sensors[i].macAddress)) == 0){
@@ -607,7 +612,7 @@ void Update_UsedDeviceInformations_structure( void )
             		for(int idx = 0; idx < sizeof(usedDeviceInformations[i].name);idx++){
             			isUsedDeviceEmpty |= usedDeviceInformations[i].name[idx];
             		}
-            		if(isUsedDeviceEmpty == 0){ //used device is empty
+            		if(isUsedDeviceEmpty == 0){ //used device is empty - newly added
             			strcpy(usedDeviceInformations[i].name, readSettings.sensors[i].name);
             			memcpy(usedDeviceInformations[i].macAddress, readSettings.sensors[i].macAddress, sizeof(usedDeviceInformations[i].macAddress));
             			usedDeviceInformations[i].isNotEmpty = true;
@@ -617,6 +622,19 @@ void Update_UsedDeviceInformations_structure( void )
     		}
     	}
     }
+    //used to remove devices in usedDeviceStructure
+
+    for(int i = 0; i < sizeof(readSettings.sensors) / sizeof(readSettings.sensors[0]); i++){
+    	for(int k = 0; k < sizeof(usedDeviceInformations)/ sizeof(usedDeviceInformations[0]); k++){
+    		if(memcmp(readSettings.sensors[i].macAddress, usedDeviceInformations[k].macAddress, sizeof(usedDeviceInformations[k].macAddress)) != 0 && i == k){
+    			connhandle = usedDeviceInformations[k].connHandle;
+    			memset(&usedDeviceInformations[k],0,sizeof(usedDeviceInformations[k]));
+    			break;
+    		}
+    	}
+    }
+
+    return connhandle;
 
 }
 
@@ -759,66 +777,70 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
 
       /* USER CODE END EVT_DISCONN_COMPLETE */
-      if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice1)
-      {
 
-        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 1 \n");
-        usedDeviceInformations[0].state = APP_BLE_IDLE;
-        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[0];
-        usedDeviceInformations[0].connHandle = 0xFFFF;
-        handleNotification.P2P_Evt_Opcode = P2P_SERVER1_DISCON_HANDLE_EVT;
-        handleNotification.ConnectionHandle = connection_handle;
-        Evt_Notification(&handleNotification);
-      }
+    	if(cc->Reason != 0x05){ //user terminated connection
+    	      if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice1)
+    	      {
 
-      if (cc->Connection_Handle == BleApplicationContext.connectionHandleCentral)
-      {
-        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF SMART PHONE \n");
-        BleApplicationContext.connectionHandleCentral = APP_BLE_IDLE;
-        handleNotification.P2P_Evt_Opcode = SMART_PHONE1_DISCON_HANDLE_EVT;
-        handleNotification.ConnectionHandle = 0xFFFF;
-        Evt_Notification(&handleNotification);
-      }
+    	        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 1 \n");
+    	        usedDeviceInformations[0].state = APP_BLE_IDLE;
+    	        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[0];
+    	        usedDeviceInformations[0].connHandle = 0xFFFF;
+    	        handleNotification.P2P_Evt_Opcode = P2P_SERVER1_DISCON_HANDLE_EVT;
+    	        handleNotification.ConnectionHandle = connection_handle;
+    	        Evt_Notification(&handleNotification);
+    	      }
 
-#if (CFG_P2P_DEMO_MULTI != 0)
-      /* USER CODE BEGIN EVT_DISCONN_COMPLETE_Multi */
-      if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice2)
-      {
+    	      if (cc->Connection_Handle == BleApplicationContext.connectionHandleCentral)
+    	      {
+    	        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF SMART PHONE \n");
+    	        BleApplicationContext.connectionHandleCentral = APP_BLE_IDLE;
+    	        handleNotification.P2P_Evt_Opcode = SMART_PHONE1_DISCON_HANDLE_EVT;
+    	        handleNotification.ConnectionHandle = 0xFFFF;
+    	        Evt_Notification(&handleNotification);
+    	      }
 
-        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 2 \n");
-        usedDeviceInformations[1].state = APP_BLE_IDLE;
-        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[1];
-        usedDeviceInformations[1].connHandle = 0xFFFF;
-        handleNotification.P2P_Evt_Opcode = P2P_SERVER2_DISCON_HANDLE_EVT;
-        handleNotification.ConnectionHandle = connection_handle;
-        Evt_Notification(&handleNotification);
-      }
-      if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice3)
-      {
+    	#if (CFG_P2P_DEMO_MULTI != 0)
+    	      /* USER CODE BEGIN EVT_DISCONN_COMPLETE_Multi */
+    	      if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice2)
+    	      {
 
-        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 3 \n");
-        usedDeviceInformations[2].state = APP_BLE_IDLE;
-        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[2];
-        usedDeviceInformations[2].connHandle = 0xFFFF;
-        handleNotification.P2P_Evt_Opcode = P2P_SERVER3_DISCON_HANDLE_EVT;
-        handleNotification.ConnectionHandle = connection_handle;
-        Evt_Notification(&handleNotification);
-      }
-      if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice4)
-      {
+    	        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 2 \n");
+    	        usedDeviceInformations[1].state = APP_BLE_IDLE;
+    	        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[1];
+    	        usedDeviceInformations[1].connHandle = 0xFFFF;
+    	        handleNotification.P2P_Evt_Opcode = P2P_SERVER2_DISCON_HANDLE_EVT;
+    	        handleNotification.ConnectionHandle = connection_handle;
+    	        Evt_Notification(&handleNotification);
+    	      }
+    	      if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice3)
+    	      {
 
-        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 4 \n");
-        usedDeviceInformations[3].state = APP_BLE_IDLE;
-        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[3];
-        usedDeviceInformations[3].connHandle = 0xFFFF;
-        handleNotification.P2P_Evt_Opcode = P2P_SERVER4_DISCON_HANDLE_EVT;
-        handleNotification.ConnectionHandle = connection_handle;
-        Evt_Notification(&handleNotification);
-      }
+    	        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 3 \n");
+    	        usedDeviceInformations[2].state = APP_BLE_IDLE;
+    	        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[2];
+    	        usedDeviceInformations[2].connHandle = 0xFFFF;
+    	        handleNotification.P2P_Evt_Opcode = P2P_SERVER3_DISCON_HANDLE_EVT;
+    	        handleNotification.ConnectionHandle = connection_handle;
+    	        Evt_Notification(&handleNotification);
+    	      }
+    	      if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice4)
+    	      {
 
-      
-      /* USER CODE END EVT_DISCONN_COMPLETE_Multi */
-#endif
+    	        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 4 \n");
+    	        usedDeviceInformations[3].state = APP_BLE_IDLE;
+    	        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[3];
+    	        usedDeviceInformations[3].connHandle = 0xFFFF;
+    	        handleNotification.P2P_Evt_Opcode = P2P_SERVER4_DISCON_HANDLE_EVT;
+    	        handleNotification.ConnectionHandle = connection_handle;
+    	        Evt_Notification(&handleNotification);
+    	      }
+
+
+    	      /* USER CODE END EVT_DISCONN_COMPLETE_Multi */
+    	#endif
+    	}
+
 
       break; /* EVT_DISCONN_COMPLETE */
 
@@ -874,11 +896,12 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
             if (dev1 == 1)
             {
               /* Inform Application it is End Device 1 */
+              int index0 = getCorrespondingIndex(usedDeviceInformations[0].macAddress);
 
               APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 1\n");
               usedDeviceInformations[0].state = APP_BLE_CONNECTED_CLIENT;
               usedDeviceInformations[0].connHandle = connection_handle;
-              //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[0];
+              scannedDevicesPackage.scannedDevicesList[index0].pairingStatus =  usedDeviceInformations[0].state;
               BleApplicationContext.connectionHandleEndDevice1 = connection_handle;
               BleApplicationContext.BleApplicationContext_legacy.connectionHandle[0] = connection_handle;
               handleNotification.P2P_Evt_Opcode = P2P_SERVER1_CONN_HANDLE_EVT;
@@ -911,12 +934,12 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
           if (dev2 == 1)
             {
               /* Inform Application it is End Device 2 */
+        	  int index1 = getCorrespondingIndex(usedDeviceInformations[1].macAddress);
 
               APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 2\n");
-
               usedDeviceInformations[1].state = APP_BLE_CONNECTED_CLIENT;
               usedDeviceInformations[1].connHandle = connection_handle;
-              //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[1];
+              scannedDevicesPackage.scannedDevicesList[index1].pairingStatus =  usedDeviceInformations[1].state;
               BleApplicationContext.connectionHandleEndDevice2 = connection_handle;
               BleApplicationContext.BleApplicationContext_legacy.connectionHandle[1] = connection_handle;
               handleNotification.P2P_Evt_Opcode = P2P_SERVER2_CONN_HANDLE_EVT;
@@ -943,11 +966,13 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
             {
               /* Inform Application it is End Device 3 */
 
+              int index2 = getCorrespondingIndex(usedDeviceInformations[2].macAddress);
+
               APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 3\n");
 
               usedDeviceInformations[2].state = APP_BLE_CONNECTED_CLIENT;
               usedDeviceInformations[2].connHandle = connection_handle;
-              //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[2];
+              scannedDevicesPackage.scannedDevicesList[index2].pairingStatus =  usedDeviceInformations[2].state;
               BleApplicationContext.connectionHandleEndDevice3 = connection_handle;
               BleApplicationContext.BleApplicationContext_legacy.connectionHandle[2] = connection_handle;
               handleNotification.P2P_Evt_Opcode = P2P_SERVER3_CONN_HANDLE_EVT;
@@ -974,11 +999,13 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
             {
               /* Inform Application it is End Device 4 */
 
+              int index3 = getCorrespondingIndex(usedDeviceInformations[3].macAddress);
+
               APP_DBG_MSG("-- CONNECTION SUCCESS WITH END DEVICE 4\n");
 
               usedDeviceInformations[3].state = APP_BLE_CONNECTED_CLIENT;
               usedDeviceInformations[3].connHandle = connection_handle;
-              //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[3];
+              scannedDevicesPackage.scannedDevicesList[index3].pairingStatus =  usedDeviceInformations[3].state;
               BleApplicationContext.connectionHandleEndDevice4 = connection_handle;
               BleApplicationContext.BleApplicationContext_legacy.connectionHandle[3] = connection_handle;
               handleNotification.P2P_Evt_Opcode = P2P_SERVER4_CONN_HANDLE_EVT;
@@ -1185,47 +1212,6 @@ APP_BLE_ConnStatus_t APP_BLE_Get_Client_Connection_Status( uint16_t Connection_H
   return (return_value);
 }
 
-int APP_BLE_Get_Client_Connection_Index( uint16_t Connection_Handle )
-{
-  /* USER CODE BEGIN APP_BLE_Get_Client_Connection_Status_1 */
-
-	struct settings readSettings;
-	readFlash((uint8_t*)&readSettings);
-
-
-  /* USER CODE END APP_BLE_Get_Client_Connection_Status_1 */
-  int return_value;
-
-  if (BleApplicationContext.connectionHandleEndDevice1 == Connection_Handle)
-  {
-
-    return_value = getCorrespondingIndex(readSettings.sensors[0].name);
-  }
-#if (CFG_P2P_DEMO_MULTI != 0)
-/* USER CODE BEGIN APP_BLE_Get_Client_Connection_Status_Multi */
-  else if (BleApplicationContext.connectionHandleEndDevice2 == Connection_Handle)
-  {
-	 return_value = getCorrespondingIndex(readSettings.sensors[1].name);
-  }
-  else if (BleApplicationContext.connectionHandleEndDevice3 == Connection_Handle)
-  {
-	 return_value = getCorrespondingIndex(readSettings.sensors[2].name);
-  }
-  else if (BleApplicationContext.connectionHandleEndDevice4 == Connection_Handle)
-  {
-	 return_value = getCorrespondingIndex(readSettings.sensors[3].name);
-  }
-/* USER CODE END APP_BLE_Get_Client_Connection_Status_Multi */
-#endif
-  else
-  {
-    return_value = -1;
-  }
-  /* USER CODE BEGIN APP_BLE_Get_Client_Connection_Status_2 */
-
-  /* USER CODE END APP_BLE_Get_Client_Connection_Status_2 */
-  return (return_value);
-}
 
 /* USER CODE BEGIN FD */
 void APP_BLE_Key_Button1_Action(void)
@@ -1519,7 +1505,7 @@ static void ConnReq1( void )
 {
   tBleStatus result;
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 1 **  \r\n\r");
-  if (usedDeviceInformations[0].state != APP_BLE_CONNECTED_CLIENT)
+  if (usedDeviceInformations[0].state != APP_BLE_CONNECTED_CLIENT && usedDeviceInformations[0].isNotEmpty == true)
   {
     /* USER CODE BEGIN APP_BLE_CONNECTED_SUCCESS_END_DEVICE_1 */
 
@@ -1540,10 +1526,11 @@ static void ConnReq1( void )
     if (result == BLE_STATUS_SUCCESS)
     {
     /* USER CODE BEGIN BLE_STATUS_END_DEVICE_1_SUCCESS */
+    	int index = getCorrespondingIndex(usedDeviceInformations[0].macAddress);
 
     /* USER CODE END BLE_STATUS_END_DEVICE_1_SUCCESS */
     	usedDeviceInformations[0].state  = APP_BLE_LP_CONNECTING;
-	//scannedDevicesPackage.scannedDevicesList[index].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[0];
+    	scannedDevicesPackage.scannedDevicesList[index].pairingStatus = usedDeviceInformations[0].state;
     }
     else
     {
@@ -1569,7 +1556,7 @@ static void ConnReq2( void )
   tBleStatus result;
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 2 **  \r\n\r");
 
-  if (usedDeviceInformations[1].state != APP_BLE_CONNECTED_CLIENT)
+  if (usedDeviceInformations[1].state != APP_BLE_CONNECTED_CLIENT && usedDeviceInformations[1].isNotEmpty == true)
   {
 
 
@@ -1588,9 +1575,10 @@ static void ConnReq2( void )
 
     if (result == BLE_STATUS_SUCCESS)
     {
+    	int index = getCorrespondingIndex(usedDeviceInformations[1].macAddress);
 
     	usedDeviceInformations[1].state = APP_BLE_LP_CONNECTING;
-      //scannedDevicesPackage.scannedDevicesList[index].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[1];
+        scannedDevicesPackage.scannedDevicesList[index].pairingStatus = usedDeviceInformations[1].state ;
 
     }
     else
@@ -1613,7 +1601,7 @@ static void ConnReq3( void )
 {
   tBleStatus result;
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 3 **  \r\n\r");
-  if (usedDeviceInformations[2].state != APP_BLE_CONNECTED_CLIENT)
+  if (usedDeviceInformations[2].state != APP_BLE_CONNECTED_CLIENT && usedDeviceInformations[2].isNotEmpty == true)
   {
 
     result = aci_gap_create_connection(
@@ -1631,8 +1619,10 @@ static void ConnReq3( void )
 
     if (result == BLE_STATUS_SUCCESS)
     {
+    	int index = getCorrespondingIndex(usedDeviceInformations[2].macAddress);
+
     	usedDeviceInformations[2].state = APP_BLE_LP_CONNECTING;
-      //scannedDevicesPackage.scannedDevicesList[index].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[2];
+        scannedDevicesPackage.scannedDevicesList[index].pairingStatus = usedDeviceInformations[2].state;
 
     }
     else
@@ -1655,7 +1645,7 @@ static void ConnReq4( void )
 {
   tBleStatus result;
   APP_DBG_MSG("\r\n\r** CREATE CONNECTION TO END DEVICE 4 **  \r\n\r");
-  if (usedDeviceInformations[3].state != APP_BLE_CONNECTED_CLIENT)
+  if (usedDeviceInformations[3].state != APP_BLE_CONNECTED_CLIENT && usedDeviceInformations[3].isNotEmpty == true)
   {
 
     result = aci_gap_create_connection(
@@ -1673,8 +1663,10 @@ static void ConnReq4( void )
 
     if (result == BLE_STATUS_SUCCESS)
     {
+    	int index = getCorrespondingIndex(usedDeviceInformations[3].macAddress);
+
     	usedDeviceInformations[3].state = APP_BLE_LP_CONNECTING;
-      //scannedDevicesPackage.scannedDevicesList[index].pairingStatus = BleApplicationContext.EndDevice_Connection_Status[3];
+        scannedDevicesPackage.scannedDevicesList[index].pairingStatus = usedDeviceInformations[3].state;
 
     }
     else

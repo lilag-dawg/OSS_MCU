@@ -182,17 +182,30 @@ void P2P_Router_APP_Init(void);
 void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotification);
 void P2P_Client_Init(void);
 
-int getCorrespondingIndex(char* sensorName);
+int getCorrespondingIndex(uint8_t* macAddress);
 static void Update_Paired_Devices_In_Flash(void);
 /* USER CODE BEGIN PFP */
 
 
 static void P2P_SensorDataType_Timer_Callback(void){
-	UTIL_SEQ_SetTask(1<<CFG_TASK_SEND_DATA_TYPE_ID, CFG_SCH_PRIO_0 );
+	UTIL_SEQ_SetTask(1<<CFG_TASK_SEND_DATA_TYPE_ID, CFG_SCH_PRIO_1 );
 }
 
 static void P2P_SensorName_Timer_Callback(void){
-	UTIL_SEQ_SetTask(1<<CFG_TASK_SEND_SENSOR_NAMES_ID, CFG_SCH_PRIO_0 );
+	UTIL_SEQ_SetTask(1<<CFG_TASK_SEND_SENSOR_NAMES_ID, CFG_SCH_PRIO_1 );
+}
+
+
+uint8_t* getCorrespondingMacAdress(char* sensorName){
+
+	//uint8_t macNotFound[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
+
+	for(int i = 0; i<scannedDevicesPackage.numberOfScannedDevices;i++){
+		if(strcmp(sensorName, scannedDevicesPackage.scannedDevicesList[i].deviceName) == 0){
+			return scannedDevicesPackage.scannedDevicesList[i].macAddress;
+		}
+	}
+	return NULL;
 }
 
 
@@ -201,13 +214,16 @@ static void Update_Paired_Devices_In_Flash(void){
     struct settings settingsToWrite;
 
     int indexOfDeviceList = 0;
-    indexOfDeviceList = getCorrespondingIndex(P2P_Router_App_Context.PairingRequestStruct.SensorName);
+    uint8_t* currentMacAdd = getCorrespondingMacAdress(P2P_Router_App_Context.PairingRequestStruct.SensorName);
+    indexOfDeviceList = getCorrespondingIndex(currentMacAdd);
 
     int sum = 0;
     int index = 0;
+    uint16_t connhandle = 0;
 
     readFlash((uint8_t*)&readSettings);
     settingsToWrite = readSettings;
+
     if(P2P_Router_App_Context.PairingRequestStruct.status == CONNECTING){
     	for(int i = 0; i < sizeof(settingsToWrite.sensors); i++){
     		sum = 0;
@@ -227,15 +243,15 @@ static void Update_Paired_Devices_In_Flash(void){
         	if(strcmp(P2P_Router_App_Context.PairingRequestStruct.SensorName, settingsToWrite.sensors[i].name) == 0){
         		memset(settingsToWrite.sensors[i].name, 0, sizeof(settingsToWrite.sensors[i].name));
         		memset(settingsToWrite.sensors[i].macAddress, 0, sizeof(settingsToWrite.sensors[i].macAddress));
-
+        		index = i;
         	}
         }
     }
     saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
 
-    Update_UsedDeviceInformations_structure();
+    connhandle = Update_UsedDeviceInformations_structure();
 
-    Trigger_Connection_Request(index,indexOfDeviceList,P2P_Router_App_Context.PairingRequestStruct.status);
+    Trigger_Connection_Request(index,indexOfDeviceList,P2P_Router_App_Context.PairingRequestStruct.status, connhandle);
 }
 
 
@@ -312,7 +328,7 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
 				default:
 					break;
         	}
-			memset(P2P_Router_App_Context.PairingRequestStruct.SensorName, 0, sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));
+			memset(&P2P_Router_App_Context.PairingRequestStruct.SensorName, 0, sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));
 
 			for(int i=1; i<pNotification->DataTransfered.Length;i++){
             	P2P_Router_App_Context.PairingRequestStruct.SensorName[i-1] = pNotification->DataTransfered.pPayload[i];
@@ -437,14 +453,9 @@ void P2P_Router_APP_Init(void)
      * Initialize LedButton Service
      */
 
-    //tempo
     P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
-
     P2P_Router_App_Context.PairingRequestStruct.status = DISCONNECT;
-    for(int i=0; i<(sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));i++){
-    	P2P_Router_App_Context.PairingRequestStruct.SensorName[i] = 0;
-    }
-
+    memset(&P2P_Router_App_Context.PairingRequestStruct.SensorName, 0, sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));
 
 #if (CFG_P2P_DEMO_MULTI != 0 )   
 
@@ -550,9 +561,9 @@ void P2P_Client_Init(void)
 }
 
 /* USER CODE BEGIN FD */
-int getCorrespondingIndex(char* sensorName){
+int getCorrespondingIndex(uint8_t* macAddress){
 	for(int i = 0; i<scannedDevicesPackage.numberOfScannedDevices;i++){
-		if(strcmp(sensorName, scannedDevicesPackage.scannedDevicesList[i].deviceName) == 0){
+		if(memcmp(macAddress, scannedDevicesPackage.scannedDevicesList[i].macAddress, sizeof(scannedDevicesPackage.scannedDevicesList[i].macAddress)) == 0){
 			return i;
 		}
 	}
@@ -613,24 +624,29 @@ static void Server_Update_Service( void )
 		    //green led is on when notifying
 		    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
 
-			printf("Size: %d \n\r",sizeof(scannedDevicesPackage.scannedDevicesList[index].deviceName));
-			printf("Position: %d \n\r",scannedDevicesPackage.scannedDevicesList[index].position);
-			printf("[");
 
-			printf("%x,",value[0]);
+			//printf("Size: %d \n\r",sizeof(scannedDevicesPackage.scannedDevicesList[index].deviceName));
+			//printf("Position: %d \n\r",scannedDevicesPackage.scannedDevicesList[index].position);
+			//printf("[");
+
+			//printf("%x,",value[0]);
 
 			for(int i = 1; i<(sizeof(value));i++){
 				value[i] = (uint8_t)(scannedDevicesPackage.scannedDevicesList[index].deviceName[i-1]);
-				printf("%x,",value[i]);
+				//printf("%x,",value[i]);
 			}
+
+		    printf("status : %d name: %s\n\r", status, scannedDevicesPackage.scannedDevicesList[index].deviceName);
+
 
 			P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition ++;
 
 			if (P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition >= scannedDevicesPackage.numberOfScannedDevices){
 				P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
+				printf("END OF PACKET\n\r");
 			}
 
-			printf("]\n\r");
+			//printf("]\n\r");
 
 			EDS_STM_Update_Char(0x0000,(uint8_t *)&value);
 		}

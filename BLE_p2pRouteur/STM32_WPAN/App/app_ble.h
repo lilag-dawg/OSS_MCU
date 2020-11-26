@@ -217,15 +217,13 @@ typedef struct
 
   APP_BLE_ConnStatus_t APP_BLE_Get_Client_Connection_Status( uint16_t Connection_Handle );
 
-  int APP_BLE_Get_Client_Connection_Index( uint16_t Connection_Handle );
-
   void Trigger_Scan_Request( void );
-  void Trigger_Connection_Request( int index, int indexInScannedDevices, Pairing_request_status status );
+  void Trigger_Connection_Request( int index, int indexInScannedDevices, Pairing_request_status status, uint16_t connhandle );
 
 /* USER CODE BEGIN EF */
-  int getCorrespondingIndex(char* sensorName);
+  int getCorrespondingIndex(uint8_t* macAddress);
 
-  void Update_UsedDeviceInformations_structure( void );
+  uint16_t Update_UsedDeviceInformations_structure( void );
 
 
 /* USER CODE END EF */
