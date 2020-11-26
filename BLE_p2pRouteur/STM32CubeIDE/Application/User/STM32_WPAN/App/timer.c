@@ -93,13 +93,13 @@ float getSensorsTime()
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	if(htim == &htim16) {
+	if(htim->Instance == TIM16) {
 		  BSP_LED_Toggle(LED2);
 		  //Call de l'algo ici
 		  algoCases();
 	}
 
-	if(htim == &htim17) {
+	if(htim->Instance == TIM17) {
 		if (HAL_TIM_Base_Stop_IT(&htim17) != HAL_OK)
 		{
 			Error_Handler();
