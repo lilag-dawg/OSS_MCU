@@ -343,6 +343,14 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
         	struct settings readSettings;
         	readFlash((uint8_t*)&readSettings);
 
+        	int test[20];
+        	memset(&test, 0, sizeof(test));
+
+			for(int i=0; i<pNotification->DataTransfered.Length;i++){
+            	test[i] = pNotification->DataTransfered.pPayload[i];
+            }
+			printf("xd");
+
         	//todo fonction pour decoder les valeurs
 
 

@@ -286,7 +286,7 @@ void EDS_STM_Init(void)
     aci_gatt_add_char(bEndDeviceManagementContext.EndDeviceManagementSvcHdle,
                       UUID_TYPE_16,
                       &uuid16,
-                      20,
+                      24,
 					  CHAR_PROP_WRITE,
                       ATTR_PERMISSION_NONE,
 					  GATT_NOTIFY_ATTRIBUTE_WRITE, /* gattEvtMask */
@@ -363,7 +363,7 @@ tBleStatus EDS_STM_Update_Char(uint16_t UUID, uint8_t *pPayload)
         result = aci_gatt_update_char_value(bEndDeviceManagementContext.EndDeviceManagementSvcHdle,
                                bEndDeviceManagementContext.EndDeviceStatusWriteClientToServerCharHdle,
                                0, /* charValOffset */
-                               20, /* charValueLen */
+                               24, /* charValueLen */
                                (uint8_t *)  pPayload);
 
        break;
