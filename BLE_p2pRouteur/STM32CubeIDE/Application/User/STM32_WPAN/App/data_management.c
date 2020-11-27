@@ -111,14 +111,19 @@ void wheelRevFunction(int* wheelValue){
 		float kmhValue = (3.6*1024)*(diffWheelData/diffWheelEvent);
 
 		bikeDataInformation.speed.value = kmhValue;
-		bikeDataInformation.speed.time = getSensorsTime();    // a changer avec le timer
 		//printf("Votre vitesse est: %f km/h\n\r", kmhValue);
 		//printf("Age vitesse : %f\n\r", bikeDataInformation.speed.time);
+		bikeDataInformation.speed.time = getSensorsTime();    // a changer avec le timer
+    }
+    else{
+    	bikeDataInformation.speed.value = 0;
+    	bikeDataInformation.speed.time = getSensorsTime();    // a changer avec le timer
     }
 }
 
 void crankRevFunction(int* CrankValue){
-
+	bikeDataInformation.cadence.time = getSensorsTime();
+    // a changer avec le timer
 	/* mettre la valeur dans le buffer */
 	for(int i = 0; i < 4; i++){
 		crankRevValue[indexCrankRevValue][i] = CrankValue[i];
@@ -166,7 +171,8 @@ void crankRevFunction(int* CrankValue){
 		currentCrankEvent = (CurrentEvent1 + CurrentEvent2)/1024; // On obtient le current event en secondes
 
 		if (currentCrankData <= prevCrankData){
-			rpmValue = rpmValue;
+			rpmValue = 0;
+			bikeDataInformation.cadence.value = rpmValue;
 		}
 		else{
 			if(currentCrankEvent < prevCrankEvent){
@@ -176,7 +182,6 @@ void crankRevFunction(int* CrankValue){
 			rpmValue = ((currentCrankData-prevCrankData)/(currentCrankEvent-prevCrankEvent))*60;
 			bikeDataInformation.cadence.value = rpmValue;
 			//printf("Votre cadence est: %f rpm\n\r", rpmValue);
-			bikeDataInformation.cadence.time = getSensorsTime();    // a changer avec le timer
 			//printf("Age cadence : %f\n\r", bikeDataInformation.cadence.time);
 		}
 	}
@@ -211,7 +216,8 @@ void algoCases(void){
 	uint32_t Timer_cadence = getSensorsTime()-bikeDataInformation.cadence.time;
 	uint32_t Timer_vitesse = getSensorsTime()-bikeDataInformation.speed.time;
 
-	printf("\n\r\n\r Age power : %d   Age cadence : %d   Age vitesse : %d", Timer_puissance, Timer_cadence, Timer_vitesse);
+	//printf("\n\r\n\r Power :  %f  Cadence : %f   Vitesse : %f", puissance, cadence, vitesse);
+	//printf("\n\r\n\r Age Power :  %d  Age Cadence : %d   Age Vitesse : %d", Timer_puissance, Timer_cadence, Timer_vitesse);
 
 
 	if (init == true){
