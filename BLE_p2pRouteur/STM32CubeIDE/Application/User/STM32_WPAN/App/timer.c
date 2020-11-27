@@ -86,9 +86,9 @@ void startRelayTimer(uint16_t GPIO_PIN) {
 	RELAY_PIN = GPIO_PIN;
 }
 
-float getSensorsTime()
+uint32_t getSensorsTime()
 {
-	return (float) __HAL_TIM_GET_COUNTER(&htim2);
+	return (uint32_t) __HAL_TIM_GET_COUNTER(&htim2);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)

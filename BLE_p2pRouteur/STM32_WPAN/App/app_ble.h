@@ -120,7 +120,7 @@ typedef struct
 
 typedef struct
 {
-  float time;
+  uint32_t time;
   float value;
 } Algorithme_type_data;
 

@@ -18,14 +18,14 @@
 
 // Constante
 // Constante
-float ftp = 200; // reçu de l'app
+float ftp = 240; // reçu de l'app
 int Diametre_roues = 700; // reçu de l'app
 int Cadence_des = 90; // reçu de l'app
 
 int nbr_pignon = 11; // reçu de l'app
 int nbr_plateau = 2; // reçu de l'app
 
-int cassette[nbr_pignon_max] = {11, 12, 13, 14, 15, 17, 19, 21, 24, 27, 30, 0}; // reçu de l'app
+int cassette[nbr_pignon_max] = {11, 12, 13, 14, 15, 17, 19, 21, 23, 25, 28, 0}; // reçu de l'app
 int pedalier[nbr_plateau_max] = {52, 36}; // reçu de l'app
 
 int nbr_ratio = 14; // valeur par défaut

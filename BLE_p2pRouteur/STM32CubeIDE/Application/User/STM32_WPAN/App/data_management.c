@@ -111,8 +111,9 @@ void wheelRevFunction(int* wheelValue){
 		float kmhValue = (3.6*1024)*(diffWheelData/diffWheelEvent);
 
 		bikeDataInformation.speed.value = kmhValue;
-		//bikeDataInformation.speed.time = getSensorsTime();    // a changer avec le timer
+		bikeDataInformation.speed.time = getSensorsTime();    // a changer avec le timer
 		//printf("Votre vitesse est: %f km/h\n\r", kmhValue);
+		//printf("Age vitesse : %f\n\r", bikeDataInformation.speed.time);
     }
 }
 
@@ -176,6 +177,7 @@ void crankRevFunction(int* CrankValue){
 			bikeDataInformation.cadence.value = rpmValue;
 			//printf("Votre cadence est: %f rpm\n\r", rpmValue);
 			bikeDataInformation.cadence.time = getSensorsTime();    // a changer avec le timer
+			//printf("Age cadence : %f\n\r", bikeDataInformation.cadence.time);
 		}
 	}
 
@@ -184,8 +186,9 @@ void crankRevFunction(int* CrankValue){
 void powerFunction(int* powerData){
 	float powerValue = (powerData[1]*256) + powerData[0];
 	bikeDataInformation.power.value = powerValue;
-	//bikeDataInformation.power.time = getSensorsTime();    // a changer avec le timer
+	bikeDataInformation.power.time = getSensorsTime();    // a changer avec le timer
 	//printf("power : %f\n\r",bikeDataInformation.power.value);
+	//printf("Age power : %f\n\r", bikeDataInformation.power.time);
 }
 
 void algoCases(void){
@@ -201,10 +204,14 @@ void algoCases(void){
 	//float Timer_cadence = bikeDataInformation.cadence.time;
 	//float Timer_vitesse = bikeDataInformation.speed.time;
 
-	float Timer_puissance = 1000;
-	float Timer_cadence = 1000;
-	float Timer_vitesse = 1000;
 
+
+
+	uint32_t Timer_puissance = getSensorsTime()-bikeDataInformation.power.time;
+	uint32_t Timer_cadence = getSensorsTime()-bikeDataInformation.cadence.time;
+	uint32_t Timer_vitesse = getSensorsTime()-bikeDataInformation.speed.time;
+
+	printf("\n\r\n\r Age power : %d   Age cadence : %d   Age vitesse : %d", Timer_puissance, Timer_cadence, Timer_vitesse);
 
 
 	if (init == true){
@@ -224,6 +231,7 @@ void algoCases(void){
 	    // Algorithme de changements de vitesses automatisés
 	    if (*pointeur_flag == 0 && Timer_puissance < 3000 && Timer_cadence < 3000 && Timer_vitesse < 3000)
 	      {
+	    	printf("\n\r ok\n\r");
 	        float ratio = Obtenir_ratio(pignon, plateau, cassette, pedalier);
 
 	        if (puissance >= ftp*1.51)
@@ -231,12 +239,12 @@ void algoCases(void){
 	        Sprint(puissance, cadence, vitesse, ratio, pointeur_flag_changement_ratio, pointeur_flag);
 	        }
 
-	        else if (puissance <= ftp*0.24)
+	        else if (puissance <= ftp*0.10)
 	        {
 	        Repos(puissance, cadence, vitesse, ratio, pointeur_nbr_ratio, Diametre_roues, tab_ratio, pointeur_flag_changement_ratio);
 	        }
 
-	        else if (puissance < ftp*1.51 && puissance > ftp*0.24)
+	        else if (puissance < ftp*1.51 && puissance > ftp*0.10)
 	        {
 	        Normale(puissance, cadence, vitesse, ratio, pointeur_nbr_ratio, Diametre_roues, Cadence_des, tab_ratio, pointeur_flag_changement_ratio);
 	        }
@@ -341,8 +349,8 @@ void GetRatio(int *tableau){
 						break;
 					}
 				}
-		bikeDataInformation.cadence.time = 0;    // a changer avec le timer
 		//printf("plateau : %f	cassette : %f\n\r",bikeDataInformation.pinion_fd.value, bikeDataInformation.pinion_rd.value);
+
 	}
 }
 
