@@ -289,6 +289,7 @@ typedef struct
 //struct DeviceInformations_t *DeviceFound[MAX_NMBR_DEVICES];
  ScannedDevicesPackage_t scannedDevicesPackage;
  UsedDeviceInformations_t usedDeviceInformations[4];
+ BikeDataInformation_t bikeDataInformation;
 
  uint8_t macRidesense[6] = {21,42,96,10,26,236};
  uint8_t macShimano[6] = {159,110,155,254,115,235};
@@ -503,6 +504,11 @@ void APP_BLE_Init( void )
 
   //reset used device informations
   memset(&usedDeviceInformations, 0 , sizeof(usedDeviceInformations));
+
+  //reset calibration parameters
+  memset(&bikeDataInformation, 0 , sizeof(bikeDataInformation));
+
+  //todo set calibration parameters to something lol
 
 
   //reset flash
