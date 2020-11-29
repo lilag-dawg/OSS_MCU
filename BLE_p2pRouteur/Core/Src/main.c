@@ -136,6 +136,7 @@ int main(void)
   MX_RF_Init();
   MX_RTC_Init();
   startSensorsTimer();
+  setupRelayTimer();
   //startAlgoTimer();
   /* USER CODE BEGIN 2 */
   /* USER CODE END 2 */
@@ -424,6 +425,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_SET);
 
 }
 

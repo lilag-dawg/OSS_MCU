@@ -568,7 +568,7 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
 
     case P2P_NOTIFICATION_CP_RECEIVED_EVT:
     	for(int i = 0; i<2; i++){
-			sensorData[i] = pNotification->DataTransfered.pPayload[i+1];
+			sensorData[i] = pNotification->DataTransfered.pPayload[i+2];
 		}
 
     	powerFunction(sensorData);
@@ -585,7 +585,7 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
     }
 /* USER CODE BEGIN P2P_Client_App_Notification_2 */
     if(Data_per_service.isShimanoReceived && Data_per_service.isCSCReceived && Data_per_service.isPowerReceived && isFirstTimerInit){
-        //startAlgoTimer();
+        startAlgoTimer();
         isFirstTimerInit = false;
     }
 

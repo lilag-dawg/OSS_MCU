@@ -11,6 +11,8 @@
 /* Public functions ----------------------------------------------------------*/
 
 
+uint16_t RELAY_PIN = 0x0;
+
 void startSensorsTimer()
 {
 
@@ -61,6 +63,29 @@ void startAlgoTimer() {
 	}
 }
 
+void setupRelayTimer() {
+	htim17.Instance = TIM17;
+	htim17.Init.Prescaler = TIM17_PRESCALER_VALUE;
+	htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim17.Init.Period = TIM17_PERIOD;
+	htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	htim17.Init.RepetitionCounter = 0;
+	htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+	if (HAL_TIM_Base_Init(&htim17) != HAL_OK)
+	{
+		Error_Handler();
+	}
+}
+
+void startRelayTimer(uint16_t GPIO_PIN) {
+
+	if (HAL_TIM_Base_Start_IT(&htim17) != HAL_OK)
+	{
+		Error_Handler();
+	}
+	RELAY_PIN = GPIO_PIN;
+}
+
 float getSensorsTime()
 {
 	return (float) __HAL_TIM_GET_COUNTER(&htim2);
@@ -68,7 +93,18 @@ float getSensorsTime()
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  BSP_LED_Toggle(LED2);
-  //Call de l'algo ici
-  algoCases();
+	if(htim->Instance == TIM16) {
+		  BSP_LED_Toggle(LED2);
+		  //Call de l'algo ici
+		  algoCases();
+	}
+
+	if(htim->Instance == TIM17) {
+		if (HAL_TIM_Base_Stop_IT(&htim17) != HAL_OK)
+		{
+			Error_Handler();
+		}
+		__HAL_TIM_SET_COUNTER(&htim17, 0);
+		HAL_GPIO_WritePin(GPIOC, RELAY_PIN, GPIO_PIN_SET);
+	}
 }
