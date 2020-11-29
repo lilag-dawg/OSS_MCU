@@ -124,13 +124,14 @@ typedef struct
   float value;
 } Algorithme_type_data;
 
-struct BikeDataInformation_t{
+typedef struct {
 	Algorithme_type_data cadence;
 	Algorithme_type_data speed;
 	Algorithme_type_data power;
 	Algorithme_type_data pinion_fd;
 	Algorithme_type_data pinion_rd;
-};
+	settings_t setting;
+} BikeDataInformation_t;
 
 typedef struct
 {
@@ -158,6 +159,11 @@ typedef struct
 
 	//Shimano
 	ServiceHandle_t ShimanoServicehandle;
+
+	//reading
+
+	uint16_t P2PReadCharHdle;
+	uint16_t P2PcurrentCharBeingRead;
 
 	// notification
 	uint16_t P2PNotificationCharHdle;
@@ -217,13 +223,15 @@ typedef struct
 
   APP_BLE_ConnStatus_t APP_BLE_Get_Client_Connection_Status( uint16_t Connection_Handle );
 
-  int APP_BLE_Get_Client_Connection_Index( uint16_t Connection_Handle );
-
   void Trigger_Scan_Request( void );
-  void Trigger_Connection_Request( int index, int indexInScannedDevices, Pairing_request_status status );
+  void Trigger_Connection_Request( int index, int indexInScannedDevices, Pairing_request_status status, uint16_t connhandle );
 
 /* USER CODE BEGIN EF */
-  int getCorrespondingIndex(char* sensorName);
+  int getCorrespondingIndex(uint8_t* macAddress);
+
+  uint16_t Update_UsedDeviceInformations_structure( void );
+
+
 /* USER CODE END EF */
 
 #ifdef __cplusplus

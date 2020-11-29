@@ -53,6 +53,9 @@ float Obtenir_ratio(int pignon, int plateau, int *cassette, int*pedalier)
     float ratio = (float)pedalier[plateau]/cassette[pignon];
     //printf ("ratio %f\n", ratio);
     return ratio;
+
+
+
 }
 
 // Déclaration de la fonction qui nous donne l'indice du ratio
