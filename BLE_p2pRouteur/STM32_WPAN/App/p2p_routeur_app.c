@@ -146,6 +146,7 @@ bool isFirstTimerInit = true;
 
 extern ScannedDevicesPackage_t scannedDevicesPackage;
 extern UsedDeviceInformations_t usedDeviceInformations[4];
+extern BikeDataInformation_t bikeDataInformation;
 Data_per_service_t Data_per_service;
 
 
@@ -207,8 +208,8 @@ uint8_t* getCorrespondingMacAdress(char* sensorName){
 
 
 static void Update_Paired_Devices_In_Flash(void){
-    struct settings readSettings;
-    struct settings settingsToWrite;
+    settings_t readSettings;
+    settings_t settingsToWrite;
 
     int indexOfDeviceList = 0;
     uint8_t* currentMacAdd = getCorrespondingMacAdress(P2P_Router_App_Context.PairingRequestStruct.SensorName);
@@ -337,21 +338,68 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
             break;
         case EDS_CALIBRATION_CARA_1_WRITE_EVT:
 #if(CFG_DEBUG_APP_TRACE != 0)
-        	APP_DBG_MSG("-- GATT : WRITE CHAR INFO RECEIVED\n");
+        	APP_DBG_MSG("-- GATT : WRITE CHAR INFO RECEIVED - CALIBRATION PARAMETERS -\n");
 #endif
             /* USER CODE BEGIN EDS_CALIBRATION_CARA_1_WRITE_EVT */
-        	struct settings readSettings;
+            settings_t readSettings;
+            settings_t settingsToWrite;
+
         	readFlash((uint8_t*)&readSettings);
+        	settingsToWrite = readSettings;
 
-        	int test[20];
-        	memset(&test, 0, sizeof(test));
+        	settingsToWrite.cranksets.bigGear = pNotification->DataTransfered.pPayload[0];
+        	settingsToWrite.cranksets.gear2 = pNotification->DataTransfered.pPayload[1];
+        	settingsToWrite.cranksets.gear3 = pNotification->DataTransfered.pPayload[2];
 
-			for(int i=0; i<pNotification->DataTransfered.Length;i++){
-            	test[i] = pNotification->DataTransfered.pPayload[i];
-            }
-			printf("xd");
+        	settingsToWrite.sprockets.smallGear = pNotification->DataTransfered.pPayload[3];
+        	settingsToWrite.sprockets.gear2 = pNotification->DataTransfered.pPayload[4];
+        	settingsToWrite.sprockets.gear3 = pNotification->DataTransfered.pPayload[5];
+        	settingsToWrite.sprockets.gear4 = pNotification->DataTransfered.pPayload[6];
+        	settingsToWrite.sprockets.gear5 = pNotification->DataTransfered.pPayload[7];
+        	settingsToWrite.sprockets.gear6 = pNotification->DataTransfered.pPayload[8];
+        	settingsToWrite.sprockets.gear7 = pNotification->DataTransfered.pPayload[9];
+        	settingsToWrite.sprockets.gear8 = pNotification->DataTransfered.pPayload[10];
+        	settingsToWrite.sprockets.gear9 = pNotification->DataTransfered.pPayload[11];
+        	settingsToWrite.sprockets.gear10 = pNotification->DataTransfered.pPayload[12];
+        	settingsToWrite.sprockets.gear11 = pNotification->DataTransfered.pPayload[13];
+        	settingsToWrite.sprockets.gear12 = pNotification->DataTransfered.pPayload[14];
+        	settingsToWrite.sprockets.gear13 = pNotification->DataTransfered.pPayload[15];
 
-        	//todo fonction pour decoder les valeurs
+        	settingsToWrite.preferences.ftp = (pNotification->DataTransfered.pPayload[16] << 8) + pNotification->DataTransfered.pPayload[17];
+
+        	uint32_t temp_var = (pNotification->DataTransfered.pPayload[18] << 24) + (pNotification->DataTransfered.pPayload[19] << 16) +
+        						(pNotification->DataTransfered.pPayload[20] << 8) + pNotification->DataTransfered.pPayload[21];
+        	settingsToWrite.preferences.shiftingResponsiveness = (float) temp_var/10;
+        	settingsToWrite.preferences.desiredRpm = pNotification->DataTransfered.pPayload[22];
+        	settingsToWrite.preferences.desiredBpm = pNotification->DataTransfered.pPayload[23];
+
+        	saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
+
+        	//save in bikedata
+
+        	bikeDataInformation.setting.cranksets.bigGear = settingsToWrite.cranksets.bigGear;
+        	bikeDataInformation.setting.cranksets.gear2 = settingsToWrite.cranksets.gear2;
+        	bikeDataInformation.setting.cranksets.gear3 = settingsToWrite.cranksets.gear3;
+
+        	bikeDataInformation.setting.sprockets.smallGear = settingsToWrite.sprockets.smallGear;
+        	bikeDataInformation.setting.sprockets.gear2 = settingsToWrite.sprockets.gear2;
+        	bikeDataInformation.setting.sprockets.gear3 = settingsToWrite.sprockets.gear3;
+        	bikeDataInformation.setting.sprockets.gear4 = settingsToWrite.sprockets.gear4;
+        	bikeDataInformation.setting.sprockets.gear5 = settingsToWrite.sprockets.gear5;
+        	bikeDataInformation.setting.sprockets.gear6 = settingsToWrite.sprockets.gear6;
+        	bikeDataInformation.setting.sprockets.gear7 = settingsToWrite.sprockets.gear7;
+        	bikeDataInformation.setting.sprockets.gear8 = settingsToWrite.sprockets.gear8;
+        	bikeDataInformation.setting.sprockets.gear9 = settingsToWrite.sprockets.gear9;
+        	bikeDataInformation.setting.sprockets.gear10 = settingsToWrite.sprockets.gear10;
+        	bikeDataInformation.setting.sprockets.gear11 = settingsToWrite.sprockets.gear11;
+        	bikeDataInformation.setting.sprockets.gear12 = settingsToWrite.sprockets.gear12;
+        	bikeDataInformation.setting.sprockets.gear13 = settingsToWrite.sprockets.gear13;
+
+        	bikeDataInformation.setting.preferences.ftp = settingsToWrite.preferences.ftp;
+        	bikeDataInformation.setting.preferences.shiftingResponsiveness = settingsToWrite.preferences.shiftingResponsiveness;
+        	bikeDataInformation.setting.preferences.desiredRpm = settingsToWrite.preferences.desiredRpm;
+        	bikeDataInformation.setting.preferences.desiredBpm = settingsToWrite.preferences.desiredBpm;
+
 
 
             /* USER CODE END EDS_CALIBRATION_CARA_1_WRITE_EVT */
@@ -831,7 +879,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                 {
                     /* USER CODE BEGIN EVT_BLUE_ATT_READ_BY_GROUP_TYPE_RESP */
                     bool uuid_bit_format = 0;
-                	struct settings readSettings;
+                	settings_t readSettings;
                 	readFlash((uint8_t*)&readSettings);
 
                     /* USER CODE END EVT_BLUE_ATT_READ_BY_GROUP_TYPE_RESP */

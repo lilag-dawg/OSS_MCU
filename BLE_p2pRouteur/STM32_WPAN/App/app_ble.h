@@ -124,13 +124,14 @@ typedef struct
   float value;
 } Algorithme_type_data;
 
-struct BikeDataInformation_t{
+typedef struct {
 	Algorithme_type_data cadence;
 	Algorithme_type_data speed;
 	Algorithme_type_data power;
 	Algorithme_type_data pinion_fd;
 	Algorithme_type_data pinion_rd;
-};
+	settings_t setting;
+} BikeDataInformation_t;
 
 typedef struct
 {

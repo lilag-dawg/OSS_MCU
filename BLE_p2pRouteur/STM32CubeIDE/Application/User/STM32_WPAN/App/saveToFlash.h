@@ -54,20 +54,20 @@ extern "C" {
 
 
 
-struct preferences {
+typedef struct {
 	uint16_t ftp;// : 10;
 	float shiftingResponsiveness;
 	uint16_t desiredRpm;// : 8;
 	uint16_t desiredBpm;// : 8;
-};
+} preferences;
 
-struct cranksets {
+typedef struct {
 	uint8_t bigGear;
 	uint8_t gear2;
 	uint8_t gear3;
-};
+} cranksets;
 
-struct sprockets {
+typedef struct{
 	uint8_t smallGear;
 	uint8_t gear2;
 	uint8_t gear3;
@@ -81,19 +81,20 @@ struct sprockets {
 	uint8_t gear11;
 	uint8_t gear12;
 	uint8_t gear13;
-};
+} sprockets;
 
-struct sensor {
+typedef struct {
 	char name[19];
 	uint8_t macAddress[6];
-};
+} sensor;
 
-struct settings {
-	struct preferences preferences;
-	struct cranksets cranksets;
-	struct sprockets sprockets;
-	struct sensor sensors[4]; //4 sensors max in flash
-};
+typedef struct
+{
+	preferences preferences;
+	cranksets cranksets;
+	sprockets sprockets;
+	sensor sensors[4]; //4 sensors max in flash
+} settings_t ;
 
 
 void saveToFlash(uint8_t *data, uint32_t size);

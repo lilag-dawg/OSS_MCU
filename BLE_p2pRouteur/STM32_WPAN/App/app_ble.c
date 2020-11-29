@@ -505,7 +505,7 @@ void APP_BLE_Init( void )
 
 
   //reset flash
-  struct settings settingsToWrite;
+  settings_t settingsToWrite;
   memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
 
   //initilase sensor hardcode
@@ -586,7 +586,7 @@ void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pair
 
 uint16_t Update_UsedDeviceInformations_structure( void )
 {
-    struct settings readSettings;
+    settings_t readSettings;
     readFlash((uint8_t*)&readSettings);
 
     int isFlashEmpty = 0;
