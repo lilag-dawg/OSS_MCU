@@ -198,16 +198,11 @@ void powerFunction(int* powerData){
 
 void algoCases(void){
     float puissance = bikeDataInformation.power.value;
-//  float puissance = 240;
 	float cadence = bikeDataInformation.cadence.value;
 	float vitesse = bikeDataInformation.speed.value;
 	float plateau = bikeDataInformation.pinion_fd.value;
 	float pignon = bikeDataInformation.pinion_rd.value;
-//	float plateau = 0;
-//	float pignon = 5;
-	//float Timer_puissance = bikeDataInformation.power.time;
-	//float Timer_cadence = bikeDataInformation.cadence.time;
-	//float Timer_vitesse = bikeDataInformation.speed.time;
+
 
 
 
