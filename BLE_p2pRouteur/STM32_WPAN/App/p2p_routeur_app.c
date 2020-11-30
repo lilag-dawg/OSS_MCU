@@ -30,6 +30,7 @@
 #include "stm32_seq.h"
 #include "data_management.h"
 #include "timer.h"
+#include "algorithme_function.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -589,7 +590,10 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
     }
 /* USER CODE BEGIN P2P_Client_App_Notification_2 */
     if(Data_per_service.isShimanoReceived && Data_per_service.isCSCReceived && Data_per_service.isPowerReceived && isFirstTimerInit){
-        startAlgoTimer();
+        settings_t readSettings;
+        readFlash((uint8_t*)&readSettings);
+        updateAlgoSettingsFromFlash(&readSettings);
+    	startAlgoTimer();
         isFirstTimerInit = false;
     }
 

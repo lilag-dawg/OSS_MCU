@@ -22,14 +22,44 @@
 #include "otp.h"
 #include "saveToFlash.h"
 #include "timer.h"
+#include "algorithme_function.h"
 /* USER CODE END Includes */
+
+
+// Constante
+uint16_t ftp; // reçu de l'app
+int Diametre_roues = 700; // reçu de l'app
+uint16_t Cadence_des; // reçu de l'app
+float shifting_responsiveness; // reçu de l'app
+uint16_t bpm_des; // reçu de l'app
+
+int nbr_pignon; // reçu de l'app
+int nbr_plateau; // reçu de l'app
+
+uint8_t cassette[sizeof(sprockets)]; // reçu de l'app
+uint8_t pedalier[sizeof(cranksets)]; // reçu de l'app
+
+int nbr_ratio = 14; // valeur par défaut
+
+float tab_ratio[nbr_ratio_max];
+
+// Drapeaux d'interruption
+int flag = 0;
+
+int flag_changement_ratio = 0;
+
+// Pointeurs données précédentes
+
+int plateau_precedent = 0;
+
+int pignon_precedent = 8;
 
 // Fonction de l'algorithme
 // Déclaration de la fonction qui change de vitesse pour un plus grand ratio
-void Augmenter_ratio(int *pointeur_flag_changement_ratio)
+void Augmenter_ratio()
 {
     //printf ("\n\r\n\r Augmenter ratio \n\r\n\r ");
-    *pointeur_flag_changement_ratio = 1;
+    flag_changement_ratio = 1;
       HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
       startRelayTimer(GPIO_PIN_3);
       //HAL_Delay(50);
@@ -37,10 +67,10 @@ void Augmenter_ratio(int *pointeur_flag_changement_ratio)
 }
 
 // Déclaration de la fonction qui change de vitesse pour un plus petit ratio
-void Diminuer_ratio(int *pointeur_flag_changement_ratio)
+void Diminuer_ratio()
 {
     //printf ("\n\r\n\r Diminuer ratio \n\r\n\r");
-    *pointeur_flag_changement_ratio = 1;
+    flag_changement_ratio = 1;
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
     startRelayTimer(GPIO_PIN_2);
 	//HAL_Delay(50);
@@ -48,7 +78,7 @@ void Diminuer_ratio(int *pointeur_flag_changement_ratio)
 }
 
 // Déclaration de la fonction qui nous donne le ratio en fonction des plateaux et des pignons
-float Obtenir_ratio(int pignon, int plateau, int *cassette, int*pedalier)
+float Obtenir_ratio(int pignon, int plateau)
 {
     float ratio = (float)pedalier[plateau]/cassette[pignon];
     //printf ("ratio %f\n", ratio);
@@ -95,19 +125,19 @@ int Obtenir_indice_ratio_min_repos(float *tab_ratio)
 }
 
 // Déclaration de la fonction qui gère les situations de sprints
-void Sprint(float puissance, float cadence, float vitesse, float ratio, int *pointeur_flag_changement_ratio, int *pointeur_flag)
+void Sprint(float puissance, float cadence, float vitesse, float ratio)
 {
     //printf ("Sprint à %f Watt\n", puissance);
 
     if (cadence > 130)
     {
-    Augmenter_ratio(pointeur_flag_changement_ratio);
-    *pointeur_flag = 3;
+    Augmenter_ratio();
+    flag = 3;
     }
 }
 
 // Déclaration de la fonction qui gère les situations de repos
-void Repos(float puissance, float cadence, float vitesse, float ratio, int *pointeur_nbr_ratio, int Diametre_roues, float *tab_ratio, int *pointeur_flag_changement_ratio)
+void Repos(float puissance, float cadence, float vitesse, float ratio)
 {
     //printf ("Repos a %f Watt\n\r", puissance);
 
@@ -125,19 +155,19 @@ void Repos(float puissance, float cadence, float vitesse, float ratio, int *poin
         //printf ("cadence théorique %f\n", Cadence_theorique);
         if(Cadence_theorique < 80 && j != 0)
             {
-            Diminuer_ratio(pointeur_flag_changement_ratio);
+            Diminuer_ratio();
             }
 
-        if(Cadence_theorique > 100 && j != (*pointeur_nbr_ratio-1))
+        if(Cadence_theorique > 100 && j != (nbr_ratio-1))
             {
-            Augmenter_ratio(pointeur_flag_changement_ratio);
+            Augmenter_ratio();
             }
         }
 
 }
 
 // Déclaration de la fonction qui gère le système en utilisation normale
-void Normale(float puissance, float cadence, float vitesse, float ratio, int *pointeur_nbr_ratio, int Diametre_roues, int Cadence_des, float *tab_ratio, int *pointeur_flag_changement_ratio)
+void Normale(float puissance, float cadence, float vitesse, float ratio)
 {
     float facteur_lim_sup = 1.04; // Le facteur doit être supérieur ou égal à 1
     float facteur_lim_inf = 0.96; // Le facteur doit être inférieur ou égal à 1
@@ -154,102 +184,54 @@ void Normale(float puissance, float cadence, float vitesse, float ratio, int *po
         //printf ("cadence_sup %f\n", Cadence_sup);
         if(Cadence_sup < (Cadence_des * facteur_lim_sup))
             {
-            Diminuer_ratio(pointeur_flag_changement_ratio);
+            Diminuer_ratio();
             }
         }
 
-    if(cadence > (Cadence_des * facteur_lim_sup) && i != (*pointeur_nbr_ratio-1))
+    if(cadence > (Cadence_des * facteur_lim_sup) && i != (nbr_ratio-1))
         {
         float Cadence_inf = (vitesse/3.6)/((float)Diametre_roues/1000*3.14159)*60/tab_ratio[i+1];
         //printf ("cadence_inf à %f\n", Cadence_inf);
         if(Cadence_inf > Cadence_des * facteur_lim_inf)
             {
-            Augmenter_ratio(pointeur_flag_changement_ratio);
+            Augmenter_ratio();
             }
         }
 }
 
-// Déclaration de la fonction de tri en ordre croissant pour des int
-void ordonnerTableau_int(int tableau[],int tailleTableau)
-{
-    int i,t,k = 0;
-
-    for(t = 1; t < tailleTableau; t++)
-    {
-        for(i=0; i < tailleTableau - 1; i++)
-        {
-            if(tableau[i] > tableau[i+1])
-            {
-            k= tableau[i] - tableau[i+1];
-            tableau[i] -= k;
-            tableau[i+1] += k;
-            }
-        }
-    }
-    //for(int j=0; j<tailleTableau; j++)
-    //{
-    //printf("%d ",tableau[j]);
-    //}
-    //printf("\n");
-}
-
-// Déclaration de la fonction de tri en ordre croissant pour des float
-void ordonnerTableau_float(float tableau[],int tailleTableau)
-{
-    int i,t = 0;
-    float k = 0;
-
-    for(t = 1; t < tailleTableau; t++)
-    {
-        for(i=0; i < tailleTableau - 1; i++)
-        {
-            if(tableau[i] > tableau[i+1])
-            {
-            k= tableau[i] - tableau[i+1];
-            tableau[i] -= k;
-            tableau[i+1] += k;
-            }
-        }
-    }
-    //for(int j=0; j<tailleTableau; j++)
-    //{
-    //printf("%f ",tableau[j]);
-    //}
-    //printf("\n");
-}
 // Déclaration de la fonction d'initialisation du nombre de ratio séquentiel
-void init_nbr_ratio(int nbr_pignon, int nbr_plateau, int *pointeur_nbr_ratio)
+void init_nbr_ratio()
 {
     if (nbr_pignon*nbr_plateau == 22)
         {
-        *pointeur_nbr_ratio = 14;
+        nbr_ratio = 14;
         }
     if (nbr_pignon*nbr_plateau == 24)
         {
-        *pointeur_nbr_ratio = 15;
+        nbr_ratio = 15;
         }
     if (nbr_pignon*nbr_plateau == 11)
         {
-        *pointeur_nbr_ratio = 11;
+        nbr_ratio = 11;
         }
     if (nbr_pignon*nbr_plateau == 12)
         {
-        *pointeur_nbr_ratio = 12;
+        nbr_ratio = 12;
         }
     //printf("%d\n ",*pointeur_nbr_ratio);
 }
 
 // Déclaration de la fonction d'initialisation de la table de ratios séquentiels disponibles
-void init_tab_ratio(int nbr_pignon, int nbr_plateau, int *cassette, int *pedalier, int *pointeur_nbr_ratio, float *tab_ratio)
+void init_tab_ratio()
 {
     for(int i=0; i<nbr_pignon; i++)
     {
-    tab_ratio[(*pointeur_nbr_ratio-nbr_pignon) + i] = (float)pedalier[nbr_plateau-1]/cassette[(nbr_pignon-1)-i];
+    tab_ratio[(nbr_ratio-nbr_pignon) + i] = (float)pedalier[nbr_plateau-1]/cassette[(nbr_pignon-1)-i];
     }
 
     if (nbr_plateau == 2)
     {
-        for(int i=0; i<(*pointeur_nbr_ratio-nbr_pignon); i++)
+        for(int i=0; i<(nbr_ratio-nbr_pignon); i++)
         {
         tab_ratio[i] = (float)pedalier[nbr_plateau-2]/cassette[(nbr_pignon-1)-i];
         }
@@ -262,25 +244,76 @@ void init_tab_ratio(int nbr_pignon, int nbr_plateau, int *cassette, int *pedalie
 }
 
 // Déclaration de la fonction de gestion des changements de vitesse manuel
-void gestion_changement_vitesse_manuel (int pignon, int plateau, int *pointeur_pignon_precedent, int*pointeur_plateau_precedent, int *pointeur_flag_changement_ratio, int *pointeur_flag)
+void gestion_changement_vitesse_manuel (int pignon, int plateau)
 {
-    if (pignon != *pointeur_pignon_precedent && *pointeur_flag_changement_ratio != 1)
+    if (pignon != pignon_precedent && flag_changement_ratio != 1)
         {
             //printf("Changement de vitesse manuel\n");
             //printf("pignon %d et pignon precedent %d\n", pignon, *pointeur_pignon_precedent);
-            *pointeur_flag = 6;
-            *pointeur_flag_changement_ratio = 0;
+            flag = 6;
+            flag_changement_ratio = 0;
         }
 
-    if (plateau != *pointeur_plateau_precedent && *pointeur_flag_changement_ratio != 1)
+    if (plateau != plateau_precedent && flag_changement_ratio != 1)
         {
             //printf("Changement de vitesse manuel\n");
             //printf("plateau %d et plateau precedent %d\n", plateau, *pointeur_plateau_precedent);
-            *pointeur_flag = 6;
-            *pointeur_flag_changement_ratio = 0;
+            flag = 6;
+            flag_changement_ratio = 0;
         }
 
-    *pointeur_pignon_precedent = pignon;
-    *pointeur_plateau_precedent = plateau;
-    *pointeur_flag_changement_ratio = 0;
+    pignon_precedent = pignon;
+    plateau_precedent = plateau;
+    flag_changement_ratio = 0;
+}
+
+void updateAlgoSettingsFromFlash(settings_t *readSettings) {
+
+	gearsStructToArray(&readSettings->sprockets, &readSettings->cranksets);
+
+	ftp = readSettings->preferences.ftp;
+	Cadence_des = readSettings->preferences.desiredRpm;
+	shifting_responsiveness = readSettings->preferences.shiftingResponsiveness;
+	bpm_des = readSettings->preferences.desiredBpm;
+}
+
+void gearsStructToArray(sprockets *sprocketStruct, cranksets *cranksetStruct) {
+
+	//sprockets
+	  memset(cassette, 0, sizeof(sprockets));
+	  memcpy(cassette, sprocketStruct, sizeof(sprockets));
+
+	  nbr_pignon = sizeof(sprockets);
+	  for(int i = 0; i < sizeof(sprockets) - 1; i++) {
+		if(cassette[i] == 0)  {
+			nbr_pignon--;
+		}
+	  }
+
+	//cranksets
+	  uint8_t pedalierTemp[sizeof(cranksets)];
+	  memset(pedalierTemp, 0, sizeof(cranksets));
+	  memcpy(pedalierTemp, cranksetStruct, sizeof(cranksets));
+
+	  memset(pedalier, 0, sizeof(cranksets));
+
+	  int i = 0, k = sizeof(pedalierTemp) -1;
+	  nbr_plateau = sizeof(pedalierTemp);
+	  while(k >= 0) {
+		  if(pedalierTemp[k] != 0) {
+			  pedalier[i++] = pedalierTemp[k];
+		  }
+		  else {
+			  nbr_plateau--;
+		  }
+		  k--;
+	  }
+}
+
+int* getFlag() {
+	return &flag;
+}
+
+uint16_t* getFtp() {
+	return &ftp;
 }
