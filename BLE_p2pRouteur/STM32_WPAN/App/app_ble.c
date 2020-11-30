@@ -512,8 +512,8 @@ void APP_BLE_Init( void )
 
 
   //reset flash
-  settings_t settingsToWrite;
-  memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
+  //settings_t settingsToWrite;
+  //memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
 
   //initilase sensor hardcode
  //strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
@@ -529,7 +529,7 @@ void APP_BLE_Init( void )
 //memcpy(settingsToWrite.sensors[0].macAddress, macFlux, sizeof(settingsToWrite.sensors[0].macAddress));
 
 
-  saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
+  //saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
 
 
 /* USER CODE END APP_BLE_Init_2 */
@@ -1724,6 +1724,7 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
       break;
 
     case SMART_PHONE1_DISCON_HANDLE_EVT:
+      BleApplicationContext.SmartPhone_Connection_Status = APP_BLE_IDLE;
       UTIL_SEQ_SetTask(1 << CFG_TASK_START_ADV_ID, CFG_SCH_PRIO_0);
       break;
 

@@ -378,31 +378,7 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
         	settingsToWrite.preferences.desiredBpm = pNotification->DataTransfered.pPayload[23];
 
         	saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
-
-        	//save in bikedata
-
-        	bikeDataInformation.setting.cranksets.bigGear = settingsToWrite.cranksets.bigGear;
-        	bikeDataInformation.setting.cranksets.gear2 = settingsToWrite.cranksets.gear2;
-        	bikeDataInformation.setting.cranksets.gear3 = settingsToWrite.cranksets.gear3;
-
-        	bikeDataInformation.setting.sprockets.smallGear = settingsToWrite.sprockets.smallGear;
-        	bikeDataInformation.setting.sprockets.gear2 = settingsToWrite.sprockets.gear2;
-        	bikeDataInformation.setting.sprockets.gear3 = settingsToWrite.sprockets.gear3;
-        	bikeDataInformation.setting.sprockets.gear4 = settingsToWrite.sprockets.gear4;
-        	bikeDataInformation.setting.sprockets.gear5 = settingsToWrite.sprockets.gear5;
-        	bikeDataInformation.setting.sprockets.gear6 = settingsToWrite.sprockets.gear6;
-        	bikeDataInformation.setting.sprockets.gear7 = settingsToWrite.sprockets.gear7;
-        	bikeDataInformation.setting.sprockets.gear8 = settingsToWrite.sprockets.gear8;
-        	bikeDataInformation.setting.sprockets.gear9 = settingsToWrite.sprockets.gear9;
-        	bikeDataInformation.setting.sprockets.gear10 = settingsToWrite.sprockets.gear10;
-        	bikeDataInformation.setting.sprockets.gear11 = settingsToWrite.sprockets.gear11;
-        	bikeDataInformation.setting.sprockets.gear12 = settingsToWrite.sprockets.gear12;
-        	bikeDataInformation.setting.sprockets.gear13 = settingsToWrite.sprockets.gear13;
-
-        	bikeDataInformation.setting.preferences.ftp = settingsToWrite.preferences.ftp;
-        	bikeDataInformation.setting.preferences.shiftingResponsiveness = settingsToWrite.preferences.shiftingResponsiveness;
-        	bikeDataInformation.setting.preferences.desiredRpm = settingsToWrite.preferences.desiredRpm;
-        	bikeDataInformation.setting.preferences.desiredBpm = settingsToWrite.preferences.desiredBpm;
+        	updateAlgoSettingsFromFlash(&settingsToWrite);
 
 
 

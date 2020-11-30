@@ -127,7 +127,7 @@ int Obtenir_indice_ratio_min_repos(float *tab_ratio)
 // Déclaration de la fonction qui gère les situations de sprints
 void Sprint(float puissance, float cadence, float vitesse, float ratio)
 {
-    //printf ("Sprint à %f Watt\n", puissance);
+    printf ("Sprint à %f Watt\n", puissance);
 
     if (cadence > 130)
     {
@@ -139,7 +139,7 @@ void Sprint(float puissance, float cadence, float vitesse, float ratio)
 // Déclaration de la fonction qui gère les situations de repos
 void Repos(float puissance, float cadence, float vitesse, float ratio)
 {
-    //printf ("Repos a %f Watt\n\r", puissance);
+    printf ("Repos a %f Watt\n\r", puissance);
 
     int i = Obtenir_indice_ratio_min_repos(tab_ratio);
     //printf ("indice %d\n", i);
@@ -172,7 +172,7 @@ void Normale(float puissance, float cadence, float vitesse, float ratio)
     float facteur_lim_sup = 1.04; // Le facteur doit être supérieur ou égal à 1
     float facteur_lim_inf = 0.96; // Le facteur doit être inférieur ou égal à 1
 
-    //printf ("Normale à %f Watt\n", puissance);
+    printf ("Normale à %f Watt\n", puissance);
 
     int i = Obtenir_indice_ratio(ratio, tab_ratio);
     //printf ("indice %d\n", i);
@@ -284,7 +284,7 @@ void gearsStructToArray(sprockets *sprocketStruct, cranksets *cranksetStruct) {
 	  memcpy(cassette, sprocketStruct, sizeof(sprockets));
 
 	  nbr_pignon = sizeof(sprockets);
-	  for(int i = 0; i < sizeof(sprockets) - 1; i++) {
+	  for(int i = 0; i < sizeof(sprockets); i++) {
 		if(cassette[i] == 0)  {
 			nbr_pignon--;
 		}
