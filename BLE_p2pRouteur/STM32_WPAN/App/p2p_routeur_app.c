@@ -111,10 +111,7 @@ typedef struct{
 	char SensorName[19];
 }Gestion_Conn_PairingRequest_t;
 
-typedef struct{
-	char SensorName[19];
-	uint8_t dataType;
-}Gestion_Conn_Datatype_t;
+
 
 typedef struct
 {
@@ -122,7 +119,7 @@ typedef struct
 
 	Gestion_Conn_NbrSensor_t 		NumberOfSensorNearbyStruct;
 	Gestion_Conn_PairingRequest_t	PairingRequestStruct;
-	Gestion_Conn_Datatype_t			SensorDataTypeStruct;
+	uint8_t positionInUsedDevices;
 
     uint8_t Update_timer_Id_CONN_HAND_CARA_2;
     uint8_t Update_timer_Id_CONN_HAND_CARA_4;
@@ -149,6 +146,7 @@ bool isFirstTimerInit = true;
 
 extern ScannedDevicesPackage_t scannedDevicesPackage;
 extern UsedDeviceInformations_t usedDeviceInformations[4];
+extern BikeDataInformation_t bikeDataInformation;
 Data_per_service_t Data_per_service;
 
 
@@ -182,32 +180,48 @@ void P2P_Router_APP_Init(void);
 void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotification);
 void P2P_Client_Init(void);
 
-int getCorrespondingIndex(char* sensorName);
+int getCorrespondingIndex(uint8_t* macAddress);
 static void Update_Paired_Devices_In_Flash(void);
 /* USER CODE BEGIN PFP */
 
 
 static void P2P_SensorDataType_Timer_Callback(void){
-	UTIL_SEQ_SetTask(1<<CFG_TASK_SEND_DATA_TYPE_ID, CFG_SCH_PRIO_0 );
+	UTIL_SEQ_SetTask(1<<CFG_TASK_SEND_DATA_TYPE_ID, CFG_SCH_PRIO_1 );
 }
 
 static void P2P_SensorName_Timer_Callback(void){
-	UTIL_SEQ_SetTask(1<<CFG_TASK_SEND_SENSOR_NAMES_ID, CFG_SCH_PRIO_0 );
+	UTIL_SEQ_SetTask(1<<CFG_TASK_SEND_SENSOR_NAMES_ID, CFG_SCH_PRIO_1 );
+}
+
+
+uint8_t* getCorrespondingMacAdress(char* sensorName){
+
+	//uint8_t macNotFound[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
+
+	for(int i = 0; i<scannedDevicesPackage.numberOfScannedDevices;i++){
+		if(strcmp(sensorName, scannedDevicesPackage.scannedDevicesList[i].deviceName) == 0){
+			return scannedDevicesPackage.scannedDevicesList[i].macAddress;
+		}
+	}
+	return NULL;
 }
 
 
 static void Update_Paired_Devices_In_Flash(void){
-    struct settings readSettings;
-    struct settings settingsToWrite;
+    settings_t readSettings;
+    settings_t settingsToWrite;
 
     int indexOfDeviceList = 0;
-    indexOfDeviceList = getCorrespondingIndex(P2P_Router_App_Context.PairingRequestStruct.SensorName);
+    uint8_t* currentMacAdd = getCorrespondingMacAdress(P2P_Router_App_Context.PairingRequestStruct.SensorName);
+    indexOfDeviceList = getCorrespondingIndex(currentMacAdd);
 
     int sum = 0;
     int index = 0;
+    uint16_t connhandle = 0;
 
     readFlash((uint8_t*)&readSettings);
     settingsToWrite = readSettings;
+
     if(P2P_Router_App_Context.PairingRequestStruct.status == CONNECTING){
     	for(int i = 0; i < sizeof(settingsToWrite.sensors); i++){
     		sum = 0;
@@ -227,13 +241,15 @@ static void Update_Paired_Devices_In_Flash(void){
         	if(strcmp(P2P_Router_App_Context.PairingRequestStruct.SensorName, settingsToWrite.sensors[i].name) == 0){
         		memset(settingsToWrite.sensors[i].name, 0, sizeof(settingsToWrite.sensors[i].name));
         		memset(settingsToWrite.sensors[i].macAddress, 0, sizeof(settingsToWrite.sensors[i].macAddress));
-
+        		index = i;
         	}
         }
     }
     saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
 
-    Trigger_Connection_Request(index,indexOfDeviceList,P2P_Router_App_Context.PairingRequestStruct.status);
+    connhandle = Update_UsedDeviceInformations_structure();
+
+    Trigger_Connection_Request(index,indexOfDeviceList,P2P_Router_App_Context.PairingRequestStruct.status, connhandle);
 }
 
 
@@ -297,20 +313,19 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
 #endif
             /* USER CODE BEGIN EDS_CONNEX_HAND_CARA_3_WRITE_EVT */
 
-        	//P2P_Router_App_Context.PairingRequestStruct.Pairing = pNotification->DataTransfered.pPayload[0];
 
         	switch(pNotification->DataTransfered.pPayload[0]){
 				case CONNECT:
 					P2P_Router_App_Context.PairingRequestStruct.status = CONNECTING;
 					break;
 				case DISCONNECT:
-					//todo, handle disconnection
+					//handle disconnection
 					P2P_Router_App_Context.PairingRequestStruct.status = DISCONNECTING;
 					break;
 				default:
 					break;
         	}
-			memset(P2P_Router_App_Context.PairingRequestStruct.SensorName, 0, sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));
+			memset(&P2P_Router_App_Context.PairingRequestStruct.SensorName, 0, sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));
 
 			for(int i=1; i<pNotification->DataTransfered.Length;i++){
             	P2P_Router_App_Context.PairingRequestStruct.SensorName[i-1] = pNotification->DataTransfered.pPayload[i];
@@ -323,9 +338,69 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
             break;
         case EDS_CALIBRATION_CARA_1_WRITE_EVT:
 #if(CFG_DEBUG_APP_TRACE != 0)
-        	APP_DBG_MSG("-- GATT : WRITE CHAR INFO RECEIVED\n");
+        	APP_DBG_MSG("-- GATT : WRITE CHAR INFO RECEIVED - CALIBRATION PARAMETERS -\n");
 #endif
             /* USER CODE BEGIN EDS_CALIBRATION_CARA_1_WRITE_EVT */
+            settings_t readSettings;
+            settings_t settingsToWrite;
+
+        	readFlash((uint8_t*)&readSettings);
+        	settingsToWrite = readSettings;
+
+        	settingsToWrite.cranksets.bigGear = pNotification->DataTransfered.pPayload[0];
+        	settingsToWrite.cranksets.gear2 = pNotification->DataTransfered.pPayload[1];
+        	settingsToWrite.cranksets.gear3 = pNotification->DataTransfered.pPayload[2];
+
+        	settingsToWrite.sprockets.smallGear = pNotification->DataTransfered.pPayload[3];
+        	settingsToWrite.sprockets.gear2 = pNotification->DataTransfered.pPayload[4];
+        	settingsToWrite.sprockets.gear3 = pNotification->DataTransfered.pPayload[5];
+        	settingsToWrite.sprockets.gear4 = pNotification->DataTransfered.pPayload[6];
+        	settingsToWrite.sprockets.gear5 = pNotification->DataTransfered.pPayload[7];
+        	settingsToWrite.sprockets.gear6 = pNotification->DataTransfered.pPayload[8];
+        	settingsToWrite.sprockets.gear7 = pNotification->DataTransfered.pPayload[9];
+        	settingsToWrite.sprockets.gear8 = pNotification->DataTransfered.pPayload[10];
+        	settingsToWrite.sprockets.gear9 = pNotification->DataTransfered.pPayload[11];
+        	settingsToWrite.sprockets.gear10 = pNotification->DataTransfered.pPayload[12];
+        	settingsToWrite.sprockets.gear11 = pNotification->DataTransfered.pPayload[13];
+        	settingsToWrite.sprockets.gear12 = pNotification->DataTransfered.pPayload[14];
+        	settingsToWrite.sprockets.gear13 = pNotification->DataTransfered.pPayload[15];
+
+        	settingsToWrite.preferences.ftp = (pNotification->DataTransfered.pPayload[16] << 8) + pNotification->DataTransfered.pPayload[17];
+
+        	uint32_t temp_var = (pNotification->DataTransfered.pPayload[18] << 24) + (pNotification->DataTransfered.pPayload[19] << 16) +
+        						(pNotification->DataTransfered.pPayload[20] << 8) + pNotification->DataTransfered.pPayload[21];
+        	settingsToWrite.preferences.shiftingResponsiveness = (float) temp_var/10;
+        	settingsToWrite.preferences.desiredRpm = pNotification->DataTransfered.pPayload[22];
+        	settingsToWrite.preferences.desiredBpm = pNotification->DataTransfered.pPayload[23];
+
+        	saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
+
+        	//save in bikedata
+
+        	bikeDataInformation.setting.cranksets.bigGear = settingsToWrite.cranksets.bigGear;
+        	bikeDataInformation.setting.cranksets.gear2 = settingsToWrite.cranksets.gear2;
+        	bikeDataInformation.setting.cranksets.gear3 = settingsToWrite.cranksets.gear3;
+
+        	bikeDataInformation.setting.sprockets.smallGear = settingsToWrite.sprockets.smallGear;
+        	bikeDataInformation.setting.sprockets.gear2 = settingsToWrite.sprockets.gear2;
+        	bikeDataInformation.setting.sprockets.gear3 = settingsToWrite.sprockets.gear3;
+        	bikeDataInformation.setting.sprockets.gear4 = settingsToWrite.sprockets.gear4;
+        	bikeDataInformation.setting.sprockets.gear5 = settingsToWrite.sprockets.gear5;
+        	bikeDataInformation.setting.sprockets.gear6 = settingsToWrite.sprockets.gear6;
+        	bikeDataInformation.setting.sprockets.gear7 = settingsToWrite.sprockets.gear7;
+        	bikeDataInformation.setting.sprockets.gear8 = settingsToWrite.sprockets.gear8;
+        	bikeDataInformation.setting.sprockets.gear9 = settingsToWrite.sprockets.gear9;
+        	bikeDataInformation.setting.sprockets.gear10 = settingsToWrite.sprockets.gear10;
+        	bikeDataInformation.setting.sprockets.gear11 = settingsToWrite.sprockets.gear11;
+        	bikeDataInformation.setting.sprockets.gear12 = settingsToWrite.sprockets.gear12;
+        	bikeDataInformation.setting.sprockets.gear13 = settingsToWrite.sprockets.gear13;
+
+        	bikeDataInformation.setting.preferences.ftp = settingsToWrite.preferences.ftp;
+        	bikeDataInformation.setting.preferences.shiftingResponsiveness = settingsToWrite.preferences.shiftingResponsiveness;
+        	bikeDataInformation.setting.preferences.desiredRpm = settingsToWrite.preferences.desiredRpm;
+        	bikeDataInformation.setting.preferences.desiredBpm = settingsToWrite.preferences.desiredBpm;
+
+
 
             /* USER CODE END EDS_CALIBRATION_CARA_1_WRITE_EVT */
             break;
@@ -435,14 +510,10 @@ void P2P_Router_APP_Init(void)
      * Initialize LedButton Service
      */
 
-    //tempo
     P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
-
     P2P_Router_App_Context.PairingRequestStruct.status = DISCONNECT;
-    for(int i=0; i<(sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));i++){
-    	P2P_Router_App_Context.PairingRequestStruct.SensorName[i] = 0;
-    }
-
+    P2P_Router_App_Context.positionInUsedDevices = 0;
+    memset(&P2P_Router_App_Context.PairingRequestStruct.SensorName, 0, sizeof(P2P_Router_App_Context.PairingRequestStruct.SensorName));
 
 #if (CFG_P2P_DEMO_MULTI != 0 )   
 
@@ -548,9 +619,9 @@ void P2P_Client_Init(void)
 }
 
 /* USER CODE BEGIN FD */
-int getCorrespondingIndex(char* sensorName){
+int getCorrespondingIndex(uint8_t* macAddress){
 	for(int i = 0; i<scannedDevicesPackage.numberOfScannedDevices;i++){
-		if(strcmp(sensorName, scannedDevicesPackage.scannedDevicesList[i].deviceName) == 0){
+		if(memcmp(macAddress, scannedDevicesPackage.scannedDevicesList[i].macAddress, sizeof(scannedDevicesPackage.scannedDevicesList[i].macAddress)) == 0){
 			return i;
 		}
 	}
@@ -611,24 +682,29 @@ static void Server_Update_Service( void )
 		    //green led is on when notifying
 		    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
 
-			printf("Size: %d \n\r",sizeof(scannedDevicesPackage.scannedDevicesList[index].deviceName));
-			printf("Position: %d \n\r",scannedDevicesPackage.scannedDevicesList[index].position);
-			printf("[");
 
-			printf("%x,",value[0]);
+			//printf("Size: %d \n\r",sizeof(scannedDevicesPackage.scannedDevicesList[index].deviceName));
+			//printf("Position: %d \n\r",scannedDevicesPackage.scannedDevicesList[index].position);
+			//printf("[");
+
+			//printf("%x,",value[0]);
 
 			for(int i = 1; i<(sizeof(value));i++){
 				value[i] = (uint8_t)(scannedDevicesPackage.scannedDevicesList[index].deviceName[i-1]);
-				printf("%x,",value[i]);
+				//printf("%x,",value[i]);
 			}
+
+		    printf("status : %d name: %s\n\r", status, scannedDevicesPackage.scannedDevicesList[index].deviceName);
+
 
 			P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition ++;
 
 			if (P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition >= scannedDevicesPackage.numberOfScannedDevices){
 				P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
+				printf("END OF PACKET\n\r");
 			}
 
-			printf("]\n\r");
+			//printf("]\n\r");
 
 			EDS_STM_Update_Char(0x0000,(uint8_t *)&value);
 		}
@@ -637,34 +713,27 @@ static void Server_Update_Service( void )
 		case EDS_CONNEX_HAND_CARA_4:
 		{
 			uint8_t value[20];
-			uint8_t index =  P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition;
+			uint8_t index =  P2P_Router_App_Context.positionInUsedDevices;
 
-			uint8_t isCadenceSupported = (uint8_t)((scannedDevicesPackage.scannedDevicesList[index].supportedDataType.cadence) << 4);
-			uint8_t isSpeedSupported = (uint8_t)((scannedDevicesPackage.scannedDevicesList[index].supportedDataType.speed) << 3);
-			uint8_t isPowerSupported = (uint8_t)((scannedDevicesPackage.scannedDevicesList[index].supportedDataType.power) << 2);
-			uint8_t isBatteryupported = (uint8_t)((scannedDevicesPackage.scannedDevicesList[index].supportedDataType.battery) << 1);
-			uint8_t isGearSupported = (uint8_t)((scannedDevicesPackage.scannedDevicesList[index].supportedDataType.gear));
+			uint8_t isCadenceSupported = (uint8_t)((usedDeviceInformations[index].supportedDataType.cadence) << 4);
+			uint8_t isSpeedSupported = (uint8_t)((usedDeviceInformations[index].supportedDataType.speed) << 3);
+			uint8_t isPowerSupported = (uint8_t)((usedDeviceInformations[index].supportedDataType.power) << 2);
+			uint8_t isBatteryupported = (uint8_t)((usedDeviceInformations[index].supportedDataType.battery) << 1);
+			uint8_t isGearSupported = (uint8_t)((usedDeviceInformations[index].supportedDataType.gear));
 
 
 			value[0] = (uint8_t)(isCadenceSupported + isSpeedSupported + isPowerSupported + isBatteryupported + isGearSupported);
 
 			for(int i = 1; i<(sizeof(value));i++){
-				value[i] = (uint8_t)(scannedDevicesPackage.scannedDevicesList[index].deviceName[i-1]);
+				value[i] = (uint8_t)(usedDeviceInformations[index].name[i-1]);
 			}
 
-			P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition ++;
+			P2P_Router_App_Context.positionInUsedDevices ++;
 
-			if (P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition >= scannedDevicesPackage.numberOfScannedDevices){
-				P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
+			if (P2P_Router_App_Context.positionInUsedDevices >= sizeof(usedDeviceInformations)/ sizeof(usedDeviceInformations[0])){
+				P2P_Router_App_Context.positionInUsedDevices = 0;
 			}
 
-			printf("[");
-
-			for(int i = 0; i<(sizeof(value));i++){
-				printf("%d,",value[i]);
-			}
-
-			printf("]\n\r");
 
 			EDS_STM_Update_Char(0x0003,(uint8_t *)&value);
 
@@ -746,10 +815,10 @@ static void Client_Update_Service( void )
 	        break;
 	      case APP_BLE_READ_CHARACS:
 	        APP_DBG_MSG("* GATT : Discover Reading characs - \n");
-	        aci_gatt_read_char_value(aP2PClientContext[index].connHandle,
-	        	                      aP2PClientContext[index].P2PReadCharHdle);
+	        aci_gatt_read_char_value(usedDeviceInformations[index].connHandle,
+	        						 usedDeviceInformations[index].servicesHandle.P2PReadCharHdle);
 
-	        aP2PClientContext[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
+	        usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
 	        break;
 	      case APP_BLE_ENABLE_NOTIFICATION_DESC:
 	        APP_DBG_MSG("* GATT : Enable Server Notification\n");
@@ -810,7 +879,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                 {
                     /* USER CODE BEGIN EVT_BLUE_ATT_READ_BY_GROUP_TYPE_RESP */
                     bool uuid_bit_format = 0;
-                	struct settings readSettings;
+                	settings_t readSettings;
                 	readFlash((uint8_t*)&readSettings);
 
                     /* USER CODE END EVT_BLUE_ATT_READ_BY_GROUP_TYPE_RESP */
@@ -1025,7 +1094,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                 	  APP_DBG_MSG("-- GATT : CSC_NOTIFY_CHAR_UUID FOUND  - connection handle 0x%x\n", aP2PClientContext[index].connHandle);
 #endif
                                 	  usedDeviceInformations[index].servicesHandle.P2PNotificationCharHdle = handle;
-                                	  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
+                                	  //usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
                                 }
                                 if(uuid == SHIMANO_CHAR_UUID && usedDeviceInformations[index].sensorType == SHIMANO_SENSOR){
 #if(CFG_DEBUG_APP_TRACE != 0)
@@ -1035,17 +1104,17 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                 	  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
 
                                 }
-                                /*else if (uuid == CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID && scannedDevicesPackage.scannedDevicesList[indexOfInScannedDeviceList].supportedDataType.speed == true)
+                                else if (uuid == CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID && usedDeviceInformations[index].sensorType == CSC_SENSOR)
                                 {
 #if(CFG_DEBUG_APP_TRACE != 0)
                                 	APP_DBG_MSG("-- GATT : SENSOR_READ_CHAR_UUID FOUND  - connection handle 0x%x\n", aP2PClientContext[index].connHandle);
 #endif
 
-                                	aP2PClientContext[index].state = APP_BLE_READ_CHARACS;
-									aP2PClientContext[index].P2PReadCharHdle = handle;
-									aP2PClientContext[index].P2PcurrentCharBeingRead = CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID;
+                                	usedDeviceInformations[index].servicesHandle.P2PReadCharHdle = handle;
+                                	usedDeviceInformations[index].servicesHandle.P2PcurrentCharBeingRead = CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID;
+                                	usedDeviceInformations[index].state  = APP_BLE_READ_CHARACS;
 
-                                }*/
+                                }
 
                                 if(uuid == CYCLING_POWER_MEASUREMENT_CHAR_UUID && (usedDeviceInformations[index].sensorType == TRAINER || POWER_SENSOR))
 								{
@@ -1172,24 +1241,22 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 
                 	aci_att_read_resp_event_rp0 *pr = (void*)blue_evt->data;
                     uint8_t index;
-                    int sensorIndex;
 
                     index = 0;
-                    sensorIndex = getCorrespondingIndex(SENSOR_NAME);
 
                     while((index < BLE_CFG_CLT_MAX_NBR_CB) &&
-                            (aP2PClientContext[index].connHandle != pr->Connection_Handle))
+                            (usedDeviceInformations[index].connHandle != pr->Connection_Handle))
                         index++;
 
-                    if(aP2PClientContext[index].P2PcurrentCharBeingRead == CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID){
+                    if(usedDeviceInformations[index].servicesHandle.P2PcurrentCharBeingRead == CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID){
                         printf("\n\rvalue is");
                         for (int i = 0; i<pr->Event_Data_Length; i++){
                             printf("%x", pr->Attribute_Value[i]);
                         }
                         printf("\n\r");
 
-                        scannedDevicesPackage.scannedDevicesList[sensorIndex].supportedDataType.cadence = pr->Attribute_Value[0] & 0x2;
-                        scannedDevicesPackage.scannedDevicesList[sensorIndex].supportedDataType.speed = pr->Attribute_Value[0] & 0x1;
+                        usedDeviceInformations[index].supportedDataType.cadence = pr->Attribute_Value[0] & 0x2;
+                        usedDeviceInformations[index].supportedDataType.speed = pr->Attribute_Value[0] & 0x1;
                     }
 
                 	break; //ok

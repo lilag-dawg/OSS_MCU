@@ -18,7 +18,7 @@
 
 #define bufferMaxValue	10
 
-struct BikeDataInformation_t bikeDataInformation = {0};
+extern BikeDataInformation_t bikeDataInformation;
 
 float prevWheelData = 0;
 float currentWheelData = 0;
