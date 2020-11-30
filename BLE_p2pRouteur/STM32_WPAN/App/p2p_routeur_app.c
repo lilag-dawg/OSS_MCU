@@ -543,7 +543,6 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
  */
 void P2P_Client_Init(void)
 {
-    uint8_t index =0;
 /* USER CODE BEGIN P2P_Client_Init_1 */
     UTIL_SEQ_RegTask( 1<< CFG_TASK_SEARCH_SERVICE_ID, UTIL_SEQ_RFU, Client_Update_Service );
 
@@ -620,18 +619,11 @@ static void Server_Update_Service( void )
 			value[0] = (uint8_t)((scannedDevicesPackage.scannedDevicesList[index].position) << 2) + status; // PPPP PPCC
 
 		    //green led is on when notifying
-		    HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+		    //HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
 
-
-			//printf("Size: %d \n\r",sizeof(scannedDevicesPackage.scannedDevicesList[index].deviceName));
-			//printf("Position: %d \n\r",scannedDevicesPackage.scannedDevicesList[index].position);
-			//printf("[");
-
-			//printf("%x,",value[0]);
 
 			for(int i = 1; i<(sizeof(value));i++){
 				value[i] = (uint8_t)(scannedDevicesPackage.scannedDevicesList[index].deviceName[i-1]);
-				//printf("%x,",value[i]);
 			}
 
 		    printf("status : %d name: %s\n\r", status, scannedDevicesPackage.scannedDevicesList[index].deviceName);
@@ -643,8 +635,6 @@ static void Server_Update_Service( void )
 				P2P_Router_App_Context.NumberOfSensorNearbyStruct.CurrentPosition = 0;
 				printf("END OF PACKET\n\r");
 			}
-
-			//printf("]\n\r");
 
 			EDS_STM_Update_Char(0x0000,(uint8_t *)&value);
 		}

@@ -137,7 +137,6 @@ int main(void)
   MX_RTC_Init();
   startSensorsTimer();
   setupRelayTimer();
-  //startAlgoTimer();
   /* USER CODE BEGIN 2 */
   /* USER CODE END 2 */
 
