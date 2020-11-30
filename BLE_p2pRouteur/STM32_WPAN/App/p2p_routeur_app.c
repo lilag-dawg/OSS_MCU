@@ -337,12 +337,15 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
             /* USER CODE END EDS_CONNEX_HAND_CARA_3_WRITE_EVT */
             break;
         case EDS_CALIBRATION_CARA_1_WRITE_EVT:
+        {
 #if(CFG_DEBUG_APP_TRACE != 0)
         	APP_DBG_MSG("-- GATT : WRITE CHAR INFO RECEIVED - CALIBRATION PARAMETERS -\n");
 #endif
             /* USER CODE BEGIN EDS_CALIBRATION_CARA_1_WRITE_EVT */
-            settings_t readSettings;
-            settings_t settingsToWrite;
+
+
+        	settings_t readSettings;
+        	settings_t settingsToWrite;
 
         	readFlash((uint8_t*)&readSettings);
         	settingsToWrite = readSettings;
@@ -404,6 +407,7 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
 
             /* USER CODE END EDS_CALIBRATION_CARA_1_WRITE_EVT */
             break;
+        }
 
         default:
             /* USER CODE BEGIN EDS_Evt_Opcode_default */
