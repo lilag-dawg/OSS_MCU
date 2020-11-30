@@ -21,7 +21,7 @@ extern "C" {
 
 #define TIM16_FREQUENCY 1000 //Hz
 #define TIM16_PRESCALER_VALUE (uint32_t)(((SystemCoreClock) / (TIM16_FREQUENCY)) - 1)
-#define TIM16_PERIOD 1000 //Algo Timer in ms
+#define TIM16_PERIOD 750 //Algo Timer in ms
 
 #define TIM17_FREQUENCY 1000 //Hz
 #define TIM17_PRESCALER_VALUE (uint32_t)(((SystemCoreClock) / (TIM17_FREQUENCY)) - 1)
@@ -34,7 +34,7 @@ TIM_HandleTypeDef htim17;
 
 void startSensorsTimer();
 void startAlgoTimer();
-float getSensorsTime();
+uint32_t getSensorsTime();
 void setupRelayTimer();
 void startRelayTimer(uint16_t GPIO_PIN);
 

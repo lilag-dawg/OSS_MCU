@@ -28,7 +28,7 @@
 // Déclaration de la fonction qui change de vitesse pour un plus grand ratio
 void Augmenter_ratio(int *pointeur_flag_changement_ratio)
 {
-    printf ("\n\r\n\r Augmenter ratio\n\r\n\r ");
+    //printf ("\n\r\n\r Augmenter ratio \n\r\n\r ");
     *pointeur_flag_changement_ratio = 1;
       HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
       startRelayTimer(GPIO_PIN_3);
@@ -39,7 +39,7 @@ void Augmenter_ratio(int *pointeur_flag_changement_ratio)
 // Déclaration de la fonction qui change de vitesse pour un plus petit ratio
 void Diminuer_ratio(int *pointeur_flag_changement_ratio)
 {
-    printf ("\n\r\n\r Diminuer ratio \n\r\n\r");
+    //printf ("\n\r\n\r Diminuer ratio \n\r\n\r");
     *pointeur_flag_changement_ratio = 1;
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
     startRelayTimer(GPIO_PIN_2);
@@ -97,7 +97,7 @@ int Obtenir_indice_ratio_min_repos(float *tab_ratio)
 // Déclaration de la fonction qui gère les situations de sprints
 void Sprint(float puissance, float cadence, float vitesse, float ratio, int *pointeur_flag_changement_ratio, int *pointeur_flag)
 {
-    printf ("Sprint à %f Watt\n", puissance);
+    //printf ("Sprint à %f Watt\n", puissance);
 
     if (cadence > 130)
     {
@@ -109,7 +109,7 @@ void Sprint(float puissance, float cadence, float vitesse, float ratio, int *poi
 // Déclaration de la fonction qui gère les situations de repos
 void Repos(float puissance, float cadence, float vitesse, float ratio, int *pointeur_nbr_ratio, int Diametre_roues, float *tab_ratio, int *pointeur_flag_changement_ratio)
 {
-    printf ("Repos a %f Watt\n\r", puissance);
+    //printf ("Repos a %f Watt\n\r", puissance);
 
     int i = Obtenir_indice_ratio_min_repos(tab_ratio);
     //printf ("indice %d\n", i);
@@ -142,7 +142,7 @@ void Normale(float puissance, float cadence, float vitesse, float ratio, int *po
     float facteur_lim_sup = 1.04; // Le facteur doit être supérieur ou égal à 1
     float facteur_lim_inf = 0.96; // Le facteur doit être inférieur ou égal à 1
 
-    printf ("Normale à %f Watt\n", puissance);
+    //printf ("Normale à %f Watt\n", puissance);
 
     int i = Obtenir_indice_ratio(ratio, tab_ratio);
     //printf ("indice %d\n", i);
