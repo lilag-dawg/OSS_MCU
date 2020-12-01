@@ -161,7 +161,6 @@ typedef struct
 	ServiceHandle_t ShimanoServicehandle;
 
 	//reading
-
 	uint16_t P2PReadCharHdle;
 	uint16_t P2PcurrentCharBeingRead;
 

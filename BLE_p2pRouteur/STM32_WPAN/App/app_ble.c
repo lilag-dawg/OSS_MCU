@@ -254,15 +254,11 @@ typedef enum
   P2P_SERVER2_CONN_HANDLE_EVT,
   P2P_SERVER3_CONN_HANDLE_EVT,
   P2P_SERVER4_CONN_HANDLE_EVT,
-  P2P_SERVER5_CONN_HANDLE_EVT,
-  P2P_SERVER6_CONN_HANDLE_EVT,
 /* USER CODE END P2P_SERVER_CONN_HANDLE_EVT_Multi */
 /* USER CODE BEGIN P2P_SERVER_DISCON_HANDLE_EVT_Multi */
   P2P_SERVER2_DISCON_HANDLE_EVT,
   P2P_SERVER3_DISCON_HANDLE_EVT,
   P2P_SERVER4_DISCON_HANDLE_EVT,
-  P2P_SERVER5_DISCON_HANDLE_EVT,
-  P2P_SERVER6_DISCON_HANDLE_EVT,
 /* USER CODE END P2P_SERVER_DISCON_HANDLE_EVT_Multi */
 #endif
 
@@ -694,8 +690,6 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
             /* USER CODE END GAP_GENERAL_DISCOVERY_PROC */
 
-
-
             Update_UsedDeviceInformations_structure();
 
             APP_DBG_MSG("-- GAP GENERAL DISCOVERY PROCEDURE_COMPLETED\n");
@@ -1095,8 +1089,6 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
                 case 0x09: /* now get local name */
                 /* USER CODE BEGIN get_local_name */
 
-
-
                 	for (int i=0; i<adlength;i++){
                 		current_device_name[i] = adv_report_data[k+i+1];
 					}
@@ -1128,8 +1120,6 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 				                (uint8_t *)&scannedDevicesPackage.numberOfScannedDevices);
 
 					}
-
-
 
                 /* USER CODE END get_local_name */
                   break;
