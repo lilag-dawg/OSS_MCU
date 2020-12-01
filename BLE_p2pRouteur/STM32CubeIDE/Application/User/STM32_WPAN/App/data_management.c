@@ -15,6 +15,7 @@
 #include "data_management.h"
 #include "algorithme_function.h"
 #include "app_ble.h"
+#include "timer.h"
 
 #define bufferMaxValue	10
 
@@ -216,45 +217,44 @@ void algoCases(void){
 
 
 	if (init == true){
-		ordonnerTableau_int(cassette,nbr_pignon);
 
-		ordonnerTableau_int(pedalier,nbr_plateau);
-
-		init_nbr_ratio(nbr_pignon, nbr_plateau, pointeur_nbr_ratio);
+		init_nbr_ratio();
 
 
-		init_tab_ratio(nbr_pignon, nbr_plateau, cassette, pedalier, pointeur_nbr_ratio, tab_ratio);
+		init_tab_ratio();
 		init = false;
 	}
 
 	//gestion_changement_vitesse_manuel (pignon, plateau, pointeur_pignon_precedent, pointeur_plateau_precedent, pointeur_flag_changement_ratio, pointeur_flag);
 
 	    // Algorithme de changements de vitesses automatisés
-	    if (*pointeur_flag == 0 && Timer_puissance < 3000 && Timer_cadence < 3000 && Timer_vitesse < 3000)
+		int* flag = getFlag();
+		uint16_t* ftp = getFtp();
+	    if (*flag == 0 && Timer_puissance < 3000 && Timer_cadence < 3000 && Timer_vitesse < 3000)
 	      {
 	    	printf("\n\r ok\n\r");
-	        float ratio = Obtenir_ratio(pignon, plateau, cassette, pedalier);
+	        float ratio = Obtenir_ratio(pignon, plateau);
 
-	        if (puissance >= ftp*1.51)
+	        if (puissance >= (float)*ftp*1.51)
 	        {
-	        Sprint(puissance, cadence, vitesse, ratio, pointeur_flag_changement_ratio, pointeur_flag);
+	        Sprint(puissance, cadence, vitesse, ratio);
 	        }
 
-	        else if (puissance <= ftp*0.10)
+	        else if (puissance <= (float)*ftp*0.10)
 	        {
-	        Repos(puissance, cadence, vitesse, ratio, pointeur_nbr_ratio, Diametre_roues, tab_ratio, pointeur_flag_changement_ratio);
+	        Repos(puissance, cadence, vitesse, ratio);
 	        }
 
-	        else if (puissance < ftp*1.51 && puissance > ftp*0.10)
+	        else if (puissance < (float)*ftp*1.51 && puissance > (float)*ftp*0.10)
 	        {
-	        Normale(puissance, cadence, vitesse, ratio, pointeur_nbr_ratio, Diametre_roues, Cadence_des, tab_ratio, pointeur_flag_changement_ratio);
+	        Normale(puissance, cadence, vitesse, ratio);
 	        }
 	      }
 	    else
 	      {
-	        if (*pointeur_flag != 0)
+	        if (*flag != 0)
 	        {
-	        *pointeur_flag = *pointeur_flag-1;
+	        *flag = *flag-1;
 	        }
 	      }
 }
