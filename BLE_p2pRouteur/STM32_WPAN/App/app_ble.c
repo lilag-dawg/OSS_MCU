@@ -342,7 +342,7 @@ tBDAddr SERVER_REMOTE_BDADDR;
 /**
  * Advertising Data
  */
-static char local_name[] = { AD_TYPE_COMPLETE_LOCAL_NAME,'M','i','s','s','L','P'};
+static char local_name[] = { AD_TYPE_COMPLETE_LOCAL_NAME,'O','S','S','-','0','1'};
 uint8_t manuf_data[14] = {
     sizeof(manuf_data)-1, AD_TYPE_MANUFACTURER_SPECIFIC_DATA,
     0x01/*SKD version */,
@@ -503,8 +503,6 @@ void APP_BLE_Init( void )
 
   //reset calibration parameters
   memset(&bikeDataInformation, 0 , sizeof(bikeDataInformation));
-
-  //todo set calibration parameters to something lol
 
 
   //reset flash
@@ -686,7 +684,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
               && gap_evt_proc_complete->Status == 0x00)
           {
             /* USER CODE BEGIN GAP_GENERAL_DISCOVERY_PROC */
-            BSP_LED_Off(LED_BLUE);
+            //BSP_LED_Off(LED_BLUE);
 
             /* USER CODE END GAP_GENERAL_DISCOVERY_PROC */
 
@@ -1415,7 +1413,7 @@ static void Scan_Request( void )
   )
   {
     /* USER CODE BEGIN APP_BLE_CONNECTED */
-    BSP_LED_On(LED_BLUE);
+    //BSP_LED_On(LED_BLUE);
     /* USER CODE END APP_BLE_CONNECTED */
     result = aci_gap_start_general_discovery_proc(SCAN_P, SCAN_L, PUBLIC_ADDR, 1);
     if (result == BLE_STATUS_SUCCESS)
@@ -1698,6 +1696,7 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
 
     /* USER CODE END P2P_Evt_Opcode */
     case SMART_PHONE1_CONN_HANDLE_EVT:
+    	BSP_LED_On(LED_BLUE);
         /*EDS_STM_Update_Char(0x0001,
                 (uint8_t *)&scannedDevicesPackage.numberOfScannedDevices);*/
       break;
@@ -1715,6 +1714,7 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
 
     case SMART_PHONE1_DISCON_HANDLE_EVT:
       BleApplicationContext.SmartPhone_Connection_Status = APP_BLE_IDLE;
+      BSP_LED_Off(LED_BLUE);
       UTIL_SEQ_SetTask(1 << CFG_TASK_START_ADV_ID, CFG_SCH_PRIO_0);
       break;
 
