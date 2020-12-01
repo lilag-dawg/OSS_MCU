@@ -319,8 +319,6 @@ void EDS_STM_App_Notification(EDS_STM_App_Notification_evt_t *pNotification)
         	saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
         	updateAlgoSettingsFromFlash(&settingsToWrite);
 
-
-
             /* USER CODE END EDS_CALIBRATION_CARA_1_WRITE_EVT */
             break;
         }

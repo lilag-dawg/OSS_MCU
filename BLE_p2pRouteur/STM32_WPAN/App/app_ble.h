@@ -96,8 +96,6 @@ typedef struct
 
 #define MAX_DEVICES					63
 #define MAX_DEVICE_NAME_LENGHT		19
-#define SENSOR_NAME		 			"	Rideesense"
-#define SENSOR_NAME2		 		"	CAD-BLE0967095"
 
 typedef enum
 {
@@ -130,7 +128,6 @@ typedef struct {
 	Algorithme_type_data power;
 	Algorithme_type_data pinion_fd;
 	Algorithme_type_data pinion_rd;
-	settings_t setting;
 } BikeDataInformation_t;
 
 typedef struct
