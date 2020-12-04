@@ -506,12 +506,12 @@ void APP_BLE_Init( void )
 
 
   //reset flash
-  //settings_t settingsToWrite;
-  //memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
+  settings_t settingsToWrite;
+  memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
 
   //initilase sensor hardcode
- //strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
- //memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
+ strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
+ memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
 //
  //strcpy(settingsToWrite.sensors[1].name,"	Ridesense");
  //memcpy(settingsToWrite.sensors[1].macAddress, macRidesense, sizeof(settingsToWrite.sensors[1].macAddress));
@@ -523,7 +523,7 @@ void APP_BLE_Init( void )
 //memcpy(settingsToWrite.sensors[0].macAddress, macFlux, sizeof(settingsToWrite.sensors[0].macAddress));
 
 
-  //saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
+  saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
 
 
 /* USER CODE END APP_BLE_Init_2 */
@@ -1888,6 +1888,84 @@ void SVCCTL_ResumeUserEventFlow( void )
   return;
 }
 
+int getCharacteristicIndex(uint16_t name, Service_t *self) {
+	for(int i = 0; i < (sizeof(self->characteristics)/sizeof(Characteristic_t)); i++) {
+		if(self->characteristics[i].name == name) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+bool verifyIfCharacteristicExists(uint16_t name, Service_t *self){
+	for(int i = 0; i < (sizeof(self->characteristics)/sizeof(Characteristic_t)); i++) {
+		if(self->characteristics[i].name == name) {
+			return true;
+		}
+	}
+	return false;
+}
+
+int appendCharacteristic(Characteristic_t *characteristic, Service_t *self){
+	for(int i = 0; i < (sizeof(self->characteristics)/sizeof(Characteristic_t)); i++) {
+		if(self->characteristics[i].name == NULL) {
+			memcpy(&self->characteristics[i], characteristic, sizeof(Characteristic_t));
+			return i;
+		}
+	}
+	return -1;
+}
+
+int appendCharacteristicName(uint16_t name, Service_t *self){
+	for(int i = 0; i < (sizeof(self->characteristics)/sizeof(Characteristic_t)); i++) {
+		if(self->characteristics[i].name == NULL) {
+			self->characteristics[i].name = name;
+			return i;
+		}
+	}
+	return -1;
+}
+
+int getServiceIndex(uint16_t name, UsedDeviceInformations_t *self) {
+
+	for(int i = 0; i < (sizeof(self->services)/sizeof(Service_t)); i++) {
+		if(self->services[i].name == name) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+bool verifyIfServiceExists(uint16_t name, UsedDeviceInformations_t *self) {
+	for(int i = 0; i < (sizeof(self->services)/sizeof(Service_t)); i++) {
+		if(self->services[i].name == name) {
+			return true;
+		}
+	}
+	return false;
+}
+
+int appendService(Service_t *service, UsedDeviceInformations_t *self) {
+	for(int i = 0; i < (sizeof(self->services)/sizeof(Service_t)); i++) {
+		if(self->services[i].name == NULL) {
+			memcpy(&self->services[i], service, sizeof(Service_t));
+			return i;
+		}
+	}
+	return -1;
+}
+
+int appendServiceName(uint16_t name, UsedDeviceInformations_t *self) {
+	for(int i = 0; i < (sizeof(self->services)/sizeof(Service_t)); i++) {
+		if(self->services[i].name == NULL) {
+			self->services[i].name = name;
+			return i;
+		}
+	}
+	return -1;
+}
 /* USER CODE BEGIN FD_WRAP_FUNCTIONS */
 
 /* USER CODE END FD_WRAP_FUNCTIONS */

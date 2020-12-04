@@ -867,6 +867,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 
 											usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
 											usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
+											usedDeviceInformations[index].services[0].name = CYCLING_POWER_SERVICE_UUID;
 
 											break;
 										}
@@ -1044,6 +1045,8 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 #endif
 									  usedDeviceInformations[index].servicesHandle.P2PNotificationCharHdle = handle;
 									  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
+									  int test = usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index]);
+									  //int test2 = test;
 								}
 
                                 if(uuid_format_char==1){

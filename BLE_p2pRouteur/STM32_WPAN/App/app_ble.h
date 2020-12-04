@@ -177,6 +177,30 @@ typedef enum
 
 typedef struct
 {
+	uint16_t name;
+
+	uint16_t charHandle;
+	uint16_t descHandle;
+
+} Characteristic_t; //NEW
+
+typedef struct Service_t
+{
+	uint16_t name;
+
+	uint8_t servHandle;
+	uint8_t servEndHandle;
+
+	Characteristic_t characteristics[5];
+
+	int (*getCharacteristicIndex) (uint16_t name, struct Service_t *self);
+	bool (*verifyIfCharacteristicExists) (uint16_t name, struct Service_t *self);
+	int (*appendCharacteristic) (Characteristic_t *characteristic, struct Service_t *self);
+	int (*appendCharacteristicName) (uint16_t name, struct Service_t *self);
+} Service_t; //NEW
+
+typedef struct UsedDeviceInformations_t
+{
     char name[MAX_DEVICE_NAME_LENGHT];
     uint8_t macAddress[6];
     APP_BLE_ConnStatus_t state;
@@ -186,6 +210,13 @@ typedef struct
     DeviceSupportedDataType supportedDataType;
     SensorType_t sensorType;
     P2P_Client_Opcode_Notification_evt_t sensor_evt_type; // un capteur peut notif une seule carac, A MODIFIER
+
+    Service_t services[5];
+    int (*getServiceIndex) (uint16_t name, struct UsedDeviceInformations_t *self);
+    bool (*verifyIfServiceExists) (uint16_t name, struct UsedDeviceInformations_t *self);
+    int (*appendService) (Service_t *service, struct UsedDeviceInformations_t *self);
+    int (*appendServiceName) (uint16_t name, struct UsedDeviceInformations_t *self);
+
 } UsedDeviceInformations_t;
 
 
@@ -226,6 +257,22 @@ typedef struct
   int getCorrespondingIndex(uint8_t* macAddress);
 
   uint16_t Update_UsedDeviceInformations_structure( void );
+
+  int getServiceIndex(uint16_t name, UsedDeviceInformations_t *self);
+
+  bool verifyIfServiceExists(uint16_t name, UsedDeviceInformations_t *self);
+
+  int appendService(Service_t *service, UsedDeviceInformations_t *self);
+
+  int appendServiceName(uint16_t name, UsedDeviceInformations_t *self);
+
+  int getCharacteristicIndex(uint16_t name, Service_t *self);
+
+  bool verifyIfCharacteristicExists(uint16_t name, Service_t *self);
+
+  int appendCharacteristic(Characteristic_t *characteristic, Service_t *self);
+
+  int appendCharacteristicName(uint16_t name, Service_t *self);
 
 
 /* USER CODE END EF */
