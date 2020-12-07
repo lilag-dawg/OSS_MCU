@@ -701,11 +701,28 @@ static void Client_Update_Service( void )
 				  break;
 	    	  case TRAINER:
 				  APP_DBG_MSG("* GATT : Discover P2P Characteristics trainer\n");
+
+				  int powerIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_SERVICE_UUID, &usedDeviceInformations[index]);
+				  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
+
 	    		  // TODO only call disc_all_char_of_service is List of charact is empty, if not update state to APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC and call Client_Update_Service;
-				  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
-						  	  	  	  	  	  	  usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceHandle,
-												  usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceEndHandle);
-				  // TODO get service name 0x1818 and 0x1816
+
+				  if(usedDeviceInformations[index].services[powerIndex].isEmpty(&usedDeviceInformations[index].services[powerIndex]) &&
+						  usedDeviceInformations[index].services[cscIndex].isEmpty(&usedDeviceInformations[index].services[cscIndex])){
+
+					  // TODO get service name 0x1818 and 0x1816
+					  /*aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
+							  	  	  	  	  	  	  usedDeviceInformations[index].services[powerIndex].servHandle,
+													  usedDeviceInformations[index].services[powerIndex].servEndHandle);*/
+
+					  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
+							  	  	  	  	  	  	  usedDeviceInformations[index].services[cscIndex].servHandle,
+													  usedDeviceInformations[index].services[cscIndex].servEndHandle);
+				  }
+				  else{
+					  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC; //should call Client_Update_Service;
+				  }
+
 				  break;
 	    	  case SHIMANO_SENSOR:
 
@@ -864,7 +881,11 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 											usedDeviceInformations[index].servicesHandle.CSCServicehandle.P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
 											usedDeviceInformations[index].servicesHandle.CSCServicehandle.P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
 											// TODO should add if absent is absent or if handle is different
-
+											int serv_idx = usedDeviceInformations[index].appendServiceName(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
+											if(serv_idx >= 0){
+												usedDeviceInformations[index].services[serv_idx].servHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
+												usedDeviceInformations[index].services[serv_idx].servEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
+											}
 											break;
 										}
 										case(CYCLING_POWER_SERVICE_UUID):
@@ -878,6 +899,11 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 											usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
 											usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
 											// TODO should add if absent is absent or if handle is different
+											int serv_idx = usedDeviceInformations[index].appendServiceName(CYCLING_POWER_SERVICE_UUID, &usedDeviceInformations[index]);
+											if(serv_idx >= 0){
+												usedDeviceInformations[index].services[serv_idx].servHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
+												usedDeviceInformations[index].services[serv_idx].servEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
+											}
 
 											break;
 										}
@@ -885,6 +911,11 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 										{
 											usedDeviceInformations[index].supportedDataType.battery = true;
 											// TODO should add if absent is absent or if handle is different
+											int serv_idx = usedDeviceInformations[index].appendServiceName(BATTERY_SERVICE_UUID, &usedDeviceInformations[index]);
+											if(serv_idx >= 0){
+												usedDeviceInformations[index].services[serv_idx].servHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
+												usedDeviceInformations[index].services[serv_idx].servEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
+											}
 											break;
 										}
                                     	case(SHIMANO_SERVICE_UUID ):
@@ -898,6 +929,11 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 											usedDeviceInformations[index].servicesHandle.ShimanoServicehandle.P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
 
 											// TODO should add if absent is absent or if handle is different
+											int serv_idx = usedDeviceInformations[index].appendServiceName(SHIMANO_SERVICE_UUID, &usedDeviceInformations[index]);
+											if(serv_idx >= 0){
+												usedDeviceInformations[index].services[serv_idx].servHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
+												usedDeviceInformations[index].services[serv_idx].servEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
+											}
 
                                     		break;
                                     	}
@@ -1008,7 +1044,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                 if(uuid_format_char==1){handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-14]);}
                                 else if(uuid_format_char==0){handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-2]);}
 
-                                if(uuid == CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID && usedDeviceInformations[index].sensorType == CSC_SENSOR)
+                                if(uuid == CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID)
                                 {
 #if(CFG_DEBUG_APP_TRACE != 0)
                                 	  APP_DBG_MSG("-- GATT : CSC_NOTIFY_CHAR_UUID FOUND  - \n");
@@ -1017,27 +1053,36 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                 	  //usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
 
                                 	  // TODO should add if absent is absent or if handle is different
+                                	  int serv_idx = usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID,&usedDeviceInformations[index]);
+                                	  int charac_idx = usedDeviceInformations[index].services[serv_idx].appendCharacteristicName(CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID,
+                                			  &usedDeviceInformations[index].services[serv_idx]);
+
+                                	  if(charac_idx >= 0 ){
+                                		  usedDeviceInformations[index].services[serv_idx].characteristics[charac_idx].charHandle = handle;
+                                	  }
                                 }
                                 if(uuid == SHIMANO_CHAR_UUID && usedDeviceInformations[index].sensorType == SHIMANO_SENSOR){
 #if(CFG_DEBUG_APP_TRACE != 0)
                                 	  APP_DBG_MSG("-- GATT : SHIMANO_NOTIFY_CHAR_UUID FOUND  - \n");
 #endif
-                                	  usedDeviceInformations[index].servicesHandle.P2PNotificationCharHdle = handle;
-
                                 	  // TODO should add if absent is absent or if handle is different
                                 	  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
 
                                 }
-                                if (uuid == CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID && usedDeviceInformations[index].sensorType == CSC_SENSOR)
+                                if (uuid == CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID)
                                 {
 #if(CFG_DEBUG_APP_TRACE != 0)
                                 	APP_DBG_MSG("-- GATT : SENSOR_READ_CHAR_UUID FOUND  - \n");
 #endif
 
-                                	usedDeviceInformations[index].servicesHandle.P2PReadCharHdle = handle;
                                 	// TODO should add if absent is absent or if handle is different
-                                	usedDeviceInformations[index].servicesHandle.P2PcurrentCharBeingRead = CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID;
-                                	usedDeviceInformations[index].state  = APP_BLE_READ_CHARACS;
+                              	  int serv_idx = usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID,&usedDeviceInformations[index]);
+                              	  int charac_idx = usedDeviceInformations[index].services[serv_idx].appendCharacteristicName(CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID,
+                              			  &usedDeviceInformations[index].services[serv_idx]);
+
+                              	  if(charac_idx >= 0 ){
+                              		  usedDeviceInformations[index].services[serv_idx].characteristics[charac_idx].charHandle = handle;
+                              	  }
 
                                 }
                                 if (uuid == BATTERY_LEVEL_CHAR_UUID )
@@ -1053,16 +1098,19 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 
                                 }
 
-                                if(uuid == CYCLING_POWER_MEASUREMENT_CHAR_UUID && (usedDeviceInformations[index].sensorType == TRAINER || POWER_SENSOR))
+                                if(uuid == CYCLING_POWER_MEASUREMENT_CHAR_UUID)
 								{
 #if(CFG_DEBUG_APP_TRACE != 0)
 									  APP_DBG_MSG("-- GATT : POWER_NOTIFY_CHAR_UUID FOUND  - \n");
 #endif
-									  usedDeviceInformations[index].servicesHandle.P2PNotificationCharHdle = handle;
 									  // TODO should add if absent is absent or if handle is different
-									  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
-									  int test = usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index]);
-									  //int test2 = test;
+	                              	  int serv_idx = usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_SERVICE_UUID,&usedDeviceInformations[index]);
+	                              	  int charac_idx = usedDeviceInformations[index].services[serv_idx].appendCharacteristicName(CYCLING_POWER_MEASUREMENT_CHAR_UUID,
+	                              			  &usedDeviceInformations[index].services[serv_idx]);
+
+	                              	  if(charac_idx >= 0 ){
+	                              		  usedDeviceInformations[index].services[serv_idx].characteristics[charac_idx].charHandle = handle;
+	                              	  }
 								}
 
                                 if(uuid_format_char==1){

@@ -499,7 +499,8 @@ void APP_BLE_Init( void )
   memset(&scannedDevicesPackage, 0 , sizeof(scannedDevicesPackage));
 
   //reset used device informations
-  memset(&usedDeviceInformations, 0 , sizeof(usedDeviceInformations));
+  memset(usedDeviceInformations, 0 , sizeof(usedDeviceInformations));
+  defineMethodes(sizeof(usedDeviceInformations)/sizeof(UsedDeviceInformations_t), usedDeviceInformations);
 
   //reset calibration parameters
   memset(&bikeDataInformation, 0 , sizeof(bikeDataInformation));
@@ -510,8 +511,8 @@ void APP_BLE_Init( void )
   memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
 
   //initilase sensor hardcode
- strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
- memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
+ //strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
+ //memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
 //
  //strcpy(settingsToWrite.sensors[1].name,"	Ridesense");
  //memcpy(settingsToWrite.sensors[1].macAddress, macRidesense, sizeof(settingsToWrite.sensors[1].macAddress));
@@ -1886,6 +1887,37 @@ void SVCCTL_ResumeUserEventFlow( void )
 {
   hci_resume_flow();
   return;
+}
+
+void defineMethodes(int size, UsedDeviceInformations_t *self){
+	for(int i = 0; i< size; i++){
+		self[i].getServiceIndex = getServiceIndex;
+		self[i].verifyIfServiceExists = verifyIfServiceExists;
+		self[i].appendService = appendService;
+		self[i].appendServiceName = appendServiceName;
+		defineServiceMethodes(sizeof(self[i].services)/sizeof(Service_t), self[i].services);
+	}
+}
+
+void defineServiceMethodes(int size, Service_t *self){
+	for(int i = 0; i< size; i++){
+		self[i].isEmpty = isEmpty;
+		self[i].getCharacteristicIndex = getCharacteristicIndex;
+		self[i].verifyIfCharacteristicExists = verifyIfCharacteristicExists;
+		self[i].appendCharacteristic = appendCharacteristic;
+		self[i].appendCharacteristicName = appendCharacteristicName;
+	}
+}
+
+bool isEmpty(Service_t *self) {
+	int sum = 0;
+	for(int i = 0; i < (sizeof(self->characteristics)/sizeof(Characteristic_t)); i++) {
+		sum |= self->characteristics[i].name;
+	}
+	if(sum != 0){
+		return false;
+	}
+	return true;
 }
 
 int getCharacteristicIndex(uint16_t name, Service_t *self) {
