@@ -1061,6 +1061,8 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 									  usedDeviceInformations[index].servicesHandle.P2PNotificationCharHdle = handle;
 									  // TODO should add if absent is absent or if handle is different
 									  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
+									  int test = usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index]);
+									  //int test2 = test;
 								}
 
                                 if(uuid_format_char==1){
