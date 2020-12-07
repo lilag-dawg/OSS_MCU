@@ -144,7 +144,26 @@ typedef struct
 	uint8_t P2PServiceHandle;
 	uint8_t P2PServiceEndHandle;
 
-}ServiceHandle_t;
+}ServiceHandle_t; //OLD
+
+typedef struct
+{
+	uint16_t name;
+
+	uint16_t charHandle;
+	uint16_t descHandle;
+
+}Characteristic_t; //NEW
+
+typedef struct
+{
+	uint16_t name;
+
+	uint8_t servHandle;
+	uint8_t servEndHandle;
+
+	Characteristic_t characteristics[5];
+}Service_t; //NEW
 
 typedef struct
 {
@@ -182,14 +201,16 @@ typedef struct
     APP_BLE_ConnStatus_t state;
     uint16_t connHandle;
     bool isNotEmpty;
-    ServicesHandleList_t servicesHandle;
+    ServicesHandleList_t servicesHandle; // should remove
+    Service_t services[5];
     DeviceSupportedDataType supportedDataType;
     SensorType_t sensorType;
     P2P_Client_Opcode_Notification_evt_t sensor_evt_type; // un capteur peut notif une seule carac, A MODIFIER
 } UsedDeviceInformations_t;
 
 
-extern bool uuid_bit_format;
+extern bool uuid_bit_format; //should remove
+
 typedef struct
 {
 	DeviceInformations_t scannedDevicesList[MAX_DEVICES];

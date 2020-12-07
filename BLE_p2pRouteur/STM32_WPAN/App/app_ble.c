@@ -783,8 +783,8 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
     	        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 1 \n");
     	        usedDeviceInformations[0].state = APP_BLE_IDLE;
-    	        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[0];
     	        usedDeviceInformations[0].connHandle = 0xFFFF;
+    	        // should reset usedDeviceInformations services and characteristics on disconnection
     	        handleNotification.P2P_Evt_Opcode = P2P_SERVER1_DISCON_HANDLE_EVT;
     	        handleNotification.ConnectionHandle = connection_handle;
     	        Evt_Notification(&handleNotification);
