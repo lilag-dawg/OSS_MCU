@@ -683,39 +683,48 @@ static void Client_Update_Service( void )
 	      case APP_BLE_DISCOVER_CHARACS:
 	    	  switch(usedDeviceInformations[index].sensorType){
 	    	  case CSC_SENSOR:
+	    		  // TODO only call disc_all_char_of_service is List of charact is empty, if not update state to APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC and call Client_Update_Service;
 	    		  APP_DBG_MSG("* GATT : Discover P2P Characteristics CSC sensor\n");
 				  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
 						  	  	  	  	  	  	  usedDeviceInformations[index].servicesHandle.CSCServicehandle.P2PServiceHandle,
 												  usedDeviceInformations[index].servicesHandle.CSCServicehandle.P2PServiceEndHandle);
+				  // TODO get service name 0x1816 and 0x180F if device support battery
 				  break;
 	    	  case POWER_SENSOR:
+	    		  // TODO only call disc_all_char_of_service is List of charact is empty, if not update state to APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC and call Client_Update_Service;
 	    		  APP_DBG_MSG("* GATT : Discover P2P Characteristics power sensor\n");
 				  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
 												  usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceHandle,
 												  usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceEndHandle);
+
+				  // TODO get service name 0x1818 and 0x180F if device support battery
 				  break;
 	    	  case TRAINER:
 				  APP_DBG_MSG("* GATT : Discover P2P Characteristics trainer\n");
+	    		  // TODO only call disc_all_char_of_service is List of charact is empty, if not update state to APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC and call Client_Update_Service;
 				  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
 						  	  	  	  	  	  	  usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceHandle,
 												  usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceEndHandle);
+				  // TODO get service name 0x1818 and 0x1816
 				  break;
 	    	  case SHIMANO_SENSOR:
+
+	    		  // TODO only call disc_all_char_of_service is List of charact is empty, if not update state to APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC and call Client_Update_Service;
 				  APP_DBG_MSG("* GATT : Discover P2P Characteristics Shimano\n");
 				  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
 												  usedDeviceInformations[index].servicesHandle.ShimanoServicehandle.P2PServiceHandle,
 												  usedDeviceInformations[index].servicesHandle.ShimanoServicehandle.P2PServiceEndHandle);
+				  // TODO get service name 0x18EF
 				  break;
 	    	  default:
 	    		  APP_DBG_MSG("* TYPE DE CAPTEUR NON RECONNU\n");
 	    		  break;
 	    	  }
-
-
 	        break;
 
 	      case APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC:
 	        APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic\n");
+	        // TODO only call disc_all_char_desc if characteristic doesn't have a descHandle, otherwise update state to APP_BLE_ENABLE_NOTIFICATION_DESC and call Client_Update_Service
 	        aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
 										usedDeviceInformations[index].servicesHandle.P2PNotificationCharHdle,
 										usedDeviceInformations[index].servicesHandle.P2PNotificationCharHdle+2);
@@ -854,6 +863,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 
 											usedDeviceInformations[index].servicesHandle.CSCServicehandle.P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
 											usedDeviceInformations[index].servicesHandle.CSCServicehandle.P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
+											// TODO should add if absent is absent or if handle is different
 
 											break;
 										}
@@ -867,12 +877,14 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 
 											usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-4]);
 											usedDeviceInformations[index].servicesHandle.PowerServicehandle.P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-2]);
+											// TODO should add if absent is absent or if handle is different
 
 											break;
 										}
 										case(BATTERY_SERVICE_UUID):
 										{
 											usedDeviceInformations[index].supportedDataType.battery = true;
+											// TODO should add if absent is absent or if handle is different
 											break;
 										}
                                     	case(SHIMANO_SERVICE_UUID ):
@@ -884,6 +896,8 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 
 											usedDeviceInformations[index].servicesHandle.ShimanoServicehandle.P2PServiceHandle = UNPACK_2_BYTE_PARAMETER(&pr->Attribute_Data_List[idx-16]);
 											usedDeviceInformations[index].servicesHandle.ShimanoServicehandle.P2PServiceEndHandle = UNPACK_2_BYTE_PARAMETER (&pr->Attribute_Data_List[idx-14]);
+
+											// TODO should add if absent is absent or if handle is different
 
                                     		break;
                                     	}
@@ -961,10 +975,6 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                     if(index < BLE_CFG_CLT_MAX_NBR_CB)
                     {
 
-
-
-
-
                         //Debut format 128bit ou 16bit
                         	switch(pr->Handle_Value_Pair_Length)
                         	{
@@ -1005,12 +1015,16 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 #endif
                                 	  usedDeviceInformations[index].servicesHandle.P2PNotificationCharHdle = handle;
                                 	  //usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
+
+                                	  // TODO should add if absent is absent or if handle is different
                                 }
                                 if(uuid == SHIMANO_CHAR_UUID && usedDeviceInformations[index].sensorType == SHIMANO_SENSOR){
 #if(CFG_DEBUG_APP_TRACE != 0)
                                 	  APP_DBG_MSG("-- GATT : SHIMANO_NOTIFY_CHAR_UUID FOUND  - \n");
 #endif
                                 	  usedDeviceInformations[index].servicesHandle.P2PNotificationCharHdle = handle;
+
+                                	  // TODO should add if absent is absent or if handle is different
                                 	  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
 
                                 }
@@ -1021,6 +1035,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 #endif
 
                                 	usedDeviceInformations[index].servicesHandle.P2PReadCharHdle = handle;
+                                	// TODO should add if absent is absent or if handle is different
                                 	usedDeviceInformations[index].servicesHandle.P2PcurrentCharBeingRead = CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID;
                                 	usedDeviceInformations[index].state  = APP_BLE_READ_CHARACS;
 
@@ -1032,6 +1047,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 #endif
 
                                 	usedDeviceInformations[index].servicesHandle.P2PReadCharHdle = handle;
+                                	// TODO should add if absent is absent or if handle is different
                                 	usedDeviceInformations[index].servicesHandle.P2PcurrentCharBeingRead = BATTERY_LEVEL_CHAR_UUID;
                                 	usedDeviceInformations[index].state  = APP_BLE_READ_CHARACS;
 
@@ -1043,6 +1059,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 									  APP_DBG_MSG("-- GATT : POWER_NOTIFY_CHAR_UUID FOUND  - \n");
 #endif
 									  usedDeviceInformations[index].servicesHandle.P2PNotificationCharHdle = handle;
+									  // TODO should add if absent is absent or if handle is different
 									  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
 								}
 
@@ -1110,6 +1127,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 
                                     	usedDeviceInformations[index].servicesHandle.P2PNotificationDescHandle = handle;
                                         usedDeviceInformations[index].state = APP_BLE_ENABLE_NOTIFICATION_DESC;
+                                        // TODO should state should not be change here
 
                                     }
                                 }
