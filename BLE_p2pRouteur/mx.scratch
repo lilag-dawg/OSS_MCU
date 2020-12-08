@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ScratchFile FileVersion="3.0">
+  <FileVersion>3.0</FileVersion>
+  <Workspace>
+    <WorkspaceType>Single-project</WorkspaceType>
+    <WorkspacePath>C:\Users\Maxime Chagnon\Documents\Universite\S8\PROJET\MCU_CODE\OSS_MCU\BLE_p2pRouteur\</WorkspacePath>
+    <underRoot>true</underRoot>
+    <TrustZone>0</TrustZone>
+    <HAL_Driver>C:\Users\Maxime Chagnon\STM32Cube\Repository\STM32Cube_FW_WB_V1.8.0\</HAL_Driver>
+    <CMSIS>Drivers/CMSIS</CMSIS>
+    <Toolchain>STM32CubeIDE</Toolchain>
+    <IocFile>BLE_p2pRouteur.ioc</IocFile>
+    <Project>
+      <ProjectName>BLE_p2pRouteur</ProjectName>
+      <ProjectNature>C</ProjectNature>
+      <Secure />
+      <filestoremove />
+      <sourceEntriesToRemove>
+        <sourceEntry />
+      </sourceEntriesToRemove>
+      <configs>
+        <config>
+          <name>BLE_p2pRouteur</name>
+          <mainSourceRepo>Core</mainSourceRepo>
+          <sourceStructure>Advanced</sourceStructure>
+          <device>STM32WB55CCUx</device>
+          <cpucore>ARM Cortex-M4</cpucore>
+          <fpu>SP</fpu>
+          <memories>
+            <memory access="xrw" name="RAM" size="128" start="0x20000000" />
+            <memory access="rx" name="FLASH" size="256" start="0x8000000" />
+          </memories>
+          <startup>C:\Users\Maxime Chagnon\STM32Cube\Repository\STM32Cube_FW_WB_V1.8.0\Drivers\CMSIS\Device\ST\STM32WBxx\Source\Templates\gcc\startup_stm32wb55xx_cm4.s</startup>
+          <LinkSettings>
+            <icfloc>1</icfloc>
+            <LinkAdditionalLibs />
+          </LinkSettings>
+          <heapSize>0x200</heapSize>
+          <stackSize>0x400</stackSize>
+          <board>custom</board>
+          <debugprobe>swd</debugprobe>
+          <optimization />
+          <Aincludes>
+            <include />
+          </Aincludes>
+          <Adefines />
+          <Cdefines>
+            <define>USE_STM32WBXX_NUCLEO</define>
+            <define>USE_HAL_DRIVER</define>
+            <define>STM32WB55xx</define>
+          </Cdefines>
+          <Ldefines />
+          <Cincludes>
+            <include>Core\Inc</include>
+            <include>STM32_WPAN\App</include>
+            <include>Drivers\STM32WBxx_HAL_Driver\Inc</include>
+            <include>Drivers\STM32WBxx_HAL_Driver\Inc\Legacy</include>
+            <include>Utilities\lpm\tiny_lpm</include>
+            <include>Middlewares\ST\STM32_WPAN</include>
+            <include>Middlewares\ST\STM32_WPAN\interface\patterns\ble_thread</include>
+            <include>Middlewares\ST\STM32_WPAN\interface\patterns\ble_thread\tl</include>
+            <include>Middlewares\ST\STM32_WPAN\interface\patterns\ble_thread\shci</include>
+            <include>Middlewares\ST\STM32_WPAN\utilities</include>
+            <include>Middlewares\ST\STM32_WPAN\ble\core</include>
+            <include>Middlewares\ST\STM32_WPAN\ble\core\auto</include>
+            <include>Middlewares\ST\STM32_WPAN\ble\core\template</include>
+            <include>Middlewares\ST\STM32_WPAN\ble\svc\Inc</include>
+            <include>Middlewares\ST\STM32_WPAN\ble\svc\Src</include>
+            <include>Drivers\CMSIS\Device\ST\STM32WBxx\Include</include>
+            <include>Utilities\sequencer</include>
+            <include>Middlewares\ST\STM32_WPAN\ble</include>
+            <include>Drivers\CMSIS\Include</include>
+            <include>..\..\..\..\..\..\Drivers\BSP\P-NUCLEO-WB55.Nucleo</include>
+          </Cincludes>
+          <definestoremove>
+            <Adefines />
+            <Cdefines>
+              <define>USE_FULL_LL_DRIVER</define>
+              <define>MBEDTLS_CONFIG_FILE="mbedtls_config.h"</define>
+              <define>USE_FULL_ASSERT=1U</define>
+            </Cdefines>
+            <Ldefines />
+          </definestoremove>
+          <inctoremove>
+            <Aincludes>
+              <include />
+            </Aincludes>
+            <Cincludes />
+          </inctoremove>
+        </config>
+      </configs>
+      <copyAsReference>false</copyAsReference>
+      <sourceEntries>
+        <sourceEntry>
+          <name>Core</name>
+        </sourceEntry>
+        <sourceEntry>
+          <name>Drivers</name>
+        </sourceEntry>
+        <sourceEntry>
+          <name>Middlewares</name>
+        </sourceEntry>
+        <sourceEntry>
+          <name>STM32_WPAN</name>
+        </sourceEntry>
+        <sourceEntry>
+          <name>Utilities</name>
+        </sourceEntry>
+      </sourceEntries>
+      <Groups>
+        <group>
+          <name>Drivers</name>
+          <group>
+            <name>BSP</name>
+            <group>
+              <name>P-NUCLEO-WB55.Nucleo</name>
+              <file>
+                <name>../../../../../../Drivers/BSP/P-NUCLEO-WB55.Nucleo/stm32wbxx_nucleo.c</name>
+              </file>
+            </group>
+          </group>
+        </group>
+      </Groups>
+    </Project>
+  </Workspace>
+</ScratchFile>
+

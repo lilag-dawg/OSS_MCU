@@ -231,7 +231,6 @@ typedef struct
 
 } BleApplicationContext_t;
 
-
 typedef struct
 {
   uint16_t Connection_Handle;
@@ -654,7 +653,6 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
   uint8_t adtype, adlength;
   hci_disconnection_complete_event_rp0 *cc = (void *) event_pckt->data;
 
-	//printf("event_pckt: %x\n\r",event_pckt->evt);
   switch (event_pckt->evt)
   {
     /* USER CODE BEGIN evt */
@@ -667,7 +665,6 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
       /* USER CODE BEGIN EVT_VENDOR */
       //printf("ecode: %x\n\r",blue_evt->ecode);
       /* USER CODE END EVT_VENDOR */
-
       switch (blue_evt->ecode)
       {
       /* USER CODE BEGIN ecode */
@@ -1206,7 +1203,6 @@ APP_BLE_ConnStatus_t APP_BLE_Get_Client_Connection_Status( uint16_t Connection_H
   /* USER CODE END APP_BLE_Get_Client_Connection_Status_2 */
   return (return_value);
 }
-
 
 /* USER CODE BEGIN FD */
 void APP_BLE_Key_Button1_Action(void)

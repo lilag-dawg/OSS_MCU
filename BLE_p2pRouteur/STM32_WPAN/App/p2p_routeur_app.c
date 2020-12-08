@@ -461,7 +461,6 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
 	int tab[17] = {0};
 
 /* USER CODE END P2P_Client_App_Notification_1 */
-
     switch(pNotification->P2P_Client_Evt_Opcode)
     {
     /* USER CODE BEGIN P2P_Client_Evt_Opcode */
@@ -498,7 +497,7 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
     /* USER CODE BEGIN P2P_Client_Evt_Opcode_default */
 
     /* USER CODE END P2P_Client_Evt_Opcode_default */
-        break;
+            break;
 
     }
 /* USER CODE BEGIN P2P_Client_App_Notification_2 */
