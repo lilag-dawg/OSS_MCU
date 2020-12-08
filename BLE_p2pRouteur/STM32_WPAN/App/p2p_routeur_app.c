@@ -705,22 +705,22 @@ static void Client_Update_Service( void )
 				  int powerIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_SERVICE_UUID, &usedDeviceInformations[index]);
 				  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
 
-	    		  // TODO only call disc_all_char_of_service is List of charact is empty, if not update state to APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC and call Client_Update_Service;
+				  if(usedDeviceInformations[index].services[powerIndex].isCharHandleEmpty(&usedDeviceInformations[index].services[powerIndex])){
 
-				  if(usedDeviceInformations[index].services[powerIndex].isEmpty(&usedDeviceInformations[index].services[powerIndex]) &&
-						  usedDeviceInformations[index].services[cscIndex].isEmpty(&usedDeviceInformations[index].services[cscIndex])){
-
-					  // TODO get service name 0x1818 and 0x1816
-					  /*aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
+					  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
 							  	  	  	  	  	  	  usedDeviceInformations[index].services[powerIndex].servHandle,
-													  usedDeviceInformations[index].services[powerIndex].servEndHandle);*/
+													  usedDeviceInformations[index].services[powerIndex].servEndHandle);
+				  }
+				  else if(usedDeviceInformations[index].services[cscIndex].isCharHandleEmpty(&usedDeviceInformations[index].services[cscIndex])){
 
 					  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
 							  	  	  	  	  	  	  usedDeviceInformations[index].services[cscIndex].servHandle,
 													  usedDeviceInformations[index].services[cscIndex].servEndHandle);
 				  }
-				  else{
-					  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC; //should call Client_Update_Service;
+				  else
+				  {
+					  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
+					  Client_Update_Service();
 				  }
 
 				  break;
@@ -740,12 +740,50 @@ static void Client_Update_Service( void )
 	        break;
 
 	      case APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC:
-	        APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic\n");
-	        // TODO only call disc_all_char_desc if characteristic doesn't have a descHandle, otherwise update state to APP_BLE_ENABLE_NOTIFICATION_DESC and call Client_Update_Service
-	        aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
-										usedDeviceInformations[index].servicesHandle.P2PNotificationCharHdle,
-										usedDeviceInformations[index].servicesHandle.P2PNotificationCharHdle+2);
+	    	  switch(usedDeviceInformations[index].sensorType){
+	    	  case TRAINER:
+	    	  {
+				  int powerIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_SERVICE_UUID, &usedDeviceInformations[index]);
+				  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
 
+				  if(usedDeviceInformations[index].services[powerIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[powerIndex])){
+
+				      APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic - POWER\n");
+					  int powerCharIdx = usedDeviceInformations[index].services[powerIndex].getCharacteristicIndex(CYCLING_POWER_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[powerIndex]);
+					  usedDeviceInformations[index].currentReadingInfo.serviceName = CYCLING_POWER_SERVICE_UUID;
+					  usedDeviceInformations[index].currentReadingInfo.serv_idx = powerIndex;
+					  usedDeviceInformations[index].currentReadingInfo.charName = CYCLING_POWER_MEASUREMENT_CHAR_UUID;
+					  usedDeviceInformations[index].currentReadingInfo.char_idx = powerCharIdx;
+
+					  aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
+							  	  	  	  	  	  	  usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].charHandle,
+													  usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].charHandle+2);
+				  }
+				  else if(usedDeviceInformations[index].services[cscIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[cscIndex])){
+
+				      APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic - CSC\n");
+					  int cscCharIdx = usedDeviceInformations[index].services[cscIndex].getCharacteristicIndex(CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[cscIndex]);
+					  usedDeviceInformations[index].currentReadingInfo.serviceName = CYCLING_SPEED_CADENCE_SERVICE_UUID;
+					  usedDeviceInformations[index].currentReadingInfo.serv_idx = cscIndex;
+					  usedDeviceInformations[index].currentReadingInfo.charName = CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID;
+					  usedDeviceInformations[index].currentReadingInfo.char_idx = cscCharIdx;
+
+					  aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
+							  	  	  	  	  	  	  usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].charHandle,
+													  usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].charHandle+2);
+				  }
+				  else
+				  {
+					  usedDeviceInformations[index].state = APP_BLE_ENABLE_NOTIFICATION_DESC;
+					  Client_Update_Service();
+				  }
+	    	  }
+				  break;
+
+	    	  default:
+	    		  APP_DBG_MSG("* TYPE DE CAPTEUR NON RECONNU\n");
+	    		  break;
+	    	  }
 	        break;
 	      case APP_BLE_READ_CHARACS:
 	        APP_DBG_MSG("* GATT : Discover Reading characs - \n");
@@ -754,25 +792,38 @@ static void Client_Update_Service( void )
 
 	        usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
 	        break;
+
 	      case APP_BLE_ENABLE_NOTIFICATION_DESC:
-	        APP_DBG_MSG("* GATT : Enable Server Notification\n");
-	        aci_gatt_write_char_desc(usedDeviceInformations[index].connHandle,
-	        						 usedDeviceInformations[index].servicesHandle.P2PNotificationDescHandle,
-	                                 2,
-	                                 (uint8_t *)&enable);
+	    	  switch(usedDeviceInformations[index].sensorType){
+	    	  case TRAINER:
+	    	  {
+	    		  // index for services
+				  int powerIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_SERVICE_UUID, &usedDeviceInformations[index]);
+				  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
 
-	        usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
-	        BSP_LED_Off(LED_RED);
+				  // index for characteristics
+				  int powerCharIdx = usedDeviceInformations[index].services[powerIndex].getCharacteristicIndex(CYCLING_POWER_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[powerIndex]);
+				  int cscCharIdx = usedDeviceInformations[index].services[cscIndex].getCharacteristicIndex(CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[cscIndex]);
 
-	        break;
-	      case APP_BLE_DISABLE_NOTIFICATION_DESC :
-	        APP_DBG_MSG("* GATT : Disable Server Notification\n");
-	        aci_gatt_write_char_desc(usedDeviceInformations[index].connHandle,
-	        						 usedDeviceInformations[index].servicesHandle.P2PNotificationDescHandle,
-	                                 2,
-	                                 (uint8_t *)&disable);
+			      APP_DBG_MSG("* GATT : Enable Server Notification\n");
+			      aci_gatt_write_char_desc(usedDeviceInformations[index].connHandle,
+			        					   usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].descHandle,
+			                               2,
+			                               (uint8_t *)&enable);
 
-	        usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
+			      aci_gatt_write_char_desc(usedDeviceInformations[index].connHandle,
+			        					   usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].descHandle,
+			                               2,
+			                               (uint8_t *)&enable);
+
+			        usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
+	    	  }
+				  break;
+
+	    	  default:
+	    		  APP_DBG_MSG("* TYPE DE CAPTEUR NON RECONNU\n");
+	    		  break;
+	    	  }
 
 	        break;
 	      default:
@@ -1174,10 +1225,9 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 #endif
                                     if( usedDeviceInformations[index].state == APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC)
                                     {
-
-                                    	usedDeviceInformations[index].servicesHandle.P2PNotificationDescHandle = handle;
-                                        usedDeviceInformations[index].state = APP_BLE_ENABLE_NOTIFICATION_DESC;
-                                        // TODO should state should not be change here
+                                    	int serv_idx = usedDeviceInformations[index].currentReadingInfo.serv_idx;
+                                    	int char_idx = usedDeviceInformations[index].currentReadingInfo.char_idx;
+                                    	usedDeviceInformations[index].services[serv_idx].characteristics[char_idx].descHandle = handle;
 
                                     }
                                 }
@@ -1203,6 +1253,8 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 
                     if(index < BLE_CFG_CLT_MAX_NBR_CB)
                     {
+
+                    	Characteristic_t *charac = getCharacteristic(pr->Attribute_Handle, &usedDeviceInformations[index]);
 
                         if ( (pr->Attribute_Handle == usedDeviceInformations[index].servicesHandle.P2PNotificationCharHdle))
                         {

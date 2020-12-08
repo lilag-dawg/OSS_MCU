@@ -177,12 +177,21 @@ typedef enum
 
 typedef struct
 {
+	uint16_t serviceName;
+	int serv_idx;
+
+	uint16_t charName;
+	int char_idx;
+} CurrentReadingInfo_t;
+
+typedef struct
+{
 	uint16_t name;
 
 	uint16_t charHandle;
 	uint16_t descHandle;
 
-} Characteristic_t; //NEW
+} Characteristic_t;
 
 typedef struct Service_t
 {
@@ -193,7 +202,8 @@ typedef struct Service_t
 
 	Characteristic_t characteristics[5];
 
-    bool (*isEmpty) (struct Service_t *self);
+    bool (*isCharHandleEmpty) (struct Service_t *self);
+    bool (*isDescHandleEmpty) (struct Service_t *self);
 	int (*getCharacteristicIndex) (uint16_t name, struct Service_t *self);
 	bool (*verifyIfCharacteristicExists) (uint16_t name, struct Service_t *self);
 	int (*appendCharacteristic) (Characteristic_t *characteristic, struct Service_t *self);
@@ -214,6 +224,7 @@ typedef struct UsedDeviceInformations_t
     P2P_Client_Opcode_Notification_evt_t sensor_evt_type; // un capteur peut notif une seule carac, A MODIFIER
 
     Service_t services[5];
+    CurrentReadingInfo_t currentReadingInfo;
     int (*getServiceIndex) (uint16_t name, struct UsedDeviceInformations_t *self);
     bool (*verifyIfServiceExists) (uint16_t name, struct UsedDeviceInformations_t *self);
     int (*appendService) (Service_t *service, struct UsedDeviceInformations_t *self);
@@ -266,7 +277,9 @@ typedef struct
 
   void defineServiceMethodes(int size, Service_t *self);
 
-  bool isEmpty(Service_t *self) ;
+  bool isCharHandleEmpty(Service_t *self);
+
+  bool isDescHandleEmpty(Service_t *self);
 
   int getServiceIndex(uint16_t name, UsedDeviceInformations_t *self);
 
@@ -283,6 +296,8 @@ typedef struct
   int appendCharacteristic(Characteristic_t *characteristic, Service_t *self);
 
   int appendCharacteristicName(uint16_t name, Service_t *self);
+
+  Characteristic_t* getCharacteristic(uint16_t charHandle, UsedDeviceInformations_t *parentDevice);
 
 
 /* USER CODE END EF */

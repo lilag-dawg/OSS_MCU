@@ -1901,7 +1901,8 @@ void defineMethodes(int size, UsedDeviceInformations_t *self){
 
 void defineServiceMethodes(int size, Service_t *self){
 	for(int i = 0; i< size; i++){
-		self[i].isEmpty = isEmpty;
+		self[i].isCharHandleEmpty = isCharHandleEmpty;
+		self[i].isDescHandleEmpty = isDescHandleEmpty;
 		self[i].getCharacteristicIndex = getCharacteristicIndex;
 		self[i].verifyIfCharacteristicExists = verifyIfCharacteristicExists;
 		self[i].appendCharacteristic = appendCharacteristic;
@@ -1909,13 +1910,20 @@ void defineServiceMethodes(int size, Service_t *self){
 	}
 }
 
-bool isEmpty(Service_t *self) {
-	int sum = 0;
+bool isCharHandleEmpty(Service_t *self) {
 	for(int i = 0; i < (sizeof(self->characteristics)/sizeof(Characteristic_t)); i++) {
-		sum |= self->characteristics[i].name;
+		if(self->characteristics[i].charHandle != 0){
+			return false;
+		}
 	}
-	if(sum != 0){
-		return false;
+	return true;
+}
+
+bool isDescHandleEmpty(Service_t *self) {
+	for(int i = 0; i < (sizeof(self->characteristics)/sizeof(Characteristic_t)); i++) {
+		if(self->characteristics[i].descHandle != 0){
+			return false;
+		}
 	}
 	return true;
 }
@@ -1997,6 +2005,17 @@ int appendServiceName(uint16_t name, UsedDeviceInformations_t *self) {
 		}
 	}
 	return -1;
+}
+
+Characteristic_t* getCharacteristic(uint16_t charHandle, UsedDeviceInformations_t *parentDevice) {
+	for(int i = 0; i < (sizeof(parentDevice->services)/sizeof(Service_t)); i++) {
+		for(int j = 0; j < (sizeof(parentDevice->services[i].characteristics)/sizeof(Characteristic_t)); j++) {
+			if(parentDevice->services[i].characteristics[j].charHandle == charHandle) {
+				return &parentDevice->services[i].characteristics[j];
+			}
+		}
+	}
+	return NULL;
 }
 /* USER CODE BEGIN FD_WRAP_FUNCTIONS */
 
