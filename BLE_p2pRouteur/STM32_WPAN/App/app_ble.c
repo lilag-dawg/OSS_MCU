@@ -498,15 +498,15 @@ void APP_BLE_Init( void )
   memset(&scannedDevicesPackage, 0 , sizeof(scannedDevicesPackage));
 
   //reset used device informations
-  memset(&usedDeviceInformations, 0 , sizeof(usedDeviceInformations));
+  memset(usedDeviceInformations, 0 , sizeof(usedDeviceInformations));
 
   //reset calibration parameters
   memset(&bikeDataInformation, 0 , sizeof(bikeDataInformation));
 
 
   //reset flash
-  //settings_t settingsToWrite;
-  //memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
+  settings_t settingsToWrite;
+  memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
 
   //initilase sensor hardcode
  //strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
@@ -522,7 +522,7 @@ void APP_BLE_Init( void )
 //memcpy(settingsToWrite.sensors[0].macAddress, macFlux, sizeof(settingsToWrite.sensors[0].macAddress));
 
 
-  //saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
+  saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
 
 
 /* USER CODE END APP_BLE_Init_2 */
@@ -628,7 +628,7 @@ uint16_t Update_UsedDeviceInformations_structure( void )
     	for(int k = 0; k < sizeof(usedDeviceInformations)/ sizeof(usedDeviceInformations[0]); k++){
     		if(memcmp(readSettings.sensors[i].macAddress, usedDeviceInformations[k].macAddress, sizeof(usedDeviceInformations[k].macAddress)) != 0 && i == k){
     			connhandle = usedDeviceInformations[k].connHandle;
-    			memset(&usedDeviceInformations[k],0,sizeof(usedDeviceInformations[k]));
+    			memset(&usedDeviceInformations[k],0,sizeof(UsedDeviceInformations_t));
     			break;
     		}
     	}
@@ -685,7 +685,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
             /* USER CODE END GAP_GENERAL_DISCOVERY_PROC */
 
-            Update_UsedDeviceInformations_structure();
+            //Update_UsedDeviceInformations_structure();
 
             APP_DBG_MSG("-- GAP GENERAL DISCOVERY PROCEDURE_COMPLETED\n");
             /*if a device found, connect to it, device 1 being chosen first if both found*/

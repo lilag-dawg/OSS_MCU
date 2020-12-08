@@ -48,7 +48,7 @@ extern "C" {
 #include "main.h"
 
 #define FLASH_START 0X08000000
-#define FLASH_STORAGE 0x08030000
+#define FLASH_STORAGE 0x08014000
 #define page_size 0x1000
 #define FLASH_GRANULAR_SIZE 0X8
 
