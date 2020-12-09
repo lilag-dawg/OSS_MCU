@@ -685,7 +685,7 @@ static void Client_Update_Service( void )
 	    	  case CSC_SENSOR:
 	    	  {
 
-
+	    		  APP_DBG_MSG("* GATT : Discover P2P Characteristics csc_sensor\n");
 				  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
 	    		  int batteryIndex =  usedDeviceInformations[index].getServiceIndex(BATTERY_SERVICE_UUID, &usedDeviceInformations[index]);
 
@@ -802,6 +802,7 @@ static void Client_Update_Service( void )
 				  }
 				  else
 				  {
+					  memset(&usedDeviceInformations[index].currentReadingInfo, 0, sizeof(usedDeviceInformations[index].currentReadingInfo));
 					  usedDeviceInformations[index].state = APP_BLE_ENABLE_NOTIFICATION_DESC;
 					  Client_Update_Service();
 				  }
@@ -840,6 +841,7 @@ static void Client_Update_Service( void )
 				  }
 				  else
 				  {
+					  memset(&usedDeviceInformations[index].currentReadingInfo, 0, sizeof(usedDeviceInformations[index].currentReadingInfo));
 					  usedDeviceInformations[index].state = APP_BLE_ENABLE_NOTIFICATION_DESC;
 					  Client_Update_Service();
 				  }
@@ -878,6 +880,7 @@ static void Client_Update_Service( void )
 				  }
 				  else
 				  {
+					  memset(&usedDeviceInformations[index].currentReadingInfo, 0, sizeof(usedDeviceInformations[index].currentReadingInfo));
 					  usedDeviceInformations[index].state = APP_BLE_ENABLE_NOTIFICATION_DESC;
 					  Client_Update_Service();
 				  }
@@ -1239,7 +1242,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                 if(uuid_format_char==1){handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-14]);}
                                 else if(uuid_format_char==0){handle = UNPACK_2_BYTE_PARAMETER(&pr->Handle_Value_Pair_Data[idx-2]);}
 
-                                if(uuid == CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID)
+                                if(uuid == CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID && (usedDeviceInformations[index].sensorType == TRAINER || usedDeviceInformations[index].sensorType == CSC_SENSOR))
                                 {
 #if(CFG_DEBUG_APP_TRACE != 0)
                                 	  APP_DBG_MSG("-- GATT : CSC_NOTIFY_CHAR_UUID FOUND  - \n");
@@ -1252,7 +1255,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                 		  usedDeviceInformations[index].services[serv_idx].characteristics[charac_idx].charHandle = handle;
                                 	  }
                                 }
-                                if(uuid == SHIMANO_CHAR_UUID){
+                                if(uuid == SHIMANO_CHAR_UUID && (usedDeviceInformations[index].sensorType == SHIMANO_SENSOR)){
 #if(CFG_DEBUG_APP_TRACE != 0)
                                 	  APP_DBG_MSG("-- GATT : SHIMANO_NOTIFY_CHAR_UUID FOUND  - \n");
 #endif
@@ -1265,21 +1268,24 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                 	  }
 
                                 }
-                                if (uuid == CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID)
+                                if (uuid == CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID && (usedDeviceInformations[index].sensorType == TRAINER || usedDeviceInformations[index].sensorType == CSC_SENSOR))
                                 {
 #if(CFG_DEBUG_APP_TRACE != 0)
                                 	APP_DBG_MSG("-- GATT : SENSOR_READ_CHAR_UUID FOUND  - \n");
 #endif
-                              	  int serv_idx = usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID,&usedDeviceInformations[index]);
-                              	  int charac_idx = usedDeviceInformations[index].services[serv_idx].appendCharacteristicName(CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID,
-                              			  &usedDeviceInformations[index].services[serv_idx]);
+
+                              	    int serv_idx = usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID,&usedDeviceInformations[index]);
+                                	int charac_idx = usedDeviceInformations[index].services[serv_idx].appendCharacteristicName(CYCLING_SPEED_CADENCE_FEATURE_CHAR_UUID,
+                                			  &usedDeviceInformations[index].services[serv_idx]);
+
+
 
                               	  if(charac_idx >= 0 ){
                               		  usedDeviceInformations[index].services[serv_idx].characteristics[charac_idx].charHandle = handle;
                               	  }
 
                                 }
-                                if (uuid == BATTERY_LEVEL_CHAR_UUID )
+                                if (uuid == BATTERY_LEVEL_CHAR_UUID && (usedDeviceInformations[index].sensorType == SHIMANO_SENSOR || usedDeviceInformations[index].sensorType == CSC_SENSOR))
                                 {
 #if(CFG_DEBUG_APP_TRACE != 0)
                                 	APP_DBG_MSG("-- GATT : BATTERY_LEVEL_CHAR_UUID FOUND  - \n");
@@ -1296,7 +1302,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 
                                 }
 
-                                if(uuid == CYCLING_POWER_MEASUREMENT_CHAR_UUID)
+                                if(uuid == CYCLING_POWER_MEASUREMENT_CHAR_UUID && (usedDeviceInformations[index].sensorType == TRAINER || usedDeviceInformations[index].sensorType == CSC_SENSOR))
 								{
 #if(CFG_DEBUG_APP_TRACE != 0)
 									  APP_DBG_MSG("-- GATT : POWER_NOTIFY_CHAR_UUID FOUND  - \n");
@@ -1357,7 +1363,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                         numDesc = (pr->Event_Data_Length) / 4;
                         /* we are interested only in 16 bit UUIDs */
                         idx = 0;
-                        if (pr->Format == UUID_TYPE_16) //À REGARDER-----------------------------------------------------------
+                        if (pr->Format == UUID_TYPE_16)
                         {
                             for (i=0; i<numDesc; i++)
                             {
@@ -1374,6 +1380,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
                                     	int serv_idx = usedDeviceInformations[index].currentReadingInfo.serv_idx;
                                     	int char_idx = usedDeviceInformations[index].currentReadingInfo.char_idx;
                                     	usedDeviceInformations[index].services[serv_idx].characteristics[char_idx].descHandle = handle;
+
 
                                     }
                                 }

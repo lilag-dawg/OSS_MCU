@@ -289,8 +289,8 @@ typedef struct
 
  uint8_t macRidesense[6] = {21,42,96,10,26,236};
  uint8_t macShimano[6] = {159,110,155,254,115,235};
- uint8_t macTackx[6] = {48,94,167,136,151,216};
- uint8_t macFlux[6] = {235,237,146,151,168,238};
+ uint8_t macTackxVortex[6] = {48,94,167,136,151,216};
+ uint8_t macTackxFlux[6] = {235,237,146,151,168,238};
 
 /* USER CODE END PD */
 
@@ -512,16 +512,16 @@ void APP_BLE_Init( void )
 
   //initilase sensor hardcode
  //strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
- //memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
+ //memcpy(settingsToWrite.sensors[0].macAddress, macTackxVortex, sizeof(settingsToWrite.sensors[0].macAddress));
 //
- //strcpy(settingsToWrite.sensors[1].name,"	Ridesense");
- //memcpy(settingsToWrite.sensors[1].macAddress, macRidesense, sizeof(settingsToWrite.sensors[1].macAddress));
+ //strcpy(settingsToWrite.sensors[2].name,"	Ridesense");
+ //memcpy(settingsToWrite.sensors[2].macAddress, macRidesense, sizeof(settingsToWrite.sensors[2].macAddress));
 //
- //strcpy(settingsToWrite.sensors[2].name,"	EWWU111");
- //memcpy(settingsToWrite.sensors[2].macAddress, macShimano, sizeof(settingsToWrite.sensors[2].macAddress));
+ //strcpy(settingsToWrite.sensors[1].name,"	EWWU111");
+ //memcpy(settingsToWrite.sensors[1].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress));
 
-//strcpy(settingsToWrite.sensors[0].name,"	Tacx Flux");
-//memcpy(settingsToWrite.sensors[0].macAddress, macFlux, sizeof(settingsToWrite.sensors[0].macAddress));
+ //strcpy(settingsToWrite.sensors[0].name,"	Tacx Flux");
+ //memcpy(settingsToWrite.sensors[0].macAddress, macTackxFlux, sizeof(settingsToWrite.sensors[0].macAddress));
 
 
   saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
@@ -2028,6 +2028,12 @@ Characteristic_t* getCharacteristic(uint16_t charHandle, UsedDeviceInformations_
 }
 
 void clearList(UsedDeviceInformations_t *parentDevice) {
+
+	parentDevice->currentReadingInfo.serviceName = 0;
+	parentDevice->currentReadingInfo.serv_idx = 0;
+	parentDevice->currentReadingInfo.charName = 0;
+	parentDevice->currentReadingInfo.char_idx = 0;
+
 	for(int i = 0; i < (sizeof(parentDevice->services)/sizeof(Service_t)); i++) {
 		parentDevice->services[i].name = 0;
 		parentDevice->services[i].servHandle = 0;
