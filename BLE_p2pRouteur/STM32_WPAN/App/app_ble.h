@@ -77,6 +77,15 @@ typedef enum
   P2P_NOTIFICATION_CP_RECEIVED_EVT,
 } P2P_Client_Opcode_Notification_evt_t;
 
+typedef enum
+{
+	OTHER,
+	CSC_SENSOR,
+	POWER_SENSOR,
+	TRAINER,
+	SHIMANO_SENSOR,
+} SensorType_t;
+
 typedef struct
 {
   uint8_t * pPayload;
@@ -88,6 +97,7 @@ typedef struct
   P2P_Client_Opcode_Notification_evt_t  P2P_Client_Evt_Opcode;
   P2P_Client_Data_t DataTransfered;
   uint8_t   ServiceInstance;
+  SensorType_t SensorType;
 } P2P_Client_App_Notification_evt_t;
 
 
@@ -139,41 +149,6 @@ typedef struct
     DeviceSupportedDataType supportedDataType;
 } DeviceInformations_t;
 
-typedef struct
-{
-	uint8_t P2PServiceHandle;
-	uint8_t P2PServiceEndHandle;
-
-}ServiceHandle_t; //OLD
-
-typedef struct
-{
-	// CSC
-	ServiceHandle_t CSCServicehandle;
-
-	// POWER
-	ServiceHandle_t PowerServicehandle;
-
-	//Shimano
-	ServiceHandle_t ShimanoServicehandle;
-
-	//reading
-	uint16_t P2PReadCharHdle;
-	uint16_t P2PcurrentCharBeingRead;
-
-	// notification
-	uint16_t P2PNotificationCharHdle;
-	uint16_t P2PNotificationDescHandle;
-} ServicesHandleList_t;
-
-typedef enum
-{
-	OTHER,
-	CSC_SENSOR,
-	POWER_SENSOR,
-	TRAINER,
-	SHIMANO_SENSOR,
-} SensorType_t;
 
 typedef struct
 {
@@ -190,6 +165,7 @@ typedef struct
 
 	uint16_t charHandle;
 	uint16_t descHandle;
+	bool isNotifying;
 
 } Characteristic_t;
 
@@ -217,11 +193,10 @@ typedef struct UsedDeviceInformations_t
     uint8_t macAddress[6];
     APP_BLE_ConnStatus_t state;
     uint16_t connHandle;
+
     bool isNotEmpty;
-    ServicesHandleList_t servicesHandle; // should remove
     DeviceSupportedDataType supportedDataType;
     SensorType_t sensorType;
-    P2P_Client_Opcode_Notification_evt_t sensor_evt_type; // un capteur peut notif une seule carac, A MODIFIER
 
     Service_t services[5];
     CurrentReadingInfo_t currentReadingInfo;
@@ -298,6 +273,8 @@ typedef struct
   int appendCharacteristicName(uint16_t name, Service_t *self);
 
   Characteristic_t* getCharacteristic(uint16_t charHandle, UsedDeviceInformations_t *parentDevice);
+
+  void clearList(UsedDeviceInformations_t *parentDevice);
 
 
 /* USER CODE END EF */

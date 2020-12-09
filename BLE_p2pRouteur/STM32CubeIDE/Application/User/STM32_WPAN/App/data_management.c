@@ -14,7 +14,6 @@
 
 #include "data_management.h"
 #include "algorithme_function.h"
-#include "app_ble.h"
 #include "timer.h"
 
 #define bufferMaxValue	10
@@ -41,7 +40,7 @@ float wheelRevValue[bufferMaxValue][6] = {0};
 int indexWheelRevValue = 0;
 bool init = true;
 
-void switchCase(int* value){
+void switchCase(int* value, SensorType_t sensorType){
 
     int CrankValueSent[4] = {0};
     int WheelValueSent[6] = {0};
@@ -57,7 +56,10 @@ void switchCase(int* value){
             WheelValueSent[5] = value[5];
 
             // send values
-            wheelRevFunction(WheelValueSent);
+            if(sensorType != CSC_SENSOR){
+              wheelRevFunction(WheelValueSent);
+            }
+
             break;
 
         case 2:
@@ -68,7 +70,10 @@ void switchCase(int* value){
             CrankValueSent[3] = value[3];
 
             // send values
-            crankRevFunction(CrankValueSent);
+            if(sensorType == CSC_SENSOR){
+               crankRevFunction(CrankValueSent);
+            }
+
             break;
 
         case 3:
@@ -85,8 +90,14 @@ void switchCase(int* value){
             CrankValueSent[3] = value[9];
 
             // send values
-            wheelRevFunction(WheelValueSent);
-            crankRevFunction(CrankValueSent);
+            if(sensorType != CSC_SENSOR){
+              wheelRevFunction(WheelValueSent);
+            }
+            else{
+               crankRevFunction(CrankValueSent);
+            }
+
+
             break;
 
         default:
@@ -112,7 +123,7 @@ void wheelRevFunction(int* wheelValue){
 		float kmhValue = (3.6*1024)*(diffWheelData/diffWheelEvent);
 
 		bikeDataInformation.speed.value = kmhValue;
-		//printf("Votre vitesse est: %f km/h\n\r", kmhValue);
+		printf("Votre vitesse est: %f km/h\n\r", kmhValue);
 		//printf("Age vitesse : %f\n\r", bikeDataInformation.speed.time);
 		bikeDataInformation.speed.time = getSensorsTime();    // a changer avec le timer
     }
@@ -182,7 +193,7 @@ void crankRevFunction(int* CrankValue){
 
 			rpmValue = ((currentCrankData-prevCrankData)/(currentCrankEvent-prevCrankEvent))*60;
 			bikeDataInformation.cadence.value = rpmValue;
-			//printf("Votre cadence est: %f rpm\n\r", rpmValue);
+			printf("Votre cadence est: %f rpm\n\r", rpmValue);
 			//printf("Age cadence : %f\n\r", bikeDataInformation.cadence.time);
 		}
 	}
@@ -193,7 +204,7 @@ void powerFunction(int* powerData){
 	float powerValue = (powerData[1]*256) + powerData[0];
 	bikeDataInformation.power.value = powerValue;
 	bikeDataInformation.power.time = getSensorsTime();    // a changer avec le timer
-	//printf("power : %f\n\r",bikeDataInformation.power.value);
+	printf("power : %f\n\r",bikeDataInformation.power.value);
 	//printf("Age power : %f\n\r", bikeDataInformation.power.time);
 }
 
@@ -350,7 +361,7 @@ void GetRatio(int *tableau){
 						break;
 					}
 				}
-		//printf("plateau : %f	cassette : %f\n\r",bikeDataInformation.pinion_fd.value, bikeDataInformation.pinion_rd.value);
+		printf("plateau : %f	cassette : %f\n\r",bikeDataInformation.pinion_fd.value, bikeDataInformation.pinion_rd.value);
 
 	}
 }

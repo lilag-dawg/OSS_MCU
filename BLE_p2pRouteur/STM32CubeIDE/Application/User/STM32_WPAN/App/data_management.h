@@ -8,7 +8,9 @@
 #ifndef APPLICATION_USER_STM32_WPAN_APP_DATA_MANAGEMENT_H_
 #define APPLICATION_USER_STM32_WPAN_APP_DATA_MANAGEMENT_H_
 
-void switchCase(int* value);
+#include "app_ble.h"
+
+void switchCase(int* value, SensorType_t sensorType);
 void wheelRevFunction(int* wheelValue);
 void crankRevFunction(int* CrankValue);
 void powerFunction(int* powerData);

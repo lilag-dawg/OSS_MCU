@@ -535,14 +535,14 @@ void Trigger_Scan_Request( void ){
 	UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_1);
 }
 
-void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pairing_request_status status, uint16_t connhandle){ //alexis a modifier
+void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pairing_request_status status, uint16_t connhandle){
 	switch(indexInFlash){
 		case 0:
 			if(status == CONNECTING){
 				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
 			}
 			else{
-				aci_gap_terminate(connhandle, 0x05);
+				aci_gap_terminate(connhandle, 0x16);
 				usedDeviceInformations[0].state = APP_BLE_IDLE;
 				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = usedDeviceInformations[0].state;
 			}
@@ -630,7 +630,15 @@ uint16_t Update_UsedDeviceInformations_structure( void )
     	for(int k = 0; k < sizeof(usedDeviceInformations)/ sizeof(usedDeviceInformations[0]); k++){
     		if(memcmp(readSettings.sensors[i].macAddress, usedDeviceInformations[k].macAddress, sizeof(usedDeviceInformations[k].macAddress)) != 0 && i == k){
     			connhandle = usedDeviceInformations[k].connHandle;
-    			memset(&usedDeviceInformations[k],0,sizeof(usedDeviceInformations[k]));
+    			clearList(&usedDeviceInformations[k]);
+    			memset(&usedDeviceInformations[k].name,0,sizeof(usedDeviceInformations[k].name));
+    			memset(&usedDeviceInformations[k].macAddress,0,sizeof(usedDeviceInformations[k].macAddress));
+    			usedDeviceInformations[k].state = APP_BLE_IDLE;
+    			usedDeviceInformations[k].isNotEmpty = false;
+    			memset(&usedDeviceInformations[k].supportedDataType,0,sizeof(usedDeviceInformations[k].supportedDataType));
+    			usedDeviceInformations[k].sensorType = OTHER;
+
+    			//memset(&usedDeviceInformations[k],0,sizeof(usedDeviceInformations[k]));
     			break;
     		}
     	}
@@ -778,14 +786,15 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
       /* USER CODE END EVT_DISCONN_COMPLETE */
 
-    	if(cc->Reason != 0x05){ //user terminated connection
+    	if(cc->Reason != 0x16){ //user terminated connection
     	      if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice1)
     	      {
 
     	        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 1 \n");
     	        usedDeviceInformations[0].state = APP_BLE_IDLE;
     	        usedDeviceInformations[0].connHandle = 0xFFFF;
-    	        // should reset usedDeviceInformations services and characteristics on disconnection
+    	        clearList(&usedDeviceInformations[0]);
+
     	        handleNotification.P2P_Evt_Opcode = P2P_SERVER1_DISCON_HANDLE_EVT;
     	        handleNotification.ConnectionHandle = connection_handle;
     	        Evt_Notification(&handleNotification);
@@ -807,8 +816,8 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
     	        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 2 \n");
     	        usedDeviceInformations[1].state = APP_BLE_IDLE;
-    	        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[1];
     	        usedDeviceInformations[1].connHandle = 0xFFFF;
+    	        clearList(&usedDeviceInformations[1]);
     	        handleNotification.P2P_Evt_Opcode = P2P_SERVER2_DISCON_HANDLE_EVT;
     	        handleNotification.ConnectionHandle = connection_handle;
     	        Evt_Notification(&handleNotification);
@@ -818,8 +827,8 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
     	        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 3 \n");
     	        usedDeviceInformations[2].state = APP_BLE_IDLE;
-    	        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[2];
     	        usedDeviceInformations[2].connHandle = 0xFFFF;
+    	        clearList(&usedDeviceInformations[2]);
     	        handleNotification.P2P_Evt_Opcode = P2P_SERVER3_DISCON_HANDLE_EVT;
     	        handleNotification.ConnectionHandle = connection_handle;
     	        Evt_Notification(&handleNotification);
@@ -829,8 +838,8 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
     	        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 4 \n");
     	        usedDeviceInformations[3].state = APP_BLE_IDLE;
-    	        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[3];
     	        usedDeviceInformations[3].connHandle = 0xFFFF;
+    	        clearList(&usedDeviceInformations[3]);
     	        handleNotification.P2P_Evt_Opcode = P2P_SERVER4_DISCON_HANDLE_EVT;
     	        handleNotification.ConnectionHandle = connection_handle;
     	        Evt_Notification(&handleNotification);
@@ -2016,6 +2025,20 @@ Characteristic_t* getCharacteristic(uint16_t charHandle, UsedDeviceInformations_
 		}
 	}
 	return NULL;
+}
+
+void clearList(UsedDeviceInformations_t *parentDevice) {
+	for(int i = 0; i < (sizeof(parentDevice->services)/sizeof(Service_t)); i++) {
+		parentDevice->services[i].name = 0;
+		parentDevice->services[i].servHandle = 0;
+		parentDevice->services[i].servEndHandle = 0;
+		for(int k = 0; k < (sizeof(parentDevice->services[i].characteristics)/sizeof(Characteristic_t)); k++){
+			parentDevice->services[i].characteristics[k].name = 0;
+			parentDevice->services[i].characteristics[k].charHandle = 0;
+			parentDevice->services[i].characteristics[k].descHandle = 0;
+			parentDevice->services[i].characteristics[k].isNotifying = false;
+		}
+	}
 }
 /* USER CODE BEGIN FD_WRAP_FUNCTIONS */
 
