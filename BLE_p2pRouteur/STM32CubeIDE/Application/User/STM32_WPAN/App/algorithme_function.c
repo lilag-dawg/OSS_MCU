@@ -59,8 +59,9 @@ int pignon_precedent = 8;
 void Augmenter_ratio()
 {
     //printf ("\n\r\n\r Augmenter ratio \n\r\n\r ");
+	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_6);
     flag_changement_ratio = 1;
-      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
       startRelayTimer(GPIO_PIN_6);
       //HAL_Delay(50);
 	  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
@@ -70,8 +71,9 @@ void Augmenter_ratio()
 void Diminuer_ratio()
 {
     //printf ("\n\r\n\r Diminuer ratio \n\r\n\r");
+	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
     flag_changement_ratio = 1;
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_SET);
     startRelayTimer(GPIO_PIN_7);
 	//HAL_Delay(50);
 	//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);

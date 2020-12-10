@@ -94,7 +94,9 @@ uint32_t getSensorsTime()
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance == TIM16) {
-		  BSP_LED_Toggle(LED2);
+		 // BSP_LED_Toggle(LED2);
+		//HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_6);
+		//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
 		  //Call de l'algo ici
 		  algoCases();
 	}
@@ -105,6 +107,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			Error_Handler();
 		}
 		__HAL_TIM_SET_COUNTER(&htim17, 0);
-		HAL_GPIO_WritePin(GPIOA, RELAY_PIN, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, RELAY_PIN, GPIO_PIN_RESET);
 	}
 }

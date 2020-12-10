@@ -1706,7 +1706,8 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
 
     /* USER CODE END P2P_Evt_Opcode */
     case SMART_PHONE1_CONN_HANDLE_EVT:
-    	BSP_LED_On(LED_BLUE);
+    	  //HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
+    	//BSP_LED_On(LED_BLUE);
         /*EDS_STM_Update_Char(0x0001,
                 (uint8_t *)&scannedDevicesPackage.numberOfScannedDevices);*/
       break;
@@ -1724,7 +1725,9 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
 
     case SMART_PHONE1_DISCON_HANDLE_EVT:
       BleApplicationContext.SmartPhone_Connection_Status = APP_BLE_IDLE;
-      BSP_LED_Off(LED_BLUE);
+      //HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
+
+      //BSP_LED_Off(LED_BLUE);
       UTIL_SEQ_SetTask(1 << CFG_TASK_START_ADV_ID, CFG_SCH_PRIO_0);
       break;
 
