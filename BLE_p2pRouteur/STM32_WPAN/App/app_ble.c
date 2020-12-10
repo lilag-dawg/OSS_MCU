@@ -507,8 +507,8 @@ void APP_BLE_Init( void )
 
 
   //reset flash
-  settings_t settingsToWrite;
-  memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
+  //settings_t settingsToWrite;
+  //memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
 
   //initilase sensor hardcode
  //strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
@@ -517,14 +517,14 @@ void APP_BLE_Init( void )
  //strcpy(settingsToWrite.sensors[2].name,"	Ridesense");
  //memcpy(settingsToWrite.sensors[2].macAddress, macRidesense, sizeof(settingsToWrite.sensors[2].macAddress));
 //
- //strcpy(settingsToWrite.sensors[1].name,"	EWWU111");
- //memcpy(settingsToWrite.sensors[1].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress));
+ //strcpy(settingsToWrite.sensors[0].name,"	EWWU111");
+ //memcpy(settingsToWrite.sensors[0].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress)); //****IMPORTANT** shimano doit être en premier [0] dans le tableau
 
- //strcpy(settingsToWrite.sensors[0].name,"	Tacx Flux");
- //memcpy(settingsToWrite.sensors[0].macAddress, macTackxFlux, sizeof(settingsToWrite.sensors[0].macAddress));
+ //strcpy(settingsToWrite.sensors[1].name,"	Tacx Flux");
+ //memcpy(settingsToWrite.sensors[1].macAddress, macTackxFlux, sizeof(settingsToWrite.sensors[0].macAddress));
 
 
-  saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
+  //saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
 
 
 /* USER CODE END APP_BLE_Init_2 */

@@ -669,8 +669,10 @@ static void Client_Update_Service( void )
 	  uint8_t index;
 
 	  index = 0;
+
+	  bool shouldLoop = true;
 	  while((index < BLE_CFG_CLT_MAX_NBR_CB) &&
-	          (usedDeviceInformations[index].state != APP_BLE_IDLE))
+	          (usedDeviceInformations[index].state != APP_BLE_IDLE) && shouldLoop)
 	  {
 
 
@@ -684,81 +686,87 @@ static void Client_Update_Service( void )
 	    	  switch(usedDeviceInformations[index].sensorType){
 	    	  case CSC_SENSOR:
 	    	  {
+	    		  if(usedDeviceInformations[index].state != APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC){
 
-	    		  APP_DBG_MSG("* GATT : Discover P2P Characteristics csc_sensor\n");
-				  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
-	    		  int batteryIndex =  usedDeviceInformations[index].getServiceIndex(BATTERY_SERVICE_UUID, &usedDeviceInformations[index]);
+		    		  APP_DBG_MSG("* GATT : Discover P2P Characteristics csc_sensor\n");
+					  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
+		    		  int batteryIndex =  usedDeviceInformations[index].getServiceIndex(BATTERY_SERVICE_UUID, &usedDeviceInformations[index]);
 
 
-				  if(usedDeviceInformations[index].services[cscIndex].isCharHandleEmpty(&usedDeviceInformations[index].services[cscIndex])){
+					  if(usedDeviceInformations[index].services[cscIndex].isCharHandleEmpty(&usedDeviceInformations[index].services[cscIndex]) && shouldLoop){
 
-					  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
-							  	  	  	  	  	  	  usedDeviceInformations[index].services[cscIndex].servHandle,
-													  usedDeviceInformations[index].services[cscIndex].servEndHandle);
-				  }
-				  else if(usedDeviceInformations[index].services[batteryIndex].isCharHandleEmpty(&usedDeviceInformations[index].services[batteryIndex])){
+						  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
+								  	  	  	  	  	  	  usedDeviceInformations[index].services[cscIndex].servHandle,
+														  usedDeviceInformations[index].services[cscIndex].servEndHandle);
+						  shouldLoop = false; //exit while
+					  }
+					  else if(usedDeviceInformations[index].services[batteryIndex].isCharHandleEmpty(&usedDeviceInformations[index].services[batteryIndex]) && shouldLoop){
 
-					  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
-							  	  	  	  	  	  	  usedDeviceInformations[index].services[batteryIndex].servHandle,
-													  usedDeviceInformations[index].services[batteryIndex].servEndHandle);
-				  }
-				  else
-				  {
-					  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
-					  Client_Update_Service();
-				  }
+						  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
+								  	  	  	  	  	  	  usedDeviceInformations[index].services[batteryIndex].servHandle,
+														  usedDeviceInformations[index].services[batteryIndex].servEndHandle);
+
+						  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
+						  shouldLoop = false; //exit while
+
+
+					  }
+	    		  }
+
 	    	  }
 				  break;
 	    	  case POWER_SENSOR:
 				  break;
 	    	  case TRAINER:
-				  APP_DBG_MSG("* GATT : Discover P2P Characteristics trainer\n");
+				  if(usedDeviceInformations[index].state != APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC){
+					  APP_DBG_MSG("* GATT : Discover P2P Characteristics trainer\n");
+					  int powerIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_SERVICE_UUID, &usedDeviceInformations[index]);
+					  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
 
-				  int powerIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_SERVICE_UUID, &usedDeviceInformations[index]);
-				  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
+					  if(usedDeviceInformations[index].services[powerIndex].isCharHandleEmpty(&usedDeviceInformations[index].services[powerIndex]) && shouldLoop){
 
-				  if(usedDeviceInformations[index].services[powerIndex].isCharHandleEmpty(&usedDeviceInformations[index].services[powerIndex])){
+						  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
+								  	  	  	  	  	  	  usedDeviceInformations[index].services[powerIndex].servHandle,
+														  usedDeviceInformations[index].services[powerIndex].servEndHandle);
+						  shouldLoop = false; //exit while
+					  }
+					  else if(usedDeviceInformations[index].services[cscIndex].isCharHandleEmpty(&usedDeviceInformations[index].services[cscIndex]) && shouldLoop){
 
-					  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
-							  	  	  	  	  	  	  usedDeviceInformations[index].services[powerIndex].servHandle,
-													  usedDeviceInformations[index].services[powerIndex].servEndHandle);
-				  }
-				  else if(usedDeviceInformations[index].services[cscIndex].isCharHandleEmpty(&usedDeviceInformations[index].services[cscIndex])){
+						  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
+								  	  	  	  	  	  	  usedDeviceInformations[index].services[cscIndex].servHandle,
+														  usedDeviceInformations[index].services[cscIndex].servEndHandle);
 
-					  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
-							  	  	  	  	  	  	  usedDeviceInformations[index].services[cscIndex].servHandle,
-													  usedDeviceInformations[index].services[cscIndex].servEndHandle);
-				  }
-				  else
-				  {
-					  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
-					  Client_Update_Service();
+						  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
+						  shouldLoop = false; //exit while
+					  }
 				  }
 
 				  break;
 	    	  case SHIMANO_SENSOR:
-	    		  APP_DBG_MSG("* GATT : Discover P2P Characteristics shimano\n");
+	    		  if(usedDeviceInformations[index].state != APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC){
+		    		  APP_DBG_MSG("* GATT : Discover P2P Characteristics shimano\n");
 
-	    		  int positionIndex =  usedDeviceInformations[index].getServiceIndex(SHIMANO_SERVICE_UUID, &usedDeviceInformations[index]);
-	    		  int batteryIndex =  usedDeviceInformations[index].getServiceIndex(BATTERY_SERVICE_UUID, &usedDeviceInformations[index]);
+		    		  int positionIndex =  usedDeviceInformations[index].getServiceIndex(SHIMANO_SERVICE_UUID, &usedDeviceInformations[index]);
+		    		  int batteryIndex =  usedDeviceInformations[index].getServiceIndex(BATTERY_SERVICE_UUID, &usedDeviceInformations[index]);
 
-				  if(usedDeviceInformations[index].services[positionIndex].isCharHandleEmpty(&usedDeviceInformations[index].services[positionIndex])){
+					  if(usedDeviceInformations[index].services[positionIndex].isCharHandleEmpty(&usedDeviceInformations[index].services[positionIndex]) && shouldLoop){
 
-					  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
-							  	  	  	  	  	  	  usedDeviceInformations[index].services[positionIndex].servHandle,
-													  usedDeviceInformations[index].services[positionIndex].servEndHandle);
-				  }
-				  else if(usedDeviceInformations[index].services[batteryIndex].isCharHandleEmpty(&usedDeviceInformations[index].services[batteryIndex])){
+						  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
+								  	  	  	  	  	  	  usedDeviceInformations[index].services[positionIndex].servHandle,
+														  usedDeviceInformations[index].services[positionIndex].servEndHandle);
+						  shouldLoop = false; //exit while
+					  }
+					  else if(usedDeviceInformations[index].services[batteryIndex].isCharHandleEmpty(&usedDeviceInformations[index].services[batteryIndex]) && shouldLoop){
 
-					  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
-							  	  	  	  	  	  	  usedDeviceInformations[index].services[batteryIndex].servHandle,
-													  usedDeviceInformations[index].services[batteryIndex].servEndHandle);
-				  }
-				  else
-				  {
-					  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
-					  Client_Update_Service();
-				  }
+						  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
+								  	  	  	  	  	  	  usedDeviceInformations[index].services[batteryIndex].servHandle,
+														  usedDeviceInformations[index].services[batteryIndex].servEndHandle);
+
+						  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
+						  shouldLoop = false; //exit while
+					  }
+	    		  }
+
 
 				  break;
 	    	  default:
@@ -771,119 +779,126 @@ static void Client_Update_Service( void )
 	    	  switch(usedDeviceInformations[index].sensorType){
 	    	  case TRAINER:
 	    	  {
-				  int powerIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_SERVICE_UUID, &usedDeviceInformations[index]);
-				  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
+	    		  if(usedDeviceInformations[index].state != APP_BLE_ENABLE_NOTIFICATION_DESC){
+					  int powerIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_SERVICE_UUID, &usedDeviceInformations[index]);
+					  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
 
-				  if(usedDeviceInformations[index].services[powerIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[powerIndex])){
+					  if(usedDeviceInformations[index].services[powerIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[powerIndex]) && shouldLoop){
 
-				      APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic - POWER\n");
-					  int powerCharIdx = usedDeviceInformations[index].services[powerIndex].getCharacteristicIndex(CYCLING_POWER_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[powerIndex]);
-					  usedDeviceInformations[index].currentReadingInfo.serviceName = CYCLING_POWER_SERVICE_UUID;
-					  usedDeviceInformations[index].currentReadingInfo.serv_idx = powerIndex;
-					  usedDeviceInformations[index].currentReadingInfo.charName = CYCLING_POWER_MEASUREMENT_CHAR_UUID;
-					  usedDeviceInformations[index].currentReadingInfo.char_idx = powerCharIdx;
+					      APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic - POWER\n");
+						  int powerCharIdx = usedDeviceInformations[index].services[powerIndex].getCharacteristicIndex(CYCLING_POWER_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[powerIndex]);
+						  usedDeviceInformations[index].currentReadingInfo.serviceName = CYCLING_POWER_SERVICE_UUID;
+						  usedDeviceInformations[index].currentReadingInfo.serv_idx = powerIndex;
+						  usedDeviceInformations[index].currentReadingInfo.charName = CYCLING_POWER_MEASUREMENT_CHAR_UUID;
+						  usedDeviceInformations[index].currentReadingInfo.char_idx = powerCharIdx;
 
-					  aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
-							  	  	  	  	  	  	  usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].charHandle,
-													  usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].charHandle+2);
-				  }
-				  else if(usedDeviceInformations[index].services[cscIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[cscIndex])){
+						  aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
+								  	  	  	  	  	  	  usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].charHandle,
+														  usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].charHandle+2);
+						  shouldLoop = false; //exit while
+					  }
+					  else if(usedDeviceInformations[index].services[cscIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[cscIndex]) && shouldLoop){
 
-				      APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic - CSC\n");
-					  int cscCharIdx = usedDeviceInformations[index].services[cscIndex].getCharacteristicIndex(CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[cscIndex]);
-					  usedDeviceInformations[index].currentReadingInfo.serviceName = CYCLING_SPEED_CADENCE_SERVICE_UUID;
-					  usedDeviceInformations[index].currentReadingInfo.serv_idx = cscIndex;
-					  usedDeviceInformations[index].currentReadingInfo.charName = CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID;
-					  usedDeviceInformations[index].currentReadingInfo.char_idx = cscCharIdx;
+					      APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic - CSC\n");
+						  int cscCharIdx = usedDeviceInformations[index].services[cscIndex].getCharacteristicIndex(CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[cscIndex]);
+						  usedDeviceInformations[index].currentReadingInfo.serviceName = CYCLING_SPEED_CADENCE_SERVICE_UUID;
+						  usedDeviceInformations[index].currentReadingInfo.serv_idx = cscIndex;
+						  usedDeviceInformations[index].currentReadingInfo.charName = CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID;
+						  usedDeviceInformations[index].currentReadingInfo.char_idx = cscCharIdx;
 
-					  aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
-							  	  	  	  	  	  	  usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].charHandle,
-													  usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].charHandle+2);
-				  }
-				  else
-				  {
-					  memset(&usedDeviceInformations[index].currentReadingInfo, 0, sizeof(usedDeviceInformations[index].currentReadingInfo));
-					  usedDeviceInformations[index].state = APP_BLE_ENABLE_NOTIFICATION_DESC;
-					  Client_Update_Service();
-				  }
+						  aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
+								  	  	  	  	  	  	  usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].charHandle,
+														  usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].charHandle+2);
+
+						  usedDeviceInformations[index].state = APP_BLE_ENABLE_NOTIFICATION_DESC;
+						  shouldLoop = false; //exit while
+					  }
+	    		  }
+
 	    	  }
 				  break;
 	    	  case SHIMANO_SENSOR:
 	    	  {
-				  int positionIndex =  usedDeviceInformations[index].getServiceIndex(SHIMANO_SERVICE_UUID, &usedDeviceInformations[index]);
-				  int batteryIndex =  usedDeviceInformations[index].getServiceIndex(BATTERY_SERVICE_UUID, &usedDeviceInformations[index]);
+	    		  if(usedDeviceInformations[index].state != APP_BLE_ENABLE_NOTIFICATION_DESC){
+					  int positionIndex =  usedDeviceInformations[index].getServiceIndex(SHIMANO_SERVICE_UUID, &usedDeviceInformations[index]);
+					  int batteryIndex =  usedDeviceInformations[index].getServiceIndex(BATTERY_SERVICE_UUID, &usedDeviceInformations[index]);
 
-				  if(usedDeviceInformations[index].services[positionIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[positionIndex])){
+					  if(usedDeviceInformations[index].services[positionIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[positionIndex]) && shouldLoop){
 
-				      APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic - Position\n");
-					  int positionCharIdx = usedDeviceInformations[index].services[positionIndex].getCharacteristicIndex(SHIMANO_CHAR_UUID, &usedDeviceInformations[index].services[positionIndex]);
-					  usedDeviceInformations[index].currentReadingInfo.serviceName = SHIMANO_SERVICE_UUID;
-					  usedDeviceInformations[index].currentReadingInfo.serv_idx = positionIndex;
-					  usedDeviceInformations[index].currentReadingInfo.charName = SHIMANO_CHAR_UUID;
-					  usedDeviceInformations[index].currentReadingInfo.char_idx = positionCharIdx;
+					      APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic - Position\n");
+						  int positionCharIdx = usedDeviceInformations[index].services[positionIndex].getCharacteristicIndex(SHIMANO_CHAR_UUID, &usedDeviceInformations[index].services[positionIndex]);
+						  usedDeviceInformations[index].currentReadingInfo.serviceName = SHIMANO_SERVICE_UUID;
+						  usedDeviceInformations[index].currentReadingInfo.serv_idx = positionIndex;
+						  usedDeviceInformations[index].currentReadingInfo.charName = SHIMANO_CHAR_UUID;
+						  usedDeviceInformations[index].currentReadingInfo.char_idx = positionCharIdx;
 
-					  aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
-							  	  	  	  	  	  	  usedDeviceInformations[index].services[positionIndex].characteristics[positionCharIdx].charHandle,
-													  usedDeviceInformations[index].services[positionIndex].characteristics[positionCharIdx].charHandle+2);
-				  }
-				  else if(usedDeviceInformations[index].services[batteryIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[batteryIndex])){
+						  aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
+								  	  	  	  	  	  	  usedDeviceInformations[index].services[positionIndex].characteristics[positionCharIdx].charHandle,
+														  usedDeviceInformations[index].services[positionIndex].characteristics[positionCharIdx].charHandle+2);
+						  shouldLoop = false; //exit while
+					  }
+					  else if(usedDeviceInformations[index].services[batteryIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[batteryIndex]) && shouldLoop){
 
-				      APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic - Battery\n");
-					  int batteryCharIdx = usedDeviceInformations[index].services[batteryIndex].getCharacteristicIndex(BATTERY_LEVEL_CHAR_UUID, &usedDeviceInformations[index].services[batteryIndex]);
-					  usedDeviceInformations[index].currentReadingInfo.serviceName = BATTERY_SERVICE_UUID;
-					  usedDeviceInformations[index].currentReadingInfo.serv_idx = batteryIndex;
-					  usedDeviceInformations[index].currentReadingInfo.charName = BATTERY_LEVEL_CHAR_UUID;
-					  usedDeviceInformations[index].currentReadingInfo.char_idx = batteryCharIdx;
+					      APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic - Battery\n");
+						  int batteryCharIdx = usedDeviceInformations[index].services[batteryIndex].getCharacteristicIndex(BATTERY_LEVEL_CHAR_UUID, &usedDeviceInformations[index].services[batteryIndex]);
+						  usedDeviceInformations[index].currentReadingInfo.serviceName = BATTERY_SERVICE_UUID;
+						  usedDeviceInformations[index].currentReadingInfo.serv_idx = batteryIndex;
+						  usedDeviceInformations[index].currentReadingInfo.charName = BATTERY_LEVEL_CHAR_UUID;
+						  usedDeviceInformations[index].currentReadingInfo.char_idx = batteryCharIdx;
 
-					  aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
-							  	  	  	  	  	  	  usedDeviceInformations[index].services[batteryIndex].characteristics[batteryCharIdx].charHandle,
-													  usedDeviceInformations[index].services[batteryIndex].characteristics[batteryCharIdx].charHandle+2);
-				  }
-				  else
-				  {
-					  memset(&usedDeviceInformations[index].currentReadingInfo, 0, sizeof(usedDeviceInformations[index].currentReadingInfo));
-					  usedDeviceInformations[index].state = APP_BLE_ENABLE_NOTIFICATION_DESC;
-					  Client_Update_Service();
-				  }
+						  aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
+								  	  	  	  	  	  	  usedDeviceInformations[index].services[batteryIndex].characteristics[batteryCharIdx].charHandle,
+														  usedDeviceInformations[index].services[batteryIndex].characteristics[batteryCharIdx].charHandle+2);
+
+						  usedDeviceInformations[index].state = APP_BLE_ENABLE_NOTIFICATION_DESC;
+						  shouldLoop = false; //exit while
+					  }
+	    		  }
+
 	    	  }
 				  break;
 	    	  case CSC_SENSOR:
 	    	  {
-				  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
-				  int batteryIndex =  usedDeviceInformations[index].getServiceIndex(BATTERY_SERVICE_UUID, &usedDeviceInformations[index]);
+	    		  if(usedDeviceInformations[index].state != APP_BLE_ENABLE_NOTIFICATION_DESC){
+					  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
+					  int batteryIndex =  usedDeviceInformations[index].getServiceIndex(BATTERY_SERVICE_UUID, &usedDeviceInformations[index]);
 
-				  if(usedDeviceInformations[index].services[cscIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[cscIndex])){
+					  if(usedDeviceInformations[index].services[cscIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[cscIndex]) && shouldLoop){
 
-				      APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic - CSC\n");
-					  int cscCharIdx = usedDeviceInformations[index].services[cscIndex].getCharacteristicIndex(CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[cscIndex]);
-					  usedDeviceInformations[index].currentReadingInfo.serviceName = CYCLING_SPEED_CADENCE_SERVICE_UUID;
-					  usedDeviceInformations[index].currentReadingInfo.serv_idx = cscIndex;
-					  usedDeviceInformations[index].currentReadingInfo.charName = CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID;
-					  usedDeviceInformations[index].currentReadingInfo.char_idx = cscCharIdx;
+					      APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic - CSC\n");
+						  int cscCharIdx = usedDeviceInformations[index].services[cscIndex].getCharacteristicIndex(CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[cscIndex]);
+						  usedDeviceInformations[index].currentReadingInfo.serviceName = CYCLING_SPEED_CADENCE_SERVICE_UUID;
+						  usedDeviceInformations[index].currentReadingInfo.serv_idx = cscIndex;
+						  usedDeviceInformations[index].currentReadingInfo.charName = CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID;
+						  usedDeviceInformations[index].currentReadingInfo.char_idx = cscCharIdx;
 
-					  aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
-							  	  	  	  	  	  	  usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].charHandle,
-													  usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].charHandle+2);
-				  }
-				  else if(usedDeviceInformations[index].services[batteryIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[batteryIndex])){
+						  aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
+								  	  	  	  	  	  	  usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].charHandle,
+														  usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].charHandle+2);
 
-				      APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic - Battery\n");
-					  int batteryCharIdx = usedDeviceInformations[index].services[batteryIndex].getCharacteristicIndex(BATTERY_LEVEL_CHAR_UUID, &usedDeviceInformations[index].services[batteryIndex]);
-					  usedDeviceInformations[index].currentReadingInfo.serviceName = BATTERY_SERVICE_UUID;
-					  usedDeviceInformations[index].currentReadingInfo.serv_idx = batteryIndex;
-					  usedDeviceInformations[index].currentReadingInfo.charName = BATTERY_LEVEL_CHAR_UUID;
-					  usedDeviceInformations[index].currentReadingInfo.char_idx = batteryCharIdx;
+					      shouldLoop = false; //exit while
 
-					  aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
-							  	  	  	  	  	  	  usedDeviceInformations[index].services[batteryIndex].characteristics[batteryCharIdx].charHandle,
-													  usedDeviceInformations[index].services[batteryIndex].characteristics[batteryCharIdx].charHandle+2);
-				  }
-				  else
-				  {
-					  memset(&usedDeviceInformations[index].currentReadingInfo, 0, sizeof(usedDeviceInformations[index].currentReadingInfo));
-					  usedDeviceInformations[index].state = APP_BLE_ENABLE_NOTIFICATION_DESC;
-					  Client_Update_Service();
-				  }
+
+					  }
+					  else if(usedDeviceInformations[index].services[batteryIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[batteryIndex]) && shouldLoop){
+
+					      APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic - Battery\n");
+						  int batteryCharIdx = usedDeviceInformations[index].services[batteryIndex].getCharacteristicIndex(BATTERY_LEVEL_CHAR_UUID, &usedDeviceInformations[index].services[batteryIndex]);
+						  usedDeviceInformations[index].currentReadingInfo.serviceName = BATTERY_SERVICE_UUID;
+						  usedDeviceInformations[index].currentReadingInfo.serv_idx = batteryIndex;
+						  usedDeviceInformations[index].currentReadingInfo.charName = BATTERY_LEVEL_CHAR_UUID;
+						  usedDeviceInformations[index].currentReadingInfo.char_idx = batteryCharIdx;
+
+						  aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
+								  	  	  	  	  	  	  usedDeviceInformations[index].services[batteryIndex].characteristics[batteryCharIdx].charHandle,
+														  usedDeviceInformations[index].services[batteryIndex].characteristics[batteryCharIdx].charHandle+2);
+
+						  usedDeviceInformations[index].state = APP_BLE_ENABLE_NOTIFICATION_DESC;
+					      shouldLoop = false; //exit while
+
+					  }
+	    		  }
+
 	    	  }
 				  break;
 
@@ -900,82 +915,95 @@ static void Client_Update_Service( void )
 	    	  switch(usedDeviceInformations[index].sensorType){
 	    	  case TRAINER:
 	    	  {
-	    		  // index for services
-				  int powerIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_SERVICE_UUID, &usedDeviceInformations[index]);
-				  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
+	    		  if(usedDeviceInformations[index].state != APP_BLE_CONNECTED_CLIENT){
+		    		  // index for services
+					  int powerIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_SERVICE_UUID, &usedDeviceInformations[index]);
+					  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
 
-				  // index for characteristics
-				  int powerCharIdx = usedDeviceInformations[index].services[powerIndex].getCharacteristicIndex(CYCLING_POWER_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[powerIndex]);
-				  int cscCharIdx = usedDeviceInformations[index].services[cscIndex].getCharacteristicIndex(CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[cscIndex]);
+					  // index for characteristics
+					  int powerCharIdx = usedDeviceInformations[index].services[powerIndex].getCharacteristicIndex(CYCLING_POWER_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[powerIndex]);
+					  int cscCharIdx = usedDeviceInformations[index].services[cscIndex].getCharacteristicIndex(CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[cscIndex]);
 
-				  if(!usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].isNotifying){
+					  if(!usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].isNotifying && shouldLoop){
 
-					  usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].isNotifying = true;
-				      APP_DBG_MSG("* GATT : Enable Server CP notif\n");
-				      aci_gatt_write_char_desc(usedDeviceInformations[index].connHandle,
-				        					   usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].descHandle,
-				                               2,
-				                               (uint8_t *)&enable);
-				  }
-				  else if(!usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].isNotifying){
+						  usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].isNotifying = true;
+					      APP_DBG_MSG("* GATT : Enable Server CP notif\n");
+					      aci_gatt_write_char_desc(usedDeviceInformations[index].connHandle,
+					        					   usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].descHandle,
+					                               2,
+					                               (uint8_t *)&enable);
+					      shouldLoop = false; //exit while
+					  }
+					  else if(!usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].isNotifying && shouldLoop){
 
-					  usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].isNotifying = true;
-					  APP_DBG_MSG("* GATT : Enable Server CSC notif\n");
-				      aci_gatt_write_char_desc(usedDeviceInformations[index].connHandle,
-				        					   usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].descHandle,
-				                               2,
-				                               (uint8_t *)&enable);
-				  }
-				  else{
-					  usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
-				  }
+						  usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].isNotifying = true;
+						  APP_DBG_MSG("* GATT : Enable Server CSC notif\n");
+					      aci_gatt_write_char_desc(usedDeviceInformations[index].connHandle,
+					        					   usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].descHandle,
+					                               2,
+					                               (uint8_t *)&enable);
+
+					      usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
+					      shouldLoop = false; //exit while
+					  }
+	    		  }
+
 
 	    	  }
 				  break;
 
 	    	  case SHIMANO_SENSOR:
 	    	  {
-	    		  // index for services
-				  int posistionIndex =  usedDeviceInformations[index].getServiceIndex(SHIMANO_SERVICE_UUID, &usedDeviceInformations[index]);
+	    		  if(usedDeviceInformations[index].state != APP_BLE_CONNECTED_CLIENT){
+		    		  // index for services
+					  int posistionIndex =  usedDeviceInformations[index].getServiceIndex(SHIMANO_SERVICE_UUID, &usedDeviceInformations[index]);
 
-				  // index for characteristics
-				  int positionCharIdx = usedDeviceInformations[index].services[posistionIndex].getCharacteristicIndex(SHIMANO_CHAR_UUID, &usedDeviceInformations[index].services[posistionIndex]);
+					  // index for characteristics
+					  int positionCharIdx = usedDeviceInformations[index].services[posistionIndex].getCharacteristicIndex(SHIMANO_CHAR_UUID, &usedDeviceInformations[index].services[posistionIndex]);
 
-				  if(!usedDeviceInformations[index].services[posistionIndex].characteristics[positionCharIdx].isNotifying){
+					  if(!usedDeviceInformations[index].services[posistionIndex].characteristics[positionCharIdx].isNotifying && shouldLoop){
 
-					  usedDeviceInformations[index].services[posistionIndex].characteristics[positionCharIdx].isNotifying = true;
-				      APP_DBG_MSG("* GATT : Enable Server Position notif\n");
-				      aci_gatt_write_char_desc(usedDeviceInformations[index].connHandle,
-				        					   usedDeviceInformations[index].services[posistionIndex].characteristics[positionCharIdx].descHandle,
-				                               2,
-				                               (uint8_t *)&enable);
-				  }
-				  else{
-					  usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
-				  }
+						  usedDeviceInformations[index].services[posistionIndex].characteristics[positionCharIdx].isNotifying = true;
+					      APP_DBG_MSG("* GATT : Enable Server Position notif\n");
+					      aci_gatt_write_char_desc(usedDeviceInformations[index].connHandle,
+					        					   usedDeviceInformations[index].services[posistionIndex].characteristics[positionCharIdx].descHandle,
+					                               2,
+					                               (uint8_t *)&enable);
+					      shouldLoop = false; //exit while
+
+					  }
+					  else{
+						  usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
+					  }
+	    		  }
+
 
 	    	  }
 				  break;
 	    	  case CSC_SENSOR:
 	    	  {
-	    		  // index for services
-				  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
+	    		  if(usedDeviceInformations[index].state != APP_BLE_CONNECTED_CLIENT){
+		    		  // index for services
+					  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
 
-				  // index for characteristics
-				  int cscCharIdx = usedDeviceInformations[index].services[cscIndex].getCharacteristicIndex(CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[cscIndex]);
+					  // index for characteristics
+					  int cscCharIdx = usedDeviceInformations[index].services[cscIndex].getCharacteristicIndex(CYCLING_SPEED_CADENCE_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[cscIndex]);
 
-				  if(!usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].isNotifying){
+					  if(!usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].isNotifying && shouldLoop){
 
-					  usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].isNotifying = true;
-				      APP_DBG_MSG("* GATT : Enable Server CSC notif\n");
-				      aci_gatt_write_char_desc(usedDeviceInformations[index].connHandle,
-				        					   usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].descHandle,
-				                               2,
-				                               (uint8_t *)&enable);
-				  }
-				  else{
-					  usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
-				  }
+						  usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].isNotifying = true;
+					      APP_DBG_MSG("* GATT : Enable Server CSC notif\n");
+					      aci_gatt_write_char_desc(usedDeviceInformations[index].connHandle,
+					        					   usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].descHandle,
+					                               2,
+					                               (uint8_t *)&enable);
+					      shouldLoop = false; //exit while
+					  }
+					  else{
+						  usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
+					  }
+	    		  }
+
 
 	    	  }
 				  break;
@@ -1375,14 +1403,13 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 #if(CFG_DEBUG_APP_TRACE != 0)
                                     APP_DBG_MSG("-- GATT : CLIENT_CHAR_CONFIG_DESCRIPTOR_UUID - \n");
 #endif
-                                    if( usedDeviceInformations[index].state == APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC)
-                                    {
-                                    	int serv_idx = usedDeviceInformations[index].currentReadingInfo.serv_idx;
-                                    	int char_idx = usedDeviceInformations[index].currentReadingInfo.char_idx;
-                                    	usedDeviceInformations[index].services[serv_idx].characteristics[char_idx].descHandle = handle;
+
+                                    int serv_idx = usedDeviceInformations[index].currentReadingInfo.serv_idx;
+                                    int char_idx = usedDeviceInformations[index].currentReadingInfo.char_idx;
+                                    usedDeviceInformations[index].services[serv_idx].characteristics[char_idx].descHandle = handle;
 
 
-                                    }
+
                                 }
                                 idx += 4;
                             }
