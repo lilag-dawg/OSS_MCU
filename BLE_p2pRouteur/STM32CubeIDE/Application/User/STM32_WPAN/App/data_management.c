@@ -14,7 +14,6 @@
 
 #include "data_management.h"
 #include "algorithme_function.h"
-#include "app_ble.h"
 #include "timer.h"
 
 #define bufferMaxValue	10
@@ -41,7 +40,7 @@ float wheelRevValue[bufferMaxValue][6] = {0};
 int indexWheelRevValue = 0;
 bool init = true;
 
-void switchCase(int* value){
+void switchCase(int* value, SensorType_t sensorType){
 
     int CrankValueSent[4] = {0};
     int WheelValueSent[6] = {0};
@@ -57,7 +56,10 @@ void switchCase(int* value){
             WheelValueSent[5] = value[5];
 
             // send values
-            wheelRevFunction(WheelValueSent);
+            if(sensorType != CSC_SENSOR){
+              wheelRevFunction(WheelValueSent);
+            }
+
             break;
 
         case 2:
@@ -68,7 +70,10 @@ void switchCase(int* value){
             CrankValueSent[3] = value[3];
 
             // send values
-            crankRevFunction(CrankValueSent);
+            if(sensorType == CSC_SENSOR){
+               crankRevFunction(CrankValueSent);
+            }
+
             break;
 
         case 3:
@@ -85,8 +90,14 @@ void switchCase(int* value){
             CrankValueSent[3] = value[9];
 
             // send values
-            wheelRevFunction(WheelValueSent);
-            crankRevFunction(CrankValueSent);
+            if(sensorType != CSC_SENSOR){
+              wheelRevFunction(WheelValueSent);
+            }
+            else{
+               crankRevFunction(CrankValueSent);
+            }
+
+
             break;
 
         default:
