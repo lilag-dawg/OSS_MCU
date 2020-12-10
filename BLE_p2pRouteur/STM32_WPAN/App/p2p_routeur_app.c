@@ -735,7 +735,7 @@ static void Client_Update_Service( void )
 	                                 (uint8_t *)&enable);
 
 	        usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
-	        BSP_LED_Off(LED_RED);
+	        //BSP_LED_Off(LED_RED);
 
 	        break;
 	      case APP_BLE_DISABLE_NOTIFICATION_DESC :
