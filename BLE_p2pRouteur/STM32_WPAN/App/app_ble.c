@@ -231,6 +231,7 @@ typedef struct
 
 } BleApplicationContext_t;
 
+
 typedef struct
 {
   uint16_t Connection_Handle;
@@ -288,8 +289,8 @@ typedef struct
 
  uint8_t macRidesense[6] = {21,42,96,10,26,236};
  uint8_t macShimano[6] = {159,110,155,254,115,235};
- uint8_t macTackx[6] = {48,94,167,136,151,216};
- uint8_t macFlux[6] = {235,237,146,151,168,238};
+ uint8_t macTackxVortex[6] = {48,94,167,136,151,216};
+ uint8_t macTackxFlux[6] = {235,237,146,151,168,238};
 
 /* USER CODE END PD */
 
@@ -499,30 +500,31 @@ void APP_BLE_Init( void )
 
   //reset used device informations
   memset(usedDeviceInformations, 0 , sizeof(usedDeviceInformations));
+  defineMethodes(sizeof(usedDeviceInformations)/sizeof(UsedDeviceInformations_t), usedDeviceInformations);
 
   //reset calibration parameters
   memset(&bikeDataInformation, 0 , sizeof(bikeDataInformation));
 
 
   //reset flash
-  settings_t settingsToWrite;
-  memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
+  //settings_t settingsToWrite;
+  //memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
 
   //initilase sensor hardcode
  //strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
- //memcpy(settingsToWrite.sensors[0].macAddress, macTackx, sizeof(settingsToWrite.sensors[0].macAddress));
+ //memcpy(settingsToWrite.sensors[0].macAddress, macTackxVortex, sizeof(settingsToWrite.sensors[0].macAddress));
 //
- //strcpy(settingsToWrite.sensors[1].name,"	Ridesense");
- //memcpy(settingsToWrite.sensors[1].macAddress, macRidesense, sizeof(settingsToWrite.sensors[1].macAddress));
+ //strcpy(settingsToWrite.sensors[2].name,"	Ridesense");
+ //memcpy(settingsToWrite.sensors[2].macAddress, macRidesense, sizeof(settingsToWrite.sensors[2].macAddress));
 //
- //strcpy(settingsToWrite.sensors[2].name,"	EWWU111");
- //memcpy(settingsToWrite.sensors[2].macAddress, macShimano, sizeof(settingsToWrite.sensors[2].macAddress));
+ //strcpy(settingsToWrite.sensors[0].name,"	EWWU111");
+ //memcpy(settingsToWrite.sensors[0].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress)); //****IMPORTANT** shimano doit être en premier [0] dans le tableau
 
-//strcpy(settingsToWrite.sensors[0].name,"	Tacx Flux");
-//memcpy(settingsToWrite.sensors[0].macAddress, macFlux, sizeof(settingsToWrite.sensors[0].macAddress));
+ //strcpy(settingsToWrite.sensors[1].name,"	Tacx Flux");
+ //memcpy(settingsToWrite.sensors[1].macAddress, macTackxFlux, sizeof(settingsToWrite.sensors[0].macAddress));
 
 
-  saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
+  //saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
 
 
 /* USER CODE END APP_BLE_Init_2 */
@@ -533,14 +535,14 @@ void Trigger_Scan_Request( void ){
 	UTIL_SEQ_SetTask(1 << CFG_TASK_START_SCAN_ID, CFG_SCH_PRIO_1);
 }
 
-void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pairing_request_status status, uint16_t connhandle){ //alexis a modifier
+void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pairing_request_status status, uint16_t connhandle){
 	switch(indexInFlash){
 		case 0:
 			if(status == CONNECTING){
 				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_1_ID, CFG_SCH_PRIO_0);
 			}
 			else{
-				aci_gap_terminate(connhandle, 0x05);
+				aci_gap_terminate(connhandle, 0x16);
 				usedDeviceInformations[0].state = APP_BLE_IDLE;
 				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = usedDeviceInformations[0].state;
 			}
@@ -628,7 +630,15 @@ uint16_t Update_UsedDeviceInformations_structure( void )
     	for(int k = 0; k < sizeof(usedDeviceInformations)/ sizeof(usedDeviceInformations[0]); k++){
     		if(memcmp(readSettings.sensors[i].macAddress, usedDeviceInformations[k].macAddress, sizeof(usedDeviceInformations[k].macAddress)) != 0 && i == k){
     			connhandle = usedDeviceInformations[k].connHandle;
-    			memset(&usedDeviceInformations[k],0,sizeof(UsedDeviceInformations_t));
+    			clearList(&usedDeviceInformations[k]);
+    			memset(&usedDeviceInformations[k].name,0,sizeof(usedDeviceInformations[k].name));
+    			memset(&usedDeviceInformations[k].macAddress,0,sizeof(usedDeviceInformations[k].macAddress));
+    			usedDeviceInformations[k].state = APP_BLE_IDLE;
+    			usedDeviceInformations[k].isNotEmpty = false;
+    			memset(&usedDeviceInformations[k].supportedDataType,0,sizeof(usedDeviceInformations[k].supportedDataType));
+    			usedDeviceInformations[k].sensorType = OTHER;
+
+    			//memset(&usedDeviceInformations[k],0,sizeof(usedDeviceInformations[k]));
     			break;
     		}
     	}
@@ -653,6 +663,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
   uint8_t adtype, adlength;
   hci_disconnection_complete_event_rp0 *cc = (void *) event_pckt->data;
 
+	//printf("event_pckt: %x\n\r",event_pckt->evt);
   switch (event_pckt->evt)
   {
     /* USER CODE BEGIN evt */
@@ -665,6 +676,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
       /* USER CODE BEGIN EVT_VENDOR */
       //printf("ecode: %x\n\r",blue_evt->ecode);
       /* USER CODE END EVT_VENDOR */
+
       switch (blue_evt->ecode)
       {
       /* USER CODE BEGIN ecode */
@@ -685,7 +697,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
             /* USER CODE END GAP_GENERAL_DISCOVERY_PROC */
 
-            //Update_UsedDeviceInformations_structure();
+            Update_UsedDeviceInformations_structure();
 
             APP_DBG_MSG("-- GAP GENERAL DISCOVERY PROCEDURE_COMPLETED\n");
             /*if a device found, connect to it, device 1 being chosen first if both found*/
@@ -774,14 +786,15 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
       /* USER CODE END EVT_DISCONN_COMPLETE */
 
-    	if(cc->Reason != 0x05){ //user terminated connection
+    	if(cc->Reason != 0x16){ //user terminated connection
     	      if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice1)
     	      {
 
     	        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 1 \n");
     	        usedDeviceInformations[0].state = APP_BLE_IDLE;
-    	        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[0];
     	        usedDeviceInformations[0].connHandle = 0xFFFF;
+    	        clearList(&usedDeviceInformations[0]);
+
     	        handleNotification.P2P_Evt_Opcode = P2P_SERVER1_DISCON_HANDLE_EVT;
     	        handleNotification.ConnectionHandle = connection_handle;
     	        Evt_Notification(&handleNotification);
@@ -803,8 +816,8 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
     	        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 2 \n");
     	        usedDeviceInformations[1].state = APP_BLE_IDLE;
-    	        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[1];
     	        usedDeviceInformations[1].connHandle = 0xFFFF;
+    	        clearList(&usedDeviceInformations[1]);
     	        handleNotification.P2P_Evt_Opcode = P2P_SERVER2_DISCON_HANDLE_EVT;
     	        handleNotification.ConnectionHandle = connection_handle;
     	        Evt_Notification(&handleNotification);
@@ -814,8 +827,8 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
     	        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 3 \n");
     	        usedDeviceInformations[2].state = APP_BLE_IDLE;
-    	        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[2];
     	        usedDeviceInformations[2].connHandle = 0xFFFF;
+    	        clearList(&usedDeviceInformations[2]);
     	        handleNotification.P2P_Evt_Opcode = P2P_SERVER3_DISCON_HANDLE_EVT;
     	        handleNotification.ConnectionHandle = connection_handle;
     	        Evt_Notification(&handleNotification);
@@ -825,8 +838,8 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
     	        APP_DBG_MSG("\r\n\r** DISCONNECTION EVENT OF END DEVICE 4 \n");
     	        usedDeviceInformations[3].state = APP_BLE_IDLE;
-    	        //scannedDevicesPackage.scannedDevicesList[index].pairingStatus =  BleApplicationContext.EndDevice_Connection_Status[3];
     	        usedDeviceInformations[3].connHandle = 0xFFFF;
+    	        clearList(&usedDeviceInformations[3]);
     	        handleNotification.P2P_Evt_Opcode = P2P_SERVER4_DISCON_HANDLE_EVT;
     	        handleNotification.ConnectionHandle = connection_handle;
     	        Evt_Notification(&handleNotification);
@@ -1203,6 +1216,7 @@ APP_BLE_ConnStatus_t APP_BLE_Get_Client_Connection_Status( uint16_t Connection_H
   /* USER CODE END APP_BLE_Get_Client_Connection_Status_2 */
   return (return_value);
 }
+
 
 /* USER CODE BEGIN FD */
 void APP_BLE_Key_Button1_Action(void)
@@ -1884,6 +1898,154 @@ void SVCCTL_ResumeUserEventFlow( void )
   return;
 }
 
+void defineMethodes(int size, UsedDeviceInformations_t *self){
+	for(int i = 0; i< size; i++){
+		self[i].getServiceIndex = getServiceIndex;
+		self[i].verifyIfServiceExists = verifyIfServiceExists;
+		self[i].appendService = appendService;
+		self[i].appendServiceName = appendServiceName;
+		defineServiceMethodes(sizeof(self[i].services)/sizeof(Service_t), self[i].services);
+	}
+}
+
+void defineServiceMethodes(int size, Service_t *self){
+	for(int i = 0; i< size; i++){
+		self[i].isCharHandleEmpty = isCharHandleEmpty;
+		self[i].isDescHandleEmpty = isDescHandleEmpty;
+		self[i].getCharacteristicIndex = getCharacteristicIndex;
+		self[i].verifyIfCharacteristicExists = verifyIfCharacteristicExists;
+		self[i].appendCharacteristic = appendCharacteristic;
+		self[i].appendCharacteristicName = appendCharacteristicName;
+	}
+}
+
+bool isCharHandleEmpty(Service_t *self) {
+	for(int i = 0; i < (sizeof(self->characteristics)/sizeof(Characteristic_t)); i++) {
+		if(self->characteristics[i].charHandle != 0){
+			return false;
+		}
+	}
+	return true;
+}
+
+bool isDescHandleEmpty(Service_t *self) {
+	for(int i = 0; i < (sizeof(self->characteristics)/sizeof(Characteristic_t)); i++) {
+		if(self->characteristics[i].descHandle != 0){
+			return false;
+		}
+	}
+	return true;
+}
+
+int getCharacteristicIndex(uint16_t name, Service_t *self) {
+	for(int i = 0; i < (sizeof(self->characteristics)/sizeof(Characteristic_t)); i++) {
+		if(self->characteristics[i].name == name) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+bool verifyIfCharacteristicExists(uint16_t name, Service_t *self){
+	for(int i = 0; i < (sizeof(self->characteristics)/sizeof(Characteristic_t)); i++) {
+		if(self->characteristics[i].name == name) {
+			return true;
+		}
+	}
+	return false;
+}
+
+int appendCharacteristic(Characteristic_t *characteristic, Service_t *self){
+	for(int i = 0; i < (sizeof(self->characteristics)/sizeof(Characteristic_t)); i++) {
+		if(self->characteristics[i].name == NULL) {
+			memcpy(&self->characteristics[i], characteristic, sizeof(Characteristic_t));
+			return i;
+		}
+	}
+	return -1;
+}
+
+int appendCharacteristicName(uint16_t name, Service_t *self){
+	for(int i = 0; i < (sizeof(self->characteristics)/sizeof(Characteristic_t)); i++) {
+		if(self->characteristics[i].name == NULL) {
+			self->characteristics[i].name = name;
+			return i;
+		}
+	}
+	return -1;
+}
+
+int getServiceIndex(uint16_t name, UsedDeviceInformations_t *self) {
+
+	for(int i = 0; i < (sizeof(self->services)/sizeof(Service_t)); i++) {
+		if(self->services[i].name == name) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+bool verifyIfServiceExists(uint16_t name, UsedDeviceInformations_t *self) {
+	for(int i = 0; i < (sizeof(self->services)/sizeof(Service_t)); i++) {
+		if(self->services[i].name == name) {
+			return true;
+		}
+	}
+	return false;
+}
+
+int appendService(Service_t *service, UsedDeviceInformations_t *self) {
+	for(int i = 0; i < (sizeof(self->services)/sizeof(Service_t)); i++) {
+		if(self->services[i].name == NULL) {
+			memcpy(&self->services[i], service, sizeof(Service_t));
+			return i;
+		}
+	}
+	return -1;
+}
+
+int appendServiceName(uint16_t name, UsedDeviceInformations_t *self) {
+	for(int i = 0; i < (sizeof(self->services)/sizeof(Service_t)); i++) {
+		if(self->services[i].name == NULL) {
+			self->services[i].name = name;
+			return i;
+		}
+	}
+	return -1;
+}
+
+Characteristic_t* getCharacteristic(uint16_t charHandle, UsedDeviceInformations_t *parentDevice) {
+	for(int i = 0; i < (sizeof(parentDevice->services)/sizeof(Service_t)); i++) {
+		for(int j = 0; j < (sizeof(parentDevice->services[i].characteristics)/sizeof(Characteristic_t)); j++) {
+			if(parentDevice->services[i].characteristics[j].charHandle == charHandle) {
+				return &parentDevice->services[i].characteristics[j];
+			}
+		}
+	}
+	return NULL;
+}
+
+void clearList(UsedDeviceInformations_t *parentDevice) {
+
+	parentDevice->currentReadingInfo.serviceName = 0;
+	parentDevice->currentReadingInfo.serv_idx = 0;
+	parentDevice->currentReadingInfo.charName = 0;
+	parentDevice->currentReadingInfo.char_idx = 0;
+
+	for(int i = 0; i < (sizeof(parentDevice->services)/sizeof(Service_t)); i++) {
+		parentDevice->services[i].name = 0;
+		parentDevice->services[i].servHandle = 0;
+		parentDevice->services[i].servEndHandle = 0;
+		for(int k = 0; k < (sizeof(parentDevice->services[i].characteristics)/sizeof(Characteristic_t)); k++){
+			parentDevice->services[i].characteristics[k].name = 0;
+			parentDevice->services[i].characteristics[k].charHandle = 0;
+			parentDevice->services[i].characteristics[k].descHandle = 0;
+			parentDevice->services[i].characteristics[k].isNotifying = false;
+		}
+	}
+}
 /* USER CODE BEGIN FD_WRAP_FUNCTIONS */
 
 /* USER CODE END FD_WRAP_FUNCTIONS */

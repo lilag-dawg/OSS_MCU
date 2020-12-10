@@ -77,6 +77,15 @@ typedef enum
   P2P_NOTIFICATION_CP_RECEIVED_EVT,
 } P2P_Client_Opcode_Notification_evt_t;
 
+typedef enum
+{
+	OTHER,
+	CSC_SENSOR,
+	POWER_SENSOR,
+	TRAINER,
+	SHIMANO_SENSOR,
+} SensorType_t;
+
 typedef struct
 {
   uint8_t * pPayload;
@@ -88,6 +97,7 @@ typedef struct
   P2P_Client_Opcode_Notification_evt_t  P2P_Client_Evt_Opcode;
   P2P_Client_Data_t DataTransfered;
   uint8_t   ServiceInstance;
+  SensorType_t SensorType;
 } P2P_Client_App_Notification_evt_t;
 
 
@@ -139,57 +149,67 @@ typedef struct
     DeviceSupportedDataType supportedDataType;
 } DeviceInformations_t;
 
-typedef struct
-{
-	uint8_t P2PServiceHandle;
-	uint8_t P2PServiceEndHandle;
-
-}ServiceHandle_t;
 
 typedef struct
 {
-	// CSC
-	ServiceHandle_t CSCServicehandle;
+	uint16_t serviceName;
+	int serv_idx;
 
-	// POWER
-	ServiceHandle_t PowerServicehandle;
-
-	//Shimano
-	ServiceHandle_t ShimanoServicehandle;
-
-	//reading
-	uint16_t P2PReadCharHdle;
-	uint16_t P2PcurrentCharBeingRead;
-
-	// notification
-	uint16_t P2PNotificationCharHdle;
-	uint16_t P2PNotificationDescHandle;
-} ServicesHandleList_t;
-
-typedef enum
-{
-	OTHER,
-	CSC_SENSOR,
-	POWER_SENSOR,
-	TRAINER,
-	SHIMANO_SENSOR,
-} SensorType_t;
+	uint16_t charName;
+	int char_idx;
+} CurrentReadingInfo_t;
 
 typedef struct
+{
+	uint16_t name;
+
+	uint16_t charHandle;
+	uint16_t descHandle;
+	bool isNotifying;
+
+} Characteristic_t;
+
+typedef struct Service_t
+{
+	uint16_t name;
+
+	uint8_t servHandle;
+	uint8_t servEndHandle;
+
+	Characteristic_t characteristics[5];
+
+    bool (*isCharHandleEmpty) (struct Service_t *self);
+    bool (*isDescHandleEmpty) (struct Service_t *self);
+	int (*getCharacteristicIndex) (uint16_t name, struct Service_t *self);
+	bool (*verifyIfCharacteristicExists) (uint16_t name, struct Service_t *self);
+	int (*appendCharacteristic) (Characteristic_t *characteristic, struct Service_t *self);
+	int (*appendCharacteristicName) (uint16_t name, struct Service_t *self);
+} Service_t; //NEW
+
+
+typedef struct UsedDeviceInformations_t
 {
     char name[MAX_DEVICE_NAME_LENGHT];
     uint8_t macAddress[6];
     APP_BLE_ConnStatus_t state;
     uint16_t connHandle;
+
     bool isNotEmpty;
-    ServicesHandleList_t servicesHandle;
     DeviceSupportedDataType supportedDataType;
     SensorType_t sensorType;
-    P2P_Client_Opcode_Notification_evt_t sensor_evt_type; // un capteur peut notif une seule carac, A MODIFIER
+
+    Service_t services[5];
+    CurrentReadingInfo_t currentReadingInfo;
+    int (*getServiceIndex) (uint16_t name, struct UsedDeviceInformations_t *self);
+    bool (*verifyIfServiceExists) (uint16_t name, struct UsedDeviceInformations_t *self);
+    int (*appendService) (Service_t *service, struct UsedDeviceInformations_t *self);
+    int (*appendServiceName) (uint16_t name, struct UsedDeviceInformations_t *self);
+
 } UsedDeviceInformations_t;
 
 
-extern bool uuid_bit_format;
+extern bool uuid_bit_format; //should remove
+
 typedef struct
 {
 	DeviceInformations_t scannedDevicesList[MAX_DEVICES];
@@ -223,9 +243,38 @@ typedef struct
   void Trigger_Connection_Request( int index, int indexInScannedDevices, Pairing_request_status status, uint16_t connhandle );
 
 /* USER CODE BEGIN EF */
+
   int getCorrespondingIndex(uint8_t* macAddress);
 
   uint16_t Update_UsedDeviceInformations_structure( void );
+
+  void defineMethodes(int size, UsedDeviceInformations_t *self);
+
+  void defineServiceMethodes(int size, Service_t *self);
+
+  bool isCharHandleEmpty(Service_t *self);
+
+  bool isDescHandleEmpty(Service_t *self);
+
+  int getServiceIndex(uint16_t name, UsedDeviceInformations_t *self);
+
+  bool verifyIfServiceExists(uint16_t name, UsedDeviceInformations_t *self);
+
+  int appendService(Service_t *service, UsedDeviceInformations_t *self);
+
+  int appendServiceName(uint16_t name, UsedDeviceInformations_t *self);
+
+  int getCharacteristicIndex(uint16_t name, Service_t *self);
+
+  bool verifyIfCharacteristicExists(uint16_t name, Service_t *self);
+
+  int appendCharacteristic(Characteristic_t *characteristic, Service_t *self);
+
+  int appendCharacteristicName(uint16_t name, Service_t *self);
+
+  Characteristic_t* getCharacteristic(uint16_t charHandle, UsedDeviceInformations_t *parentDevice);
+
+  void clearList(UsedDeviceInformations_t *parentDevice);
 
 
 /* USER CODE END EF */
