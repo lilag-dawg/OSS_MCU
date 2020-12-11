@@ -514,14 +514,14 @@ void APP_BLE_Init( void )
  //strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
  //memcpy(settingsToWrite.sensors[0].macAddress, macTackxVortex, sizeof(settingsToWrite.sensors[0].macAddress));
 //
- //strcpy(settingsToWrite.sensors[2].name,"	Ridesense");
- //memcpy(settingsToWrite.sensors[2].macAddress, macRidesense, sizeof(settingsToWrite.sensors[2].macAddress));
+// strcpy(settingsToWrite.sensors[0].name,"	Ridesense");
+// memcpy(settingsToWrite.sensors[0].macAddress, macRidesense, sizeof(settingsToWrite.sensors[0].macAddress));
 //
- //strcpy(settingsToWrite.sensors[0].name,"	EWWU111");
- //memcpy(settingsToWrite.sensors[0].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress)); //****IMPORTANT** shimano doit être en premier [0] dans le tableau
+ //strcpy(settingsToWrite.sensors[1].name,"	EWWU111");
+ //memcpy(settingsToWrite.sensors[1].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress));
 
- //strcpy(settingsToWrite.sensors[1].name,"	Tacx Flux");
- //memcpy(settingsToWrite.sensors[1].macAddress, macTackxFlux, sizeof(settingsToWrite.sensors[0].macAddress));
+ //strcpy(settingsToWrite.sensors[2].name,"	Tacx Flux");
+// memcpy(settingsToWrite.sensors[2].macAddress, macTackxFlux, sizeof(settingsToWrite.sensors[2].macAddress));
 
 
   //saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
@@ -553,7 +553,7 @@ void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pair
 				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_2_ID, CFG_SCH_PRIO_0);
 			}
 			else{
-				aci_gap_terminate(connhandle, 0x05);
+				aci_gap_terminate(connhandle, 0x16);
 				usedDeviceInformations[1].state = APP_BLE_IDLE;
 				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = usedDeviceInformations[1].state;
 			}
@@ -564,7 +564,7 @@ void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pair
 				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_3_ID, CFG_SCH_PRIO_0);
 			}
 			else{
-				aci_gap_terminate(connhandle, 0x05);
+				aci_gap_terminate(connhandle, 0x16);
 				usedDeviceInformations[2].state = APP_BLE_IDLE;
 				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = usedDeviceInformations[2].state;
 			}
@@ -575,7 +575,7 @@ void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pair
 				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_4_ID, CFG_SCH_PRIO_0);
 			}
 			else{
-				aci_gap_terminate(connhandle, 0x05);
+				aci_gap_terminate(connhandle, 0x16);
 				usedDeviceInformations[3].state = APP_BLE_IDLE;
 				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = usedDeviceInformations[3].state;
 			}
@@ -785,6 +785,8 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
 
       /* USER CODE END EVT_DISCONN_COMPLETE */
+
+    	printf("\n - Reason : , \n", cc->Reason);
 
     	if(cc->Reason != 0x16){ //user terminated connection
     	      if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice1)

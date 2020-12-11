@@ -685,7 +685,6 @@ static void Client_Update_Service( void )
 	      case APP_BLE_DISCOVER_CHARACS:
 	    	  switch(usedDeviceInformations[index].sensorType){
 	    	  case CSC_SENSOR:
-	    	  {
 	    		  if(usedDeviceInformations[index].state != APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC){
 
 		    		  APP_DBG_MSG("* GATT : Discover P2P Characteristics csc_sensor\n");
@@ -709,11 +708,8 @@ static void Client_Update_Service( void )
 						  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
 						  shouldLoop = false; //exit while
 
-
 					  }
 	    		  }
-
-	    	  }
 				  break;
 	    	  case POWER_SENSOR:
 				  break;
@@ -766,7 +762,6 @@ static void Client_Update_Service( void )
 						  shouldLoop = false; //exit while
 					  }
 	    		  }
-
 
 				  break;
 	    	  default:
@@ -877,8 +872,6 @@ static void Client_Update_Service( void )
 														  usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].charHandle+2);
 
 					      shouldLoop = false; //exit while
-
-
 					  }
 					  else if(usedDeviceInformations[index].services[batteryIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[batteryIndex]) && shouldLoop){
 
@@ -916,6 +909,8 @@ static void Client_Update_Service( void )
 	    	  case TRAINER:
 	    	  {
 	    		  if(usedDeviceInformations[index].state != APP_BLE_CONNECTED_CLIENT){
+
+	    		  }
 		    		  // index for services
 					  int powerIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_SERVICE_UUID, &usedDeviceInformations[index]);
 					  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
@@ -946,7 +941,6 @@ static void Client_Update_Service( void )
 					      usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
 					      shouldLoop = false; //exit while
 					  }
-	    		  }
 
 
 	    	  }
@@ -954,7 +948,6 @@ static void Client_Update_Service( void )
 
 	    	  case SHIMANO_SENSOR:
 	    	  {
-	    		  if(usedDeviceInformations[index].state != APP_BLE_CONNECTED_CLIENT){
 		    		  // index for services
 					  int posistionIndex =  usedDeviceInformations[index].getServiceIndex(SHIMANO_SERVICE_UUID, &usedDeviceInformations[index]);
 
@@ -969,20 +962,14 @@ static void Client_Update_Service( void )
 					        					   usedDeviceInformations[index].services[posistionIndex].characteristics[positionCharIdx].descHandle,
 					                               2,
 					                               (uint8_t *)&enable);
+						  usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
 					      shouldLoop = false; //exit while
 
 					  }
-					  else{
-						  usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
-					  }
-	    		  }
-
-
 	    	  }
 				  break;
 	    	  case CSC_SENSOR:
 	    	  {
-	    		  if(usedDeviceInformations[index].state != APP_BLE_CONNECTED_CLIENT){
 		    		  // index for services
 					  int cscIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_SPEED_CADENCE_SERVICE_UUID, &usedDeviceInformations[index]);
 
@@ -997,14 +984,10 @@ static void Client_Update_Service( void )
 					        					   usedDeviceInformations[index].services[cscIndex].characteristics[cscCharIdx].descHandle,
 					                               2,
 					                               (uint8_t *)&enable);
+
+						  usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
 					      shouldLoop = false; //exit while
 					  }
-					  else{
-						  usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
-					  }
-	    		  }
-
-
 	    	  }
 				  break;
 
