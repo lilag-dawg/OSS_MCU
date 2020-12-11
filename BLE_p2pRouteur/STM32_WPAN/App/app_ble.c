@@ -515,13 +515,13 @@ void APP_BLE_Init( void )
  //memcpy(settingsToWrite.sensors[0].macAddress, macTackxVortex, sizeof(settingsToWrite.sensors[0].macAddress));
 //
  //strcpy(settingsToWrite.sensors[2].name,"	Ridesense");
- //memcpy(settingsToWrite.sensors[2].macAddress, macRidesense, sizeof(settingsToWrite.sensors[2].macAddress));
+// memcpy(settingsToWrite.sensors[2].macAddress, macRidesense, sizeof(settingsToWrite.sensors[2].macAddress));
 //
  //strcpy(settingsToWrite.sensors[0].name,"	EWWU111");
- //memcpy(settingsToWrite.sensors[0].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress)); //****IMPORTANT** shimano doit être en premier [0] dans le tableau
+// memcpy(settingsToWrite.sensors[0].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress)); //****IMPORTANT** shimano doit être en premier [0] dans le tableau
 
  //strcpy(settingsToWrite.sensors[1].name,"	Tacx Flux");
- //memcpy(settingsToWrite.sensors[1].macAddress, macTackxFlux, sizeof(settingsToWrite.sensors[0].macAddress));
+// memcpy(settingsToWrite.sensors[1].macAddress, macTackxFlux, sizeof(settingsToWrite.sensors[0].macAddress));
 
 
   saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
