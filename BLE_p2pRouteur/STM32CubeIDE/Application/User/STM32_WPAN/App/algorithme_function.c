@@ -61,8 +61,8 @@ void Augmenter_ratio()
     //printf ("\n\r\n\r Augmenter ratio \n\r\n\r ");
 	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_6);
     flag_changement_ratio = 1;
-      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
-      startRelayTimer(GPIO_PIN_6);
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_SET);
+      startRelayTimer(GPIO_PIN_7);
       //HAL_Delay(50);
 	  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
 }
@@ -73,8 +73,8 @@ void Diminuer_ratio()
     //printf ("\n\r\n\r Diminuer ratio \n\r\n\r");
 	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
     flag_changement_ratio = 1;
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_SET);
-    startRelayTimer(GPIO_PIN_7);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+    startRelayTimer(GPIO_PIN_6);
 	//HAL_Delay(50);
 	//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
 }
@@ -129,9 +129,9 @@ int Obtenir_indice_ratio_min_repos(float *tab_ratio)
 // Déclaration de la fonction qui gère les situations de sprints
 void Sprint(float puissance, float cadence, float vitesse, float ratio)
 {
-    printf ("Sprint à %f Watt\n", puissance);
+    //printf ("Sprint à %f Watt\n", puissance);
 
-    if (cadence > 130)
+    if (cadence > Cadence_des * 1.33)
     {
     Augmenter_ratio();
     flag = 3;
@@ -141,7 +141,7 @@ void Sprint(float puissance, float cadence, float vitesse, float ratio)
 // Déclaration de la fonction qui gère les situations de repos
 void Repos(float puissance, float cadence, float vitesse, float ratio)
 {
-    printf ("Repos a %f Watt\n\r", puissance);
+    //printf ("Repos a %f Watt\n\r", puissance);
 
     int i = Obtenir_indice_ratio_min_repos(tab_ratio);
     //printf ("indice %d\n", i);
@@ -151,19 +151,30 @@ void Repos(float puissance, float cadence, float vitesse, float ratio)
     //printf ("indice %d\n", j);
     //printf ("ratio %f et tab_ratio %f\n", ratio, tab_ratio[j]);
 
+    float facteur_lim_sup = 1 + (shifting_responsiveness/100); // Le facteur doit être supérieur ou égal à 1
+    float facteur_lim_inf = 1 - (shifting_responsiveness/100); // Le facteur doit être inférieur ou égal à 1
+
+    float Cadence_des_repos = Cadence_des * 0.9;
+
     if(cadence > 1 && j > i)
         {
-        float Cadence_theorique = (vitesse/3.6)/((float)Diametre_roues/1000*3.14159)*60/tab_ratio[j];
-        //printf ("cadence théorique %f\n", Cadence_theorique);
-        if(Cadence_theorique < 80 && j != 0)
-            {
-            Diminuer_ratio();
-            }
+    	if(cadence < (Cadence_des_repos * facteur_lim_inf) && j != 0 && cadence > 1)
+    	        {
+    	        float Cadence_sup = (vitesse/3.6)/((float)Diametre_roues/1000*3.14159)*60/tab_ratio[j-1];
+    	        if(Cadence_sup < (Cadence_des_repos * facteur_lim_sup))
+    	            {
+    	            Diminuer_ratio();
+    	            }
+    	        }
 
-        if(Cadence_theorique > 100 && j != (nbr_ratio-1))
-            {
-            Augmenter_ratio();
-            }
+    	    if(cadence > (Cadence_des_repos * facteur_lim_sup) && j != (nbr_ratio-1))
+    	        {
+    	        float Cadence_inf = (vitesse/3.6)/((float)Diametre_roues/1000*3.14159)*60/tab_ratio[j+1];
+    	        if(Cadence_inf > Cadence_des_repos * facteur_lim_inf)
+    	            {
+    	            Augmenter_ratio();
+    	            }
+    	        }
         }
 
 }
@@ -171,16 +182,17 @@ void Repos(float puissance, float cadence, float vitesse, float ratio)
 // Déclaration de la fonction qui gère le système en utilisation normale
 void Normale(float puissance, float cadence, float vitesse, float ratio)
 {
-    float facteur_lim_sup = 1.04; // Le facteur doit être supérieur ou égal à 1
-    float facteur_lim_inf = 0.96; // Le facteur doit être inférieur ou égal à 1
+    float facteur_lim_sup = 1 + (shifting_responsiveness/100); // Le facteur doit être supérieur ou égal à 1
+    float facteur_lim_inf = 1 - (shifting_responsiveness/100); // Le facteur doit être inférieur ou égal à 1
 
-    printf ("Normale à %f Watt\n", puissance);
+    //printf ("Normale à %f Watt\n", puissance);
+
 
     int i = Obtenir_indice_ratio(ratio, tab_ratio);
     //printf ("indice %d\n", i);
     //printf ("ratio %f et tab_ratio %f\n", ratio, tab_ratio[i]);
 
-    if(cadence < (Cadence_des * facteur_lim_inf) && i != 0)
+    if(cadence < (Cadence_des * facteur_lim_inf) && i != 0 && cadence > 1)
         {
         float Cadence_sup = (vitesse/3.6)/((float)Diametre_roues/1000*3.14159)*60/tab_ratio[i-1];
         //printf ("cadence_sup %f\n", Cadence_sup);
@@ -277,6 +289,8 @@ void updateAlgoSettingsFromFlash(settings_t *readSettings) {
 	Cadence_des = readSettings->preferences.desiredRpm;
 	shifting_responsiveness = readSettings->preferences.shiftingResponsiveness;
 	bpm_des = readSettings->preferences.desiredBpm;
+
+	init_tab_ratio();
 }
 
 void gearsStructToArray(sprockets *sprocketStruct, cranksets *cranksetStruct) {

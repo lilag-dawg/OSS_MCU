@@ -251,12 +251,12 @@ void algoCases(void){
 	        Sprint(puissance, cadence, vitesse, ratio);
 	        }
 
-	        else if (puissance <= (float)*ftp*0.10)
+	        else if (puissance <= (float)*ftp*0.24)
 	        {
 	        Repos(puissance, cadence, vitesse, ratio);
 	        }
 
-	        else if (puissance < (float)*ftp*1.51 && puissance > (float)*ftp*0.10)
+	        else if (puissance < (float)*ftp*1.51 && puissance > (float)*ftp*0.24)
 	        {
 	        Normale(puissance, cadence, vitesse, ratio);
 	        }
