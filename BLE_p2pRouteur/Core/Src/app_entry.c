@@ -91,9 +91,9 @@ void APPE_Init( void )
    */
   UTIL_LPM_SetOffMode(1 << CFG_LPM_APP, UTIL_LPM_DISABLE);
 
-  Led_Init();
+  //Led_Init();
 
-  Button_Init();
+  //Button_Init();
 /* USER CODE END APPE_Init_1 */
   appe_Tl_Init();	/* Initialize all transport layers */
 
@@ -207,9 +207,9 @@ static void Led_Init( void )
    * Leds Initialization
    */
 
-  BSP_LED_Init(LED_BLUE);
-  BSP_LED_Init(LED_GREEN);
-  BSP_LED_Init(LED_RED);
+  //BSP_LED_Init(LED_BLUE);
+  //BSP_LED_Init(LED_GREEN);
+  //BSP_LED_Init(LED_RED);
 
   //BSP_LED_On(LED_GREEN);
 #endif
@@ -224,7 +224,7 @@ static void Button_Init( void )
    * Button Initialization
    */
 
-  BSP_PB_Init(BUTTON_SW1, BUTTON_MODE_EXTI);
+  //BSP_PB_Init(BUTTON_SW1, BUTTON_MODE_EXTI);
 #endif
 
   return;

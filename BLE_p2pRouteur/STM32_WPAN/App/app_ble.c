@@ -762,7 +762,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
           APP_DBG_MSG("\r\n\r** NO UPDATE \n");
           if(result != BLE_STATUS_SUCCESS) {
               /* USER CODE BEGIN BLE_STATUS_SUCCESS */
-              BSP_LED_On(LED_RED);
+              //BSP_LED_On(LED_RED);
               /* USER CODE END BLE_STATUS_SUCCESS */
           }
 
@@ -1437,7 +1437,7 @@ static void Scan_Request( void )
     else
     {
     /* USER CODE BEGIN BLE_SCAN_FAILED */
-      BSP_LED_On(LED_RED);
+      //BSP_LED_On(LED_RED);
     /* USER CODE END BLE_SCAN_FAILED */
       APP_DBG_MSG("-- BLE_App_Start_Limited_Disc_Req, Failed \r\n\r");
     }
@@ -1490,7 +1490,7 @@ static void Adv_Request( void )
     else
     {
     /* USER CODE BEGIN BLE_CONNECT_FAILED */
-      BSP_LED_On(LED_RED);
+      //BSP_LED_On(LED_RED);
     /* USER CODE END BLE_CONNECT_FAILED */
       APP_DBG_MSG("BLE_APP_Adv_Request(), Failed \r\n\r");
     }
@@ -1540,7 +1540,7 @@ static void ConnReq1( void )
     else
     {
     /* USER CODE BEGIN BLE_STATUS_END_DEVICE_1_FAILED */
-      BSP_LED_On(LED_RED);
+      //BSP_LED_On(LED_RED);
     /* USER CODE END BLE_STATUS_END_DEVICE_1_FAILED */
       usedDeviceInformations[0].state  = APP_BLE_IDLE;
     }
@@ -1588,7 +1588,7 @@ static void ConnReq2( void )
     }
     else
     {
-      BSP_LED_On(LED_RED);
+      //BSP_LED_On(LED_RED);
       usedDeviceInformations[1].state = APP_BLE_IDLE;
 
     }
@@ -1632,7 +1632,7 @@ static void ConnReq3( void )
     }
     else
     {
-      BSP_LED_On(LED_RED);
+      //BSP_LED_On(LED_RED);
       usedDeviceInformations[2].state = APP_BLE_IDLE;
 
     }
@@ -1676,7 +1676,7 @@ static void ConnReq4( void )
     }
     else
     {
-      BSP_LED_On(LED_RED);
+      //BSP_LED_On(LED_RED);
       usedDeviceInformations[3].state = APP_BLE_IDLE;
 
     }
