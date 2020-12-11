@@ -507,24 +507,24 @@ void APP_BLE_Init( void )
 
 
   //reset flash
-  settings_t settingsToWrite;
-  memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
+  //settings_t settingsToWrite;
+  //memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
 
   //initilase sensor hardcode
  //strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
  //memcpy(settingsToWrite.sensors[0].macAddress, macTackxVortex, sizeof(settingsToWrite.sensors[0].macAddress));
 //
- //strcpy(settingsToWrite.sensors[2].name,"	Ridesense");
-// memcpy(settingsToWrite.sensors[2].macAddress, macRidesense, sizeof(settingsToWrite.sensors[2].macAddress));
+// strcpy(settingsToWrite.sensors[0].name,"	Ridesense");
+// memcpy(settingsToWrite.sensors[0].macAddress, macRidesense, sizeof(settingsToWrite.sensors[0].macAddress));
 //
- //strcpy(settingsToWrite.sensors[0].name,"	EWWU111");
-// memcpy(settingsToWrite.sensors[0].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress)); //****IMPORTANT** shimano doit être en premier [0] dans le tableau
+ //strcpy(settingsToWrite.sensors[1].name,"	EWWU111");
+ //memcpy(settingsToWrite.sensors[1].macAddress, macShimano, sizeof(settingsToWrite.sensors[1].macAddress));
 
- //strcpy(settingsToWrite.sensors[1].name,"	Tacx Flux");
-// memcpy(settingsToWrite.sensors[1].macAddress, macTackxFlux, sizeof(settingsToWrite.sensors[0].macAddress));
+ //strcpy(settingsToWrite.sensors[2].name,"	Tacx Flux");
+// memcpy(settingsToWrite.sensors[2].macAddress, macTackxFlux, sizeof(settingsToWrite.sensors[2].macAddress));
 
 
-  saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
+  //saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
 
 
 /* USER CODE END APP_BLE_Init_2 */
@@ -553,7 +553,7 @@ void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pair
 				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_2_ID, CFG_SCH_PRIO_0);
 			}
 			else{
-				aci_gap_terminate(connhandle, 0x05);
+				aci_gap_terminate(connhandle, 0x16);
 				usedDeviceInformations[1].state = APP_BLE_IDLE;
 				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = usedDeviceInformations[1].state;
 			}
@@ -564,7 +564,7 @@ void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pair
 				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_3_ID, CFG_SCH_PRIO_0);
 			}
 			else{
-				aci_gap_terminate(connhandle, 0x05);
+				aci_gap_terminate(connhandle, 0x16);
 				usedDeviceInformations[2].state = APP_BLE_IDLE;
 				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = usedDeviceInformations[2].state;
 			}
@@ -575,7 +575,7 @@ void Trigger_Connection_Request( int indexInFlash,int indexInScannedDevices,Pair
 				UTIL_SEQ_SetTask(1 << CFG_TASK_CONN_DEV_4_ID, CFG_SCH_PRIO_0);
 			}
 			else{
-				aci_gap_terminate(connhandle, 0x05);
+				aci_gap_terminate(connhandle, 0x16);
 				usedDeviceInformations[3].state = APP_BLE_IDLE;
 				scannedDevicesPackage.scannedDevicesList[indexInScannedDevices].pairingStatus = usedDeviceInformations[3].state;
 			}
@@ -762,7 +762,7 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
           APP_DBG_MSG("\r\n\r** NO UPDATE \n");
           if(result != BLE_STATUS_SUCCESS) {
               /* USER CODE BEGIN BLE_STATUS_SUCCESS */
-              //BSP_LED_On(LED_RED);
+              BSP_LED_On(LED_RED);
               /* USER CODE END BLE_STATUS_SUCCESS */
           }
 
@@ -785,6 +785,8 @@ SVCCTL_UserEvtFlowStatus_t SVCCTL_App_Notification(void *pckt)
 
 
       /* USER CODE END EVT_DISCONN_COMPLETE */
+
+    	printf("\n - Reason : %x\n", cc->Reason);
 
     	if(cc->Reason != 0x16){ //user terminated connection
     	      if (cc->Connection_Handle == BleApplicationContext.connectionHandleEndDevice1)
@@ -1437,7 +1439,7 @@ static void Scan_Request( void )
     else
     {
     /* USER CODE BEGIN BLE_SCAN_FAILED */
-      //BSP_LED_On(LED_RED);
+      BSP_LED_On(LED_RED);
     /* USER CODE END BLE_SCAN_FAILED */
       APP_DBG_MSG("-- BLE_App_Start_Limited_Disc_Req, Failed \r\n\r");
     }
@@ -1490,7 +1492,7 @@ static void Adv_Request( void )
     else
     {
     /* USER CODE BEGIN BLE_CONNECT_FAILED */
-      //BSP_LED_On(LED_RED);
+      BSP_LED_On(LED_RED);
     /* USER CODE END BLE_CONNECT_FAILED */
       APP_DBG_MSG("BLE_APP_Adv_Request(), Failed \r\n\r");
     }
@@ -1540,7 +1542,7 @@ static void ConnReq1( void )
     else
     {
     /* USER CODE BEGIN BLE_STATUS_END_DEVICE_1_FAILED */
-      //BSP_LED_On(LED_RED);
+      BSP_LED_On(LED_RED);
     /* USER CODE END BLE_STATUS_END_DEVICE_1_FAILED */
       usedDeviceInformations[0].state  = APP_BLE_IDLE;
     }
@@ -1588,7 +1590,7 @@ static void ConnReq2( void )
     }
     else
     {
-      //BSP_LED_On(LED_RED);
+      BSP_LED_On(LED_RED);
       usedDeviceInformations[1].state = APP_BLE_IDLE;
 
     }
@@ -1632,7 +1634,7 @@ static void ConnReq3( void )
     }
     else
     {
-      //BSP_LED_On(LED_RED);
+      BSP_LED_On(LED_RED);
       usedDeviceInformations[2].state = APP_BLE_IDLE;
 
     }
@@ -1676,7 +1678,7 @@ static void ConnReq4( void )
     }
     else
     {
-      //BSP_LED_On(LED_RED);
+      BSP_LED_On(LED_RED);
       usedDeviceInformations[3].state = APP_BLE_IDLE;
 
     }
@@ -1706,8 +1708,7 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
 
     /* USER CODE END P2P_Evt_Opcode */
     case SMART_PHONE1_CONN_HANDLE_EVT:
-    	  //HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
-    	//BSP_LED_On(LED_BLUE);
+    	BSP_LED_On(LED_BLUE);
         /*EDS_STM_Update_Char(0x0001,
                 (uint8_t *)&scannedDevicesPackage.numberOfScannedDevices);*/
       break;
@@ -1725,9 +1726,7 @@ void Evt_Notification( P2P_ConnHandle_Not_evt_t *pNotification )
 
     case SMART_PHONE1_DISCON_HANDLE_EVT:
       BleApplicationContext.SmartPhone_Connection_Status = APP_BLE_IDLE;
-      //HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
-
-      //BSP_LED_Off(LED_BLUE);
+      BSP_LED_Off(LED_BLUE);
       UTIL_SEQ_SetTask(1 << CFG_TASK_START_ADV_ID, CFG_SCH_PRIO_0);
       break;
 
