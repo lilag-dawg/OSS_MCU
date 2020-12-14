@@ -507,8 +507,8 @@ void APP_BLE_Init( void )
 
 
   //reset flash
-  //settings_t settingsToWrite;
-  //memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
+  settings_t settingsToWrite;
+  memset(&settingsToWrite, 0 , sizeof(settingsToWrite));
 
   //initilase sensor hardcode
  //strcpy(settingsToWrite.sensors[0].name,"	Tacx Vortex 18043");
@@ -524,7 +524,7 @@ void APP_BLE_Init( void )
 // memcpy(settingsToWrite.sensors[2].macAddress, macTackxFlux, sizeof(settingsToWrite.sensors[2].macAddress));
 
 
-  //saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
+  saveToFlash((uint8_t*) &settingsToWrite, sizeof(settingsToWrite));
 
 
 /* USER CODE END APP_BLE_Init_2 */
