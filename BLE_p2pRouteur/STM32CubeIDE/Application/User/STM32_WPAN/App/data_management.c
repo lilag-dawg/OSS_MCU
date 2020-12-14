@@ -30,7 +30,7 @@ float currentCrankData = 0;
 float prevCrankEvent = 0;
 float currentCrankEvent = 0;
 
-float wheelCircumference = 2.2;
+float wheelCircumference = 2.105;
 float rpmValue = 0;
 
 float crankRevValue[bufferMaxValue][4] = {0};
@@ -108,7 +108,7 @@ void switchCase(int* value, SensorType_t sensorType){
 void wheelRevFunction(int* wheelValue){
 
      prevWheelData = currentWheelData;
-    currentWheelData = wheelCircumference*((wheelValue[0]<<24) + (wheelValue[1]<<16) + (wheelValue[2]<<8) + (wheelValue[3]));
+    currentWheelData = wheelCircumference*2*((wheelValue[0]<<24) + (wheelValue[1]<<16) + (wheelValue[2]<<8) + (wheelValue[3]));
 
     prevWheelEvent = currentWheelEvent;
     currentWheelEvent = ((wheelValue[4]<<8) + (wheelValue[5])); // On obtient le current event en secondes
@@ -204,12 +204,12 @@ void powerFunction(int* powerData){
 	float powerValue = (powerData[3]*256) + powerData[2];
 	int WheelValueSent[6] = {0};
 
-    WheelValueSent[0] = powerData[8];
-    WheelValueSent[1] = powerData[7];
-    WheelValueSent[2] = powerData[6];
-    WheelValueSent[3] = powerData[5];
-    WheelValueSent[4] = powerData[10];
-    WheelValueSent[5] = powerData[9];
+    WheelValueSent[0] = powerData[9];
+    WheelValueSent[1] = powerData[8];
+    WheelValueSent[2] = powerData[7];
+    WheelValueSent[3] = powerData[6];
+    WheelValueSent[4] = powerData[11];
+    WheelValueSent[5] = powerData[10];
 
     wheelRevFunction(WheelValueSent);
 
@@ -217,7 +217,7 @@ void powerFunction(int* powerData){
 
 	bikeDataInformation.power.value = powerValue;
 	bikeDataInformation.power.time = getSensorsTime();    // a changer avec le timer
-	//printf("power : %f\n\r",bikeDataInformation.power.value);
+	printf("power : %f\n\r",bikeDataInformation.power.value);
 	//printf("Age power : %f\n\r", bikeDataInformation.power.time);
 }
 

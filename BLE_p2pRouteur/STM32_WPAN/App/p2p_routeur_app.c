@@ -457,7 +457,7 @@ void P2P_Router_APP_Init(void)
 void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotification)
 {
 /* USER CODE BEGIN P2P_Client_App_Notification_1 */
-	int sensorData[11] = {0};
+	int sensorData[20] = {0};
 	int tab[17] = {0};
 
 /* USER CODE END P2P_Client_App_Notification_1 */
@@ -485,7 +485,7 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
 	break;
 
     case P2P_NOTIFICATION_CP_RECEIVED_EVT:
-    	for(int i = 0; i<11; i++){
+    	for(int i = 0; i<20; i++){
 			sensorData[i] = pNotification->DataTransfered.pPayload[i];
 		}
 
@@ -710,8 +710,23 @@ static void Client_Update_Service( void )
 
 					  }
 	    		  }
-				  break;
+	    		  break;
 	    	  case POWER_SENSOR:
+				  if(usedDeviceInformations[index].state != APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC){
+					  APP_DBG_MSG("* GATT : Discover P2P Characteristics trainer\n");
+					  int powerIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_SERVICE_UUID, &usedDeviceInformations[index]);
+
+					  if(usedDeviceInformations[index].services[powerIndex].isCharHandleEmpty(&usedDeviceInformations[index].services[powerIndex]) && shouldLoop){
+
+						  aci_gatt_disc_all_char_of_service(usedDeviceInformations[index].connHandle,
+								  	  	  	  	  	  	  usedDeviceInformations[index].services[powerIndex].servHandle,
+														  usedDeviceInformations[index].services[powerIndex].servEndHandle);
+
+						  usedDeviceInformations[index].state = APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC;
+						  shouldLoop = false; //exit while
+					  }
+				  }
+
 				  break;
 	    	  case TRAINER:
 				  if(usedDeviceInformations[index].state != APP_BLE_DISCOVER_NOTIFICATION_CHAR_DESC){
@@ -894,6 +909,30 @@ static void Client_Update_Service( void )
 
 	    	  }
 				  break;
+				case POWER_SENSOR:
+		    	  {
+		    		  if(usedDeviceInformations[index].state != APP_BLE_ENABLE_NOTIFICATION_DESC){
+						  int powerIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_SERVICE_UUID, &usedDeviceInformations[index]);
+
+						  if(usedDeviceInformations[index].services[powerIndex].isDescHandleEmpty(&usedDeviceInformations[index].services[powerIndex]) && shouldLoop){
+
+						      APP_DBG_MSG("* GATT : Discover Descriptor of Rx - Notification Characteritic - POWER\n");
+							  int powerCharIdx = usedDeviceInformations[index].services[powerIndex].getCharacteristicIndex(CYCLING_POWER_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[powerIndex]);
+							  usedDeviceInformations[index].currentReadingInfo.serviceName = CYCLING_POWER_SERVICE_UUID;
+							  usedDeviceInformations[index].currentReadingInfo.serv_idx = powerIndex;
+							  usedDeviceInformations[index].currentReadingInfo.charName = CYCLING_POWER_MEASUREMENT_CHAR_UUID;
+							  usedDeviceInformations[index].currentReadingInfo.char_idx = powerCharIdx;
+
+							  aci_gatt_disc_all_char_desc(usedDeviceInformations[index].connHandle,
+									  	  	  	  	  	  	  usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].charHandle,
+															  usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].charHandle+2);
+							  usedDeviceInformations[index].state = APP_BLE_ENABLE_NOTIFICATION_DESC;
+							  shouldLoop = false; //exit while
+						  }
+		    		  }
+
+		    	  }
+					  break;
 
 	    	  default:
 	    		  APP_DBG_MSG("* TYPE DE CAPTEUR NON RECONNU\n");
@@ -988,6 +1027,32 @@ static void Client_Update_Service( void )
 						  usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
 					      shouldLoop = false; //exit while
 					  }
+	    	  }
+				  break;
+
+	    	  case POWER_SENSOR:
+	    	  {
+	    		  if(usedDeviceInformations[index].state != APP_BLE_CONNECTED_CLIENT){
+
+	    		  }
+		    		  // index for services
+					  int powerIndex =  usedDeviceInformations[index].getServiceIndex(CYCLING_POWER_SERVICE_UUID, &usedDeviceInformations[index]);
+
+					  // index for characteristics
+					  int powerCharIdx = usedDeviceInformations[index].services[powerIndex].getCharacteristicIndex(CYCLING_POWER_MEASUREMENT_CHAR_UUID, &usedDeviceInformations[index].services[powerIndex]);
+					  if(!usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].isNotifying && shouldLoop){
+
+						  usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].isNotifying = true;
+					      APP_DBG_MSG("* GATT : Enable Server CP notif\n");
+					      aci_gatt_write_char_desc(usedDeviceInformations[index].connHandle,
+					        					   usedDeviceInformations[index].services[powerIndex].characteristics[powerCharIdx].descHandle,
+					                               2,
+					                               (uint8_t *)&enable);
+
+					      usedDeviceInformations[index].state = APP_BLE_CONNECTED_CLIENT;
+					      shouldLoop = false; //exit while
+					  }
+
 	    	  }
 				  break;
 
@@ -1313,7 +1378,7 @@ static SVCCTL_EvtAckStatus_t Client_Event_Handler(void *Event)
 
                                 }
 
-                                if(uuid == CYCLING_POWER_MEASUREMENT_CHAR_UUID && (usedDeviceInformations[index].sensorType == TRAINER || usedDeviceInformations[index].sensorType == CSC_SENSOR))
+                                if(uuid == CYCLING_POWER_MEASUREMENT_CHAR_UUID && (usedDeviceInformations[index].sensorType == TRAINER || usedDeviceInformations[index].sensorType == POWER_SENSOR))
 								{
 #if(CFG_DEBUG_APP_TRACE != 0)
 									  APP_DBG_MSG("-- GATT : POWER_NOTIFY_CHAR_UUID FOUND  - \n");
