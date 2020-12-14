@@ -201,7 +201,20 @@ void crankRevFunction(int* CrankValue){
 }
 
 void powerFunction(int* powerData){
-	float powerValue = (powerData[1]*256) + powerData[0];
+	float powerValue = (powerData[3]*256) + powerData[2];
+	int WheelValueSent[6] = {0};
+
+    WheelValueSent[0] = powerData[8];
+    WheelValueSent[1] = powerData[7];
+    WheelValueSent[2] = powerData[6];
+    WheelValueSent[3] = powerData[5];
+    WheelValueSent[4] = powerData[10];
+    WheelValueSent[5] = powerData[9];
+
+    wheelRevFunction(WheelValueSent);
+
+
+
 	bikeDataInformation.power.value = powerValue;
 	bikeDataInformation.power.time = getSensorsTime();    // a changer avec le timer
 	//printf("power : %f\n\r",bikeDataInformation.power.value);

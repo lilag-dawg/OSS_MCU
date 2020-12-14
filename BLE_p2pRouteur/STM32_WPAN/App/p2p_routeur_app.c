@@ -485,8 +485,8 @@ void P2P_Client_App_Notification(P2P_Client_App_Notification_evt_t *pNotificatio
 	break;
 
     case P2P_NOTIFICATION_CP_RECEIVED_EVT:
-    	for(int i = 0; i<2; i++){
-			sensorData[i] = pNotification->DataTransfered.pPayload[i+2];
+    	for(int i = 0; i<11; i++){
+			sensorData[i] = pNotification->DataTransfered.pPayload[i];
 		}
 
     	powerFunction(sensorData);
